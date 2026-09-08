@@ -18,6 +18,10 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      // Worker do PDF.js copiado do node_modules — código de terceiro, minificado.
+      "public/pdf.worker.min.mjs",
+      // Protótipo de design do produto, não faz parte do build.
+      "Vira Pagina design/**",
     ],
   },
 ];

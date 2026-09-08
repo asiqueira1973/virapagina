@@ -8,6 +8,7 @@
 import { google } from 'googleapis'
 import { unstable_cache } from 'next/cache'
 import type { Livro, PublicadoValor } from '@/types/livro'
+import { proximoSlugLivre } from '../slug'
 import { ABA_LIVROS, serviceAccountCredentials, sheetId } from './config'
 
 // Etiqueta de cache das leituras públicas. As rotas do admin invalidam por ela
@@ -97,8 +98,10 @@ function rowToLivro(row: string[]): Livro | null {
 }
 
 // Transforma um Livro na linha de 14 células que a planilha espera (colunas A–N).
+// A conferência contra COLUNAS existe porque a planilha é posicional: uma célula
+// a mais ou a menos aqui desloca todos os campos da linha em silêncio.
 function livroToRow(livro: Livro): string[] {
-  return [
+  const celulas = [
     livro.id,
     livro.titulo,
     livro.subtitulo ?? '',
@@ -114,6 +117,12 @@ function livroToRow(livro: Livro): string[] {
     livro.criado_em,
     livro.atualizado_em,
   ]
+  if (celulas.length !== COLUNAS.length) {
+    throw new Error(
+      `Linha com ${celulas.length} células, mas a planilha tem ${COLUNAS.length} colunas`,
+    )
+  }
+  return celulas
 }
 
 // Lê todas as linhas da aba `livros`, sem cache. Usada pelas rotas do admin, que
@@ -171,13 +180,10 @@ export async function slugEmUso(slug: string, exceptoId?: string): Promise<boole
 // critério de aceite 8.2 para o caso de link duplicado.
 export async function sugerirSlugDisponivel(base: string, exceptoId?: string): Promise<string> {
   const livros = await readAllBooks()
-  const usados = new Set(
+  return proximoSlugLivre(
+    base,
     livros.filter((livro) => livro.id !== exceptoId).map((livro) => livro.slug),
   )
-  if (!usados.has(base)) return base
-  let sufixo = 2
-  while (usados.has(`${base}-${sufixo}`)) sufixo += 1
-  return `${base}-${sufixo}`
 }
 
 // Acrescenta um livro novo ao fim da planilha (épico 8.2). A linha só é escrita

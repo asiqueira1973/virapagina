@@ -42,3 +42,4 @@ next-env.d.ts
 
 # Documentos de produto e material de design que vivem fora do build
 .env*.local
+public/pdf.worker.min.mjs

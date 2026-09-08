@@ -21,3 +21,13 @@ export function slugify(texto: string): string {
 export function slugValido(slug: string): boolean {
   return /^[a-z0-9-]+$/.test(slug)
 }
+
+// Dado um slug pretendido e os slugs já em uso, devolve o primeiro livre,
+// acrescentando -2, -3... como pede o critério de aceite 8.2.
+export function proximoSlugLivre(base: string, slugsEmUso: Iterable<string>): string {
+  const usados = new Set(slugsEmUso)
+  if (!usados.has(base)) return base
+  let sufixo = 2
+  while (usados.has(`${base}-${sufixo}`)) sufixo += 1
+  return `${base}-${sufixo}`
+}

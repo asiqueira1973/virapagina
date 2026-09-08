@@ -23,9 +23,10 @@ export function BookCover({
     )
   }
 
+  // A capa vem de uma rota de proxy nossa, não de um host configurável no
+  // next/image — por isso a tag simples.
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- a capa vem de rota de
-    // proxy nossa, não de um host configurável no next/image.
+    // eslint-disable-next-line @next/next/no-img-element
     <img
       src={`/api/livros/${slug}/capa`}
       alt={`Capa de ${titulo}`}
