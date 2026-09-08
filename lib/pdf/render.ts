@@ -35,25 +35,45 @@ export async function abrirPdfDeUrl(url: string): Promise<PDFDocumentProxy> {
   return pdfjs.getDocument({ url }).promise
 }
 
-// Desenha uma página do PDF num canvas na escala pedida e devolve as dimensões
-// resultantes. É a função que o leitor usa a cada virada e a cada mudança de zoom
-// (regra 11.5).
-export async function renderizarPagina(
+// Desenha uma página do PDF num canvas na escala pedida. É a função que o leitor
+// usa a cada virada e a cada mudança de zoom (regra 11.5).
+//
+// Devolve a promessa junto de um `cancelar()`, e não só a promessa, porque o
+// PDF.js recusa duas renderizações simultâneas no mesmo canvas: sem cancelar a
+// anterior, trocar o zoom rápido — ou o efeito rodar duas vezes, como acontece
+// em desenvolvimento — deixa a página em branco. Cancelar é obrigatório, não
+// otimização.
+export function renderizarPagina(
   documento: PDFDocumentProxy,
   numeroDaPagina: number,
   canvas: HTMLCanvasElement,
   escala: number,
-): Promise<{ largura: number; altura: number }> {
-  const pagina = await documento.getPage(numeroDaPagina)
-  const viewport = pagina.getViewport({ scale: escala })
-  const contexto = canvas.getContext('2d')
-  if (!contexto) throw new Error('Canvas sem contexto 2d')
+): { promessa: Promise<void>; cancelar: () => void } {
+  let tarefa: { cancel: () => void } | null = null
+  let cancelado = false
 
-  canvas.width = Math.floor(viewport.width)
-  canvas.height = Math.floor(viewport.height)
+  const promessa = (async () => {
+    const pagina = await documento.getPage(numeroDaPagina)
+    if (cancelado) return
+    const viewport = pagina.getViewport({ scale: escala })
+    const contexto = canvas.getContext('2d')
+    if (!contexto) throw new Error('Canvas sem contexto 2d')
 
-  await pagina.render({ canvasContext: contexto, viewport } as RenderParameters).promise
-  return { largura: canvas.width, altura: canvas.height }
+    canvas.width = Math.floor(viewport.width)
+    canvas.height = Math.floor(viewport.height)
+
+    const emAndamento = pagina.render({ canvasContext: contexto, viewport } as RenderParameters)
+    tarefa = emAndamento
+    await emAndamento.promise
+  })()
+
+  return {
+    promessa,
+    cancelar() {
+      cancelado = true
+      tarefa?.cancel()
+    },
+  }
 }
 
 // Gera a capa do livro renderizando a primeira página e devolvendo um PNG em

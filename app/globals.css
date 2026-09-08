@@ -37,8 +37,14 @@
   --color-publicado: #1a7f4b;
   --color-publicado-fundo: #eaf6ef;
 
-  --font-sans: var(--font-instrument-sans), system-ui, sans-serif;
-  --font-serif: var(--font-instrument-serif), serif;
+}
+
+/* As duas famílias vêm do next/font, que declara as variáveis no <body>.
+   Ficam fora do @theme de propósito: as variáveis de fonte do Tailwind v4 só
+   são emitidas quando a utility correspondente é detectada no markup, e a
+   tipografia do produto não pode depender dessa detecção. */
+@utility font-display {
+  font-family: var(--font-instrument-serif), serif;
 }
 
 html,
@@ -50,7 +56,7 @@ body {
 body {
   background: var(--color-tela);
   color: var(--color-tinta);
-  font-family: var(--font-sans);
+  font-family: var(--font-instrument-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
