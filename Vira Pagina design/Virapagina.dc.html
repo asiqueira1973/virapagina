@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; padding:0; background:#F5F5F6; }
+  * { box-sizing:border-box; }
+  a { color:#1C5FD8; text-decoration:none; }
+  a:hover { color:#12439B; text-decoration:underline; }
+  input, button, textarea { font:inherit; color:inherit; }
+</style>
+</helmet>
+<div style="font-family:'Instrument Sans',system-ui,sans-serif;color:#17181A;min-height:100vh;display:flex;flex-direction:column;background:#F5F5F6">
+
+  <div style="position:sticky;top:0;z-index:40;background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);border-bottom:1px solid #E4E4E6;padding:12px 20px;display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;letter-spacing:-0.01em">
+        <span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:#1C5FD8"></span>
+        Virapágina
+        <span style="font-weight:400;color:#8A8C91">telas do produto</span>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        <sc-for list="{{ routes }}" as="r" hint-placeholder-count="7">
+          <button onClick="{{ r.go }}" style="border:none;cursor:pointer;padding:6px 11px;border-radius:8px;font-size:13px;font-weight:500;background:{{ r.bg }};color:{{ r.fg }}">{{ r.label }}</button>
+        </sc-for>
+      </div>
+      <div style="flex:1"></div>
+      <div style="font-size:12px;color:#8A8C91;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;border:1px solid #E4E4E6;border-radius:999px;padding:5px 12px;background:#FAFAFB">{{ currentUrl }}</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+      <span style="font-size:12px;color:#8A8C91">Estados</span>
+      <sc-for list="{{ variants }}" as="v" hint-placeholder-count="4">
+        <button onClick="{{ v.go }}" style="cursor:pointer;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:500;border:1px solid {{ v.border }};background:{{ v.bg }};color:{{ v.fg }}">{{ v.label }}</button>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;flex-direction:column">
+
+    <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:64px 24px;background:#FAFAFA">
+        <div style="width:100%;max-width:380px">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:34px">
+            <span style="display:inline-block;width:22px;height:22px;border-radius:6px;background:#1C5FD8"></span>
+            <span style="font-size:19px;font-weight:600;letter-spacing:-0.02em">Virapágina</span>
+          </div>
+          <h1 style="margin:0 0 6px;font-size:23px;font-weight:600;letter-spacing:-0.02em">Entrar</h1>
+          <p style="margin:0 0 28px;font-size:14px;color:#75777C">Painel de administração</p>
+
+          <sc-if value="{{ loginError }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-bottom:18px;padding:11px 13px;border-radius:10px;background:#FDF2F2;border:1px solid #F3D2D2;color:#A32020;font-size:13px">E-mail ou senha incorretos.</div>
+          </sc-if>
+          <sc-if value="{{ loginRecovery }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-bottom:18px;padding:11px 13px;border-radius:10px;background:#F1F5FD;border:1px solid #D3E0F7;color:#1A4EA8;font-size:13px">Se esse e-mail existir, enviamos um link.</div>
+          </sc-if>
+
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <label style="display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:500;color:#42444A">E-mail
+              <input type="email" value="ana@virapagina.co" style="padding:11px 13px;border-radius:10px;border:1px solid #DDDDE0;background:#FFFFFF;font-size:14px;outline:none" style-focus="border-color:#1C5FD8;box-shadow:0 0 0 3px rgba(28,95,216,0.12)">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:500;color:#42444A">Senha
+              <input type="password" value="••••••••••" style="padding:11px 13px;border-radius:10px;border:1px solid #DDDDE0;background:#FFFFFF;font-size:14px;outline:none" style-focus="border-color:#1C5FD8;box-shadow:0 0 0 3px rgba(28,95,216,0.12)">
+            </label>
+            <button style="margin-top:4px;border:none;cursor:pointer;padding:12px;border-radius:10px;background:{{ loginBtnBg }};color:#FFFFFF;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:9px" style-hover="background:#12439B">
+              <sc-if value="{{ loginLoading }}" hint-placeholder-val="{{ false }}">
+                <span style="width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.35);border-top-color:#FFFFFF;display:inline-block"></span>
+              </sc-if>
+              {{ loginBtnLabel }}
+            </button>
+            <div style="display:flex;justify-content:center;margin-top:2px">
+              <a href="#" style="font-size:13px">Esqueci minha senha</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isRedirect }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:64px 24px;background:#FAFAFA">
+        <div style="width:100%;max-width:560px;display:flex;flex-direction:column;gap:18px;align-items:center;text-align:center">
+          <div style="font-size:12px;color:#8A8C91;font-family:ui-monospace,Menlo,monospace">/admin/livros</div>
+          <div style="width:100%;padding:22px;border-radius:14px;border:1px dashed #D6D6D9;background:#FFFFFF;color:#75777C;font-size:14px">Sem sessão válida</div>
+          <div style="font-size:22px;color:#B4B6BA">↓</div>
+          <div style="width:100%;padding:22px;border-radius:14px;border:1px solid #D3E0F7;background:#F1F5FD;font-size:14px;color:#1A4EA8;display:flex;flex-direction:column;gap:6px">
+            <span style="font-family:ui-monospace,Menlo,monospace;font-size:12px">/admin/login</span>
+            <span style="font-weight:600">Redirecionamento imediato</span>
+          </div>
+          <p style="margin:0;max-width:420px;font-size:13px;color:#75777C;text-wrap:pretty">Toda rota <span style="font-family:ui-monospace,Menlo,monospace">/admin/*</span> acessada sem sessão devolve o redirecionamento — nenhuma tela de acesso negado é desenhada.</p>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isAdminShell }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1;display:flex;align-items:stretch;background:#FFFFFF">
+        <aside style="width:236px;flex:none;border-right:1px solid #E4E4E6;background:#FAFAFA;display:flex;flex-direction:column;padding:20px 0">
+          <div style="display:flex;align-items:center;gap:8px;padding:0 18px 20px;font-size:14px;font-weight:600;letter-spacing:-0.01em">
+            <span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:#1C5FD8"></span>Virapágina
+          </div>
+          <nav style="display:flex;flex-direction:column;gap:2px;padding:0 10px">
+            <div style="padding:8px 8px 4px;font-size:13px;font-weight:700;color:#17181A">Livros</div>
+            <sc-for list="{{ navBooks }}" as="n" hint-placeholder-count="2">
+              <button onClick="{{ n.go }}" style="text-align:left;border:none;cursor:pointer;padding:7px 10px 7px 20px;border-radius:8px;font-size:13px;font-weight:{{ n.weight }};background:{{ n.bg }};color:{{ n.fg }}">{{ n.label }}</button>
+            </sc-for>
+          </nav>
+          <div style="height:1px;background:#E4E4E6;margin:14px 18px"></div>
+          <nav style="display:flex;flex-direction:column;gap:2px;padding:0 10px">
+            <div style="padding:8px 8px 4px;font-size:13px;font-weight:700;color:#17181A">Site</div>
+            <button onClick="{{ goCatalog }}" style="text-align:left;border:none;cursor:pointer;padding:7px 10px 7px 20px;border-radius:8px;font-size:13px;background:transparent;color:#5C5E64" style-hover="background:#F0F0F2">Ver catálogo</button>
+          </nav>
+          <div style="flex:1"></div>
+          <div style="margin:0 18px;padding-top:14px;border-top:1px solid #E4E4E6;display:flex;flex-direction:column;gap:8px">
+            <div style="font-size:12px;color:#8A8C91;overflow:hidden;text-overflow:ellipsis">ana@virapagina.co</div>
+            <button style="align-self:flex-start;cursor:pointer;border:1px solid #DDDDE0;background:#FFFFFF;border-radius:8px;padding:5px 11px;font-size:12px;font-weight:500;color:#42444A" style-hover="background:#F5F5F6">Sair</button>
+          </div>
+        </aside>
+
+        <main style="flex:1;min-width:0;padding:34px 40px 60px;max-width:1180px">
+
+          <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:26px">
+              <div>
+                <h1 style="margin:0 0 5px;font-size:25px;font-weight:600;letter-spacing:-0.02em">Livros</h1>
+                <p style="margin:0;font-size:13px;color:#8A8C91">{{ listCountLabel }}</p>
+              </div>
+              <button onClick="{{ goNew }}" style="border:none;cursor:pointer;padding:10px 16px;border-radius:10px;background:#1C5FD8;color:#FFFFFF;font-size:13px;font-weight:600" style-hover="background:#12439B">Novo livro</button>
+            </div>
+
+            <sc-if value="{{ listLoading }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px solid #E9E9EB;border-radius:14px;overflow:hidden">
+                <sc-for list="{{ skeletonRows }}" as="s" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;gap:16px;padding:16px 18px;border-bottom:1px solid #F0F0F2">
+                    <div style="width:38px;height:52px;border-radius:5px;background:#EFEFF1"></div>
+                    <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+                      <div style="height:11px;border-radius:5px;background:#EFEFF1;width:{{ s.w1 }}"></div>
+                      <div style="height:9px;border-radius:5px;background:#F4F4F6;width:{{ s.w2 }}"></div>
+                    </div>
+                    <div style="width:78px;height:20px;border-radius:999px;background:#EFEFF1"></div>
+                    <div style="width:92px;height:11px;border-radius:5px;background:#F4F4F6"></div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ listEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px dashed #DCDCDF;border-radius:16px;padding:74px 24px;display:flex;flex-direction:column;align-items:center;gap:16px;background:#FCFCFD">
+                <div style="width:44px;height:58px;border-radius:5px;border:1px solid #DCDCDF;background:#FFFFFF"></div>
+                <div style="font-size:15px;font-weight:500;color:#42444A">Nenhum livro ainda.</div>
+                <button onClick="{{ goNew }}" style="border:none;cursor:pointer;padding:10px 16px;border-radius:10px;background:#1C5FD8;color:#FFFFFF;font-size:13px;font-weight:600" style-hover="background:#12439B">Novo livro</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ listGrid }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:26px">
+                <sc-for list="{{ books }}" as="b" hint-placeholder-count="5">
+                  <div style="display:flex;flex-direction:column;gap:11px">
+                    <button onClick="{{ b.go }}" style="border:none;padding:0;background:none;cursor:pointer;text-align:left">
+                      <div style="aspect-ratio:3/4;border-radius:6px;border:1px solid rgba(0,0,0,0.08);background:{{ b.cover }};box-shadow:0 5px 14px rgba(0,0,0,0.08);padding:18px;display:flex;align-items:flex-end;font-family:'Instrument Serif',serif;font-size:17px;line-height:1.15;color:#3C3E44">{{ b.title }}</div>
+                    </button>
+                    <div style="display:flex;flex-direction:column;gap:5px">
+                      <div style="font-size:14px;font-weight:600;letter-spacing:-0.01em">{{ b.title }}</div>
+                      <div style="display:flex;align-items:center;gap:8px">
+                        <span style="display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;background:{{ b.badgeBg }};color:{{ b.badgeFg }}">{{ b.status }}</span>
+                        <span style="font-size:11px;color:#A0A2A7">{{ b.updated }}</span>
+                      </div>
+                      <sc-if value="{{ b.published }}" hint-placeholder-val="{{ true }}">
+                        <button onClick="{{ b.goReader }}" style="align-self:flex-start;margin-top:2px;cursor:pointer;border:1px solid #DDDDE0;background:#FFFFFF;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:500;color:#42444A" style-hover="background:#F5F5F6">Ver página pública</button>
+                      </sc-if>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ listReady }}" hint-placeholder-val="{{ true }}">
+              <div style="border:1px solid #E9E9EB;border-radius:14px;overflow:hidden;background:#FFFFFF">
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) 110px 150px 150px;gap:16px;padding:11px 18px;background:#FAFAFA;border-bottom:1px solid #E9E9EB;font-size:12px;font-weight:600;color:#75777C">
+                  <div>Livro</div><div>Status</div><div>Atualizado</div><div></div>
+                </div>
+                <sc-for list="{{ books }}" as="b" hint-placeholder-count="5">
+                  <div style="display:grid;grid-template-columns:minmax(0,1fr) 110px 150px 150px;gap:16px;align-items:center;padding:14px 18px;border-bottom:1px solid #F0F0F2" style-hover="background:#FCFCFD">
+                    <div style="display:flex;align-items:center;gap:14px;min-width:0">
+                      <div style="width:38px;height:52px;flex:none;border-radius:5px;border:1px solid rgba(0,0,0,0.08);background:{{ b.cover }};display:flex;align-items:flex-end;padding:5px;font-family:'Instrument Serif',serif;font-size:9px;line-height:1.1;color:#5C5E64;overflow:hidden">{{ b.title }}</div>
+                      <div style="min-width:0">
+                        <button onClick="{{ b.go }}" style="border:none;background:none;padding:0;cursor:pointer;font-size:14px;font-weight:600;color:#17181A;text-align:left" style-hover="color:#1C5FD8">{{ b.title }}</button>
+                        <div style="font-size:12px;color:#8A8C91;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.subtitle }}</div>
+                      </div>
+                    </div>
+                    <div>
+                      <span style="display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;background:{{ b.badgeBg }};color:{{ b.badgeFg }}">{{ b.status }}</span>
+                    </div>
+                    <div style="font-size:13px;color:#75777C">{{ b.updated }}</div>
+                    <div style="display:flex;justify-content:flex-end">
+                      <sc-if value="{{ b.published }}" hint-placeholder-val="{{ true }}">
+                        <button onClick="{{ b.goReader }}" style="cursor:pointer;border:1px solid #DDDDE0;background:#FFFFFF;border-radius:8px;padding:5px 11px;font-size:12px;font-weight:500;color:#42444A" style-hover="background:#F5F5F6">Ver página pública</button>
+                      </sc-if>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </sc-if>
+
+          <sc-if value="{{ isForm }}" hint-placeholder-val="{{ false }}">
+            <div style="max-width:640px">
+              <div style="font-size:12px;color:#8A8C91;margin-bottom:8px">
+                <button onClick="{{ goList }}" style="border:none;background:none;padding:0;cursor:pointer;color:#1C5FD8;font-size:12px" style-hover="text-decoration:underline">Livros</button>
+                <span style="color:#C4C6CA"> / </span>{{ formCrumb }}
+              </div>
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:26px">
+                <div>
+                  <h1 style="margin:0 0 5px;font-size:25px;font-weight:600;letter-spacing:-0.02em">{{ formTitle }}</h1>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span style="display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;background:{{ formBadgeBg }};color:{{ formBadgeFg }}">{{ formStatus }}</span>
+                    <span style="font-size:12px;color:#8A8C91">{{ formMeta }}</span>
+                  </div>
+                </div>
+                <sc-if value="{{ isEdit }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button onClick="{{ goReaderPreview }}" style="cursor:pointer;border:1px solid #DDDDE0;background:#FFFFFF;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:500;color:#42444A" style-hover="background:#F5F5F6">Prévia</button>
+                    <button onClick="{{ togglePublish }}" style="border:none;cursor:pointer;padding:9px 15px;border-radius:10px;background:{{ pubBtnBg }};color:{{ pubBtnFg }};border:1px solid {{ pubBtnBorder }};font-size:13px;font-weight:600">{{ pubBtnLabel }}</button>
+                  </div>
+                </sc-if>
+              </div>
+
+              <sc-if value="{{ submitError }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-bottom:20px;padding:12px 14px;border-radius:10px;background:#FDF2F2;border:1px solid #F3D2D2;color:#A32020;font-size:13px">Não foi possível concluir o envio. Tente novamente.</div>
+              </sc-if>
+
+              <div style="display:flex;flex-direction:column;gap:18px;padding:24px;border:1px solid #E9E9EB;border-radius:14px;background:#FFFFFF">
+                <label style="display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:500;color:#42444A">Título
+                  <input value="{{ fTitle }}" style="padding:10px 13px;border-radius:10px;border:1px solid #DDDDE0;font-size:14px;outline:none" style-focus="border-color:#1C5FD8;box-shadow:0 0 0 3px rgba(28,95,216,0.12)">
+                </label>
+                <label style="display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:500;color:#42444A">Subtítulo <span style="font-weight:400;color:#A0A2A7">opcional</span>
+                  <input value="{{ fSubtitle }}" style="padding:10px 13px;border-radius:10px;border:1px solid #DDDDE0;font-size:14px;outline:none" style-focus="border-color:#1C5FD8;box-shadow:0 0 0 3px rgba(28,95,216,0.12)">
+                </label>
+                <div style="display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:500;color:#42444A">Slug
+                  <div style="display:flex;align-items:center;gap:0;border:1px solid {{ slugBorder }};border-radius:10px;overflow:hidden;background:#FFFFFF">
+                    <span style="padding:10px 0 10px 13px;font-size:14px;color:#A0A2A7;font-family:ui-monospace,Menlo,monospace">/l/</span>
+                    <input value="{{ fSlug }}" style="flex:1;min-width:0;padding:10px 13px 10px 2px;border:none;font-size:14px;outline:none;font-family:ui-monospace,Menlo,monospace">
+                  </div>
+                  <sc-if value="{{ slugTaken }}" hint-placeholder-val="{{ false }}">
+                    <span style="font-size:12px;color:#A32020;font-weight:400">Esse slug já está em uso.</span>
+                  </sc-if>
+                  <sc-if value="{{ slugHint }}" hint-placeholder-val="{{ true }}">
+                    <span style="font-size:12px;color:#8A8C91;font-weight:400">Sugerido a partir do título. Editável.</span>
+                  </sc-if>
+                </div>
+                <label style="display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:500;color:#42444A">Descrição <span style="font-weight:400;color:#A0A2A7">opcional</span>
+                  <textarea rows="4" style="padding:10px 13px;border-radius:10px;border:1px solid #DDDDE0;font-size:14px;outline:none;resize:vertical;font-family:inherit" style-focus="border-color:#1C5FD8;box-shadow:0 0 0 3px rgba(28,95,216,0.12)">{{ fDesc }}</textarea>
+                </label>
+              </div>
+
+              <div style="margin-top:22px;padding:24px;border:1px solid #E9E9EB;border-radius:14px;background:#FFFFFF;display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+                  <div style="font-size:14px;font-weight:600">Arquivo PDF</div>
+                  <sc-if value="{{ isEdit }}" hint-placeholder-val="{{ false }}">
+                    <button style="cursor:pointer;border:1px solid #DDDDE0;background:#FFFFFF;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:500;color:#42444A" style-hover="background:#F5F5F6">Substituir PDF</button>
+                  </sc-if>
+                </div>
+
+                <sc-if value="{{ showDropzone }}" hint-placeholder-val="{{ true }}">
+                  <div style="border:1px dashed #CFD0D4;border-radius:12px;padding:38px 22px;display:flex;flex-direction:column;align-items:center;gap:10px;background:#FCFCFD;text-align:center">
+                    <div style="width:34px;height:44px;border-radius:4px;border:1px solid #D6D6D9;background:#FFFFFF"></div>
+                    <div style="font-size:14px;font-weight:500">Arraste o PDF aqui</div>
+                    <div style="font-size:12px;color:#8A8C91">ou <a href="#">selecione um arquivo</a> — até 100 MB</div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ fileErrors }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    <div style="display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:10px;border:1px solid #F3D2D2;background:#FDF2F2;font-size:13px;color:#A32020">
+                      <span style="font-weight:600">capa-final.png</span> Só aceitamos arquivos PDF.
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:10px;border:1px solid #F3D2D2;background:#FDF2F2;font-size:13px;color:#A32020">
+                      <span style="font-weight:600">jardim-alta.pdf</span> 143 MB — o limite é 100 MB.
+                    </div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ uploading }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:9px;padding:14px;border:1px solid #E9E9EB;border-radius:12px">
+                    <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px">
+                      <span style="font-weight:500">o-jardim-de-papel.pdf</span>
+                      <span style="color:#8A8C91">42,1 MB de 64,8 MB · 65%</span>
+                    </div>
+                    <div style="height:6px;border-radius:999px;background:#EFEFF1;overflow:hidden">
+                      <div style="width:65%;height:100%;background:#1C5FD8"></div>
+                    </div>
+                    <button style="align-self:flex-start;cursor:pointer;border:none;background:none;padding:0;font-size:12px;color:#75777C" style-hover="color:#17181A">Cancelar envio</button>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ hasFile }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;align-items:center;gap:13px;padding:14px;border:1px solid #E9E9EB;border-radius:12px">
+                    <div style="width:30px;height:40px;flex:none;border-radius:4px;border:1px solid #D6D6D9;background:#FAFAFA"></div>
+                    <div style="min-width:0">
+                      <div style="font-size:13px;font-weight:500">o-jardim-de-papel.pdf</div>
+                      <div style="font-size:12px;color:#8A8C91">64,8 MB · 48 páginas · enviado em 12 mar 2026</div>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+
+              <div style="margin-top:22px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <button style="border:none;cursor:pointer;padding:10px 16px;border-radius:10px;background:{{ saveBtnBg }};color:#FFFFFF;font-size:13px;font-weight:600;display:flex;align-items:center;gap:9px" style-hover="background:#12439B">
+                  <sc-if value="{{ uploading }}" hint-placeholder-val="{{ false }}">
+                    <span style="width:13px;height:13px;border-radius:50%;border:2px solid rgba(255,255,255,0.35);border-top-color:#FFFFFF;display:inline-block"></span>
+                  </sc-if>
+                  {{ saveBtnLabel }}
+                </button>
+                <button onClick="{{ goList }}" style="cursor:pointer;border:1px solid #DDDDE0;background:#FFFFFF;border-radius:10px;padding:10px 15px;font-size:13px;font-weight:500;color:#42444A" style-hover="background:#F5F5F6">Cancelar</button>
+                <div style="flex:1"></div>
+                <sc-if value="{{ isEdit }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ askDelete }}" style="cursor:pointer;border:1px solid #F0CFCF;background:#FFFFFF;border-radius:10px;padding:10px 15px;font-size:13px;font-weight:600;color:#B32020" style-hover="background:#FDF2F2">Excluir</button>
+                </sc-if>
+              </div>
+
+              <sc-if value="{{ isEdit }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:34px">
+                  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px">
+                    <div style="font-size:14px;font-weight:600">Prévia</div>
+                    <div style="font-size:12px;color:#8A8C91">Abre o leitor mesmo despublicado</div>
+                  </div>
+                  <div style="border:1px solid #E9E9EB;border-radius:14px;background:#F2F2F4;padding:26px;display:flex;justify-content:center">
+                    <div style="display:flex;box-shadow:0 12px 30px rgba(0,0,0,0.12);border-radius:3px;overflow:hidden">
+                      <div style="width:132px;height:176px;background:#FFFDF8;border-right:1px solid #EAE6DE;padding:16px;font-family:'Instrument Serif',serif;font-size:11px;color:#5C5E64;line-height:1.5">Um quintal tem mais mundo do que cabe nele.</div>
+                      <div style="width:132px;height:176px;background:#FFFDF8;padding:16px;display:flex;flex-direction:column;gap:7px;justify-content:center">
+                        <sc-for list="{{ previewLines }}" as="p" hint-placeholder-count="6">
+                          <div style="height:5px;border-radius:3px;background:#EAE6DE;width:{{ p.w }}"></div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+
+            <sc-if value="{{ confirmDelete }}" hint-placeholder-val="{{ false }}">
+              <div style="position:fixed;inset:0;z-index:60;background:rgba(20,21,23,0.36);display:flex;align-items:center;justify-content:center;padding:24px">
+                <div style="width:100%;max-width:420px;background:#FFFFFF;border-radius:16px;padding:26px;box-shadow:0 24px 60px rgba(0,0,0,0.24);display:flex;flex-direction:column;gap:12px">
+                  <div style="font-size:17px;font-weight:600;letter-spacing:-0.01em">Excluir “O Jardim de Papel”?</div>
+                  <div style="font-size:13px;color:#75777C;text-wrap:pretty">Essa ação não pode ser desfeita. O link público e o PDF enviado deixam de existir.</div>
+                  <div style="display:flex;justify-content:flex-end;gap:9px;margin-top:8px">
+                    <button onClick="{{ closeModal }}" style="cursor:pointer;border:1px solid #DDDDE0;background:#FFFFFF;border-radius:10px;padding:9px 15px;font-size:13px;font-weight:500;color:#42444A" style-hover="background:#F5F5F6">Cancelar</button>
+                    <button style="border:none;cursor:pointer;padding:9px 15px;border-radius:10px;background:#B32020;color:#FFFFFF;font-size:13px;font-weight:600" style-hover="background:#8E1717">Excluir</button>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ confirmSlug }}" hint-placeholder-val="{{ false }}">
+              <div style="position:fixed;inset:0;z-index:60;background:rgba(20,21,23,0.36);display:flex;align-items:center;justify-content:center;padding:24px">
+                <div style="width:100%;max-width:440px;background:#FFFFFF;border-radius:16px;padding:26px;box-shadow:0 24px 60px rgba(0,0,0,0.24);display:flex;flex-direction:column;gap:12px">
+                  <div style="font-size:17px;font-weight:600;letter-spacing:-0.01em">Isso muda o link público</div>
+                  <div style="font-size:13px;color:#75777C;text-wrap:pretty">Quem já tem o endereço antigo vai encontrar uma página indisponível. Continuar?</div>
+                  <div style="display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:10px;background:#FAFAFA;border:1px solid #E9E9EB;font-family:ui-monospace,Menlo,monospace;font-size:12px">
+                    <span style="color:#A0A2A7;text-decoration:line-through">/l/o-jardim-de-papel</span>
+                    <span style="color:#17181A">/l/jardim-de-papel-2026</span>
+                  </div>
+                  <div style="display:flex;justify-content:flex-end;gap:9px;margin-top:8px">
+                    <button onClick="{{ closeModal }}" style="cursor:pointer;border:1px solid #DDDDE0;background:#FFFFFF;border-radius:10px;padding:9px 15px;font-size:13px;font-weight:500;color:#42444A" style-hover="background:#F5F5F6">Cancelar</button>
+                    <button onClick="{{ closeModal }}" style="border:none;cursor:pointer;padding:9px 15px;border-radius:10px;background:#1C5FD8;color:#FFFFFF;font-size:13px;font-weight:600" style-hover="background:#12439B">Continuar</button>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+          </sc-if>
+
+        </main>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isCatalog }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;background:#FFFFFF;display:flex;flex-direction:column">
+        <header style="border-bottom:1px solid #E9E9EB;padding:18px 32px;display:flex;align-items:center;gap:9px">
+          <span style="display:inline-block;width:18px;height:18px;border-radius:5px;background:#1C5FD8"></span>
+          <span style="font-size:15px;font-weight:600;letter-spacing:-0.01em">Virapágina</span>
+        </header>
+        <div style="padding:48px 32px 80px;max-width:1120px;width:100%;margin:0 auto">
+          <h1 style="margin:0 0 6px;font-size:28px;font-weight:600;letter-spacing:-0.025em">Catálogo</h1>
+          <p style="margin:0 0 34px;font-size:14px;color:#8A8C91">Livros publicados</p>
+
+          <sc-if value="{{ catalogLoading }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:30px">
+              <sc-for list="{{ skeletonRows }}" as="s" hint-placeholder-count="4">
+                <div style="display:flex;flex-direction:column;gap:12px">
+                  <div style="aspect-ratio:3/4;border-radius:6px;background:#EFEFF1"></div>
+                  <div style="height:12px;border-radius:5px;background:#EFEFF1;width:{{ s.w1 }}"></div>
+                  <div style="height:10px;border-radius:5px;background:#F4F4F6;width:{{ s.w2 }}"></div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ catalogEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:80px 24px;text-align:center;color:#75777C;font-size:15px">Nenhum livro publicado por aqui ainda.</div>
+          </sc-if>
+
+          <sc-if value="{{ catalogReady }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:32px">
+              <sc-for list="{{ publishedBooks }}" as="b" hint-placeholder-count="3">
+                <button onClick="{{ b.goReader }}" style="border:none;background:none;padding:0;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:14px">
+                  <div style="aspect-ratio:3/4;border-radius:6px;border:1px solid rgba(0,0,0,0.08);background:{{ b.cover }};box-shadow:0 6px 18px rgba(0,0,0,0.09);padding:22px;display:flex;align-items:flex-end;font-family:'Instrument Serif',serif;font-size:20px;line-height:1.15;color:#3C3E44">{{ b.title }}</div>
+                  <div>
+                    <div style="font-size:15px;font-weight:600;letter-spacing:-0.01em">{{ b.title }}</div>
+                    <div style="font-size:13px;color:#75777C;margin-top:3px">{{ b.subtitle }}</div>
+                    <div style="font-size:12px;color:#A0A2A7;margin-top:6px">{{ b.author }}</div>
+                  </div>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isReader }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;background:#2A2B2E;display:flex;flex-direction:column">
+        <header style="padding:14px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,0.1)">
+          <button onClick="{{ goCatalog }}" style="border:none;background:none;padding:0;cursor:pointer;color:rgba(255,255,255,0.62);font-size:13px" style-hover="color:#FFFFFF">← Catálogo</button>
+          <div style="min-width:0">
+            <div style="font-size:15px;font-weight:600;color:#FFFFFF;letter-spacing:-0.01em">O Jardim de Papel</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.55)">Marina Alvares</div>
+          </div>
+          <sc-if value="{{ readerDraft }}" hint-placeholder-val="{{ false }}">
+            <span style="padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;background:rgba(255,255,255,0.14);color:#FFFFFF">Prévia · rascunho</span>
+          </sc-if>
+        </header>
+
+        <sc-if value="{{ readerNotFound }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:80px 24px;text-align:center">
+            <div style="font-size:18px;font-weight:600;color:#FFFFFF">Esse livro não está disponível.</div>
+            <button onClick="{{ goCatalog }}" style="border:none;background:none;padding:0;cursor:pointer;color:#8FB4F5;font-size:14px" style-hover="color:#FFFFFF">Ir para o catálogo</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ readerLoading }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:60px 24px">
+            <div style="display:flex;border-radius:3px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,0.4)">
+              <div style="width:250px;height:340px;background:#3A3B3F"></div>
+              <div style="width:250px;height:340px;background:#333438;border-left:1px solid #2A2B2E"></div>
+            </div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.6)">Preparando as páginas…</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ readerReady }}" hint-placeholder-val="{{ true }}">
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:18px;padding:40px 20px">
+            <button onClick="{{ prevPage }}" style="flex:none;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);color:#FFFFFF;cursor:pointer;font-size:15px" style-hover="background:rgba(255,255,255,0.16)">‹</button>
+
+            <div style="display:flex;box-shadow:0 26px 70px rgba(0,0,0,0.45);border-radius:4px;overflow:hidden;max-width:{{ spreadMax }};width:100%">
+              <div style="flex:1;min-width:0;aspect-ratio:3/4;background:#FFFDF8;padding:44px 38px;display:flex;flex-direction:column;justify-content:space-between;background-image:linear-gradient(to right,rgba(0,0,0,0.001),rgba(0,0,0,0.07))">
+                <div style="font-family:'Instrument Serif',serif;font-size:20px;line-height:1.45;color:#3C3E44;text-wrap:pretty">Um quintal tem mais mundo do que cabe nele. Bastava abrir a porta dos fundos.</div>
+                <div style="font-size:11px;color:#A8A49B">{{ pageLeft }}</div>
+              </div>
+              <sc-if value="{{ spread }}" hint-placeholder-val="{{ true }}">
+              <div style="flex:1;min-width:0;aspect-ratio:3/4;background:#FFFDF8;padding:44px 38px;display:flex;flex-direction:column;justify-content:space-between;position:relative;background-image:linear-gradient(to left,rgba(0,0,0,0.001),rgba(0,0,0,0.07))">
+                <div style="display:flex;flex-direction:column;gap:11px">
+                  <sc-for list="{{ readerLines }}" as="p" hint-placeholder-count="9">
+                    <div style="height:7px;border-radius:4px;background:#EAE6DE;width:{{ p.w }}"></div>
+                  </sc-for>
+                </div>
+                <div style="display:flex;justify-content:flex-end;font-size:11px;color:#A8A49B">{{ pageRight }}</div>
+                <div onClick="{{ nextPage }}" style="position:absolute;right:0;bottom:0;width:74px;height:74px;cursor:pointer;background:linear-gradient(315deg,rgba(0,0,0,0.14),rgba(0,0,0,0) 62%)" style-hover="background:linear-gradient(315deg,rgba(0,0,0,0.26),rgba(0,0,0,0) 62%)"></div>
+              </div>
+              </sc-if>
+            </div>
+
+            <button onClick="{{ nextPage }}" style="flex:none;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);color:#FFFFFF;cursor:pointer;font-size:15px" style-hover="background:rgba(255,255,255,0.16)">›</button>
+          </div>
+
+          <div style="padding:0 20px 30px;display:flex;justify-content:center">
+            <div style="display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);flex-wrap:wrap;justify-content:center">
+              <button onClick="{{ zoomOut }}" style="border:none;background:none;cursor:pointer;color:rgba(255,255,255,0.8);width:30px;height:30px;border-radius:50%;font-size:15px" style-hover="background:rgba(255,255,255,0.14)">−</button>
+              <span style="font-size:12px;color:rgba(255,255,255,0.7);min-width:44px;text-align:center">{{ zoomLabel }}</span>
+              <button onClick="{{ zoomIn }}" style="border:none;background:none;cursor:pointer;color:rgba(255,255,255,0.8);width:30px;height:30px;border-radius:50%;font-size:15px" style-hover="background:rgba(255,255,255,0.14)">+</button>
+              <span style="width:1px;height:20px;background:rgba(255,255,255,0.14);margin:0 4px"></span>
+              <sc-for list="{{ tools }}" as="t" hint-placeholder-count="4">
+                <button style="border:none;background:none;cursor:pointer;color:rgba(255,255,255,0.8);padding:6px 11px;border-radius:999px;font-size:12px;font-weight:500" style-hover="background:rgba(255,255,255,0.14)">{{ t.label }}</button>
+              </sc-for>
+              <span style="width:1px;height:20px;background:rgba(255,255,255,0.14);margin:0 4px"></span>
+              <span style="font-size:12px;color:rgba(255,255,255,0.7);padding:0 8px">{{ pageIndicator }}</span>
+            </div>
+          </div>
+          <div style="padding:0 20px 34px;text-align:center;font-size:11px;color:rgba(255,255,255,0.38)">Arraste a borda da página ou use as setas. Abaixo de 1024px o leitor mostra uma página por vez.</div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;listLayout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;tabela&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;tabela&quot;,&quot;grade&quot;],&quot;section&quot;:&quot;Admin&quot;},&quot;readerSpread&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Leitor&quot;}}">
+const ACCENT = "#1C5FD8";
+const BOOKS = [
+  { id: "1", title: "O Jardim de Papel", subtitle: "Contos de um quintal", author: "Marina Alvares", published: true, updated: "12 mar 2026", cover: "#EBE6DC" },
+  { id: "2", title: "Rota do Vento", subtitle: "—", author: "Tiago Bueno", published: false, updated: "9 mar 2026", cover: "#DFE4E7" },
+  { id: "3", title: "Cadernos de Campo", subtitle: "Anotações de viagem", author: "Ana Rehder", published: true, updated: "2 mar 2026", cover: "#E4E7DE" },
+  { id: "4", title: "Pequeno Atlas Doméstico", subtitle: "Mapas de dentro de casa", author: "Joana Petri", published: true, updated: "24 fev 2026", cover: "#E8E3E7" },
+  { id: "5", title: "Vinte e Três Cartas", subtitle: "—", author: "Rafael Sá", published: false, updated: "18 fev 2026", cover: "#E7E4E0" }
+];
+
+const ROUTES = [
+  { id: "login", label: "Login", url: "/admin/login", variants: ["Padrão", "Erro", "Recuperação", "Enviando"] },
+  { id: "list", label: "Livros", url: "/admin/livros", variants: ["Padrão", "Vazio", "Carregando"] },
+  { id: "new", label: "Novo livro", url: "/admin/livros/novo", variants: ["Padrão", "Validação", "Enviando", "Erro de envio"] },
+  { id: "edit", label: "Editar livro", url: "/admin/livros/1", variants: ["Rascunho", "Publicado", "Excluir", "Trocar slug"] },
+  { id: "catalog", label: "Catálogo", url: "/", variants: ["Padrão", "Vazio", "Carregando"] },
+  { id: "reader", label: "Leitor", url: "/l/o-jardim-de-papel", variants: ["Publicado", "Prévia (rascunho)", "Carregando", "404"] },
+  { id: "redirect", label: "Sem sessão", url: "/admin/* → /admin/login", variants: ["Redirecionamento"] }
+];
+
+class Component extends DCLogic {
+  state = { route: "list", variant: "Padrão", page: 12, zoom: 100 };
+
+  setRoute(id) {
+    const r = ROUTES.find(x => x.id === id);
+    this.setState({ route: id, variant: r.variants[0] });
+  }
+
+  renderVals() {
+    const { route, variant } = this.state;
+    const def = ROUTES.find(r => r.id === route);
+    const chrome = (on) => ({
+      bg: on ? "#EEF3FD" : "transparent",
+      fg: on ? ACCENT : "#5C5E64"
+    });
+
+    const routes = ROUTES.map(r => Object.assign({ label: r.label, go: () => this.setRoute(r.id) }, chrome(r.id === route)));
+    const variants = def.variants.map(v => ({
+      label: v, go: () => this.setState({ variant: v }),
+      bg: v === variant ? ACCENT : "#FFFFFF",
+      fg: v === variant ? "#FFFFFF" : "#5C5E64",
+      border: v === variant ? ACCENT : "#E4E4E6"
+    }));
+
+    const isEdit = route === "edit";
+    const isNew = route === "new";
+    const published = isEdit && variant === "Publicado";
+    const validation = isNew && variant === "Validação";
+    const uploading = isNew && variant === "Enviando";
+    const submitError = isNew && variant === "Erro de envio";
+
+    const navBooks = [
+      { label: "Todos os livros", go: () => this.setRoute("list") , on: route === "list" },
+      { label: "Novo livro", go: () => this.setRoute("new"), on: isNew || isEdit }
+    ].map(n => ({
+      label: n.label, go: n.go,
+      weight: n.on ? "600" : "400",
+      bg: n.on ? "#EEF3FD" : "transparent",
+      fg: n.on ? ACCENT : "#5C5E64"
+    }));
+
+    const books = BOOKS.map(b => Object.assign({}, b, {
+      status: b.published ? "Publicado" : "Rascunho",
+      badgeBg: b.published ? "#E9F5EC" : "#F0F0F2",
+      badgeFg: b.published ? "#1E7A3E" : "#5C5E64",
+      go: () => this.setState({ route: "edit", variant: b.published ? "Publicado" : "Rascunho" }),
+      goReader: () => this.setState({ route: "reader", variant: "Publicado" })
+    }));
+
+    const lines = [ "92%", "78%", "96%", "64%", "88%", "72%", "94%", "58%", "81%" ];
+
+    return {
+      routes, variants, navBooks,
+      currentUrl: def.url,
+      isLogin: route === "login",
+      isRedirect: route === "redirect",
+      isAdminShell: route === "list" || isNew || isEdit,
+      isList: route === "list",
+      isForm: isNew || isEdit,
+      isEdit, isCatalog: route === "catalog", isReader: route === "reader",
+
+      loginError: route === "login" && variant === "Erro",
+      loginRecovery: route === "login" && variant === "Recuperação",
+      loginLoading: route === "login" && variant === "Enviando",
+      loginBtnLabel: route === "login" && variant === "Enviando" ? "Entrando…" : "Entrar",
+      loginBtnBg: route === "login" && variant === "Enviando" ? "#5B8AE3" : ACCENT,
+
+      listLoading: route === "list" && variant === "Carregando",
+      listEmpty: route === "list" && variant === "Vazio",
+      listReady: route === "list" && variant === "Padrão" && (this.props.listLayout ?? "tabela") === "tabela",
+      listGrid: route === "list" && variant === "Padrão" && this.props.listLayout === "grade",
+      listCountLabel: variant === "Vazio" ? "" : "3 publicados · 2 rascunhos",
+      skeletonRows: [ { w1: "62%", w2: "38%" }, { w1: "48%", w2: "30%" }, { w1: "70%", w2: "42%" }, { w1: "54%", w2: "34%" } ],
+      books,
+
+      formCrumb: isEdit ? "O Jardim de Papel" : "Novo livro",
+      formTitle: isEdit ? "O Jardim de Papel" : "Novo livro",
+      formStatus: isEdit ? (published ? "Publicado" : "Rascunho") : "Rascunho",
+      formBadgeBg: published ? "#E9F5EC" : "#F0F0F2",
+      formBadgeFg: published ? "#1E7A3E" : "#5C5E64",
+      formMeta: isEdit ? "Atualizado em 12 mar 2026" : "Salvo como rascunho ao enviar",
+      pubBtnLabel: published ? "Despublicar" : "Publicar",
+      pubBtnBg: published ? "#FFFFFF" : ACCENT,
+      pubBtnFg: published ? "#42444A" : "#FFFFFF",
+      pubBtnBorder: published ? "#DDDDE0" : ACCENT,
+      togglePublish: () => this.setState({ variant: published ? "Rascunho" : "Publicado" }),
+      goReaderPreview: () => this.setState({ route: "reader", variant: published ? "Publicado" : "Prévia (rascunho)" }),
+
+      fTitle: isEdit ? "O Jardim de Papel" : "O Jardim de Papel",
+      fSubtitle: isEdit ? "Contos de um quintal" : "",
+      fSlug: validation ? "cadernos-de-campo" : "o-jardim-de-papel",
+      fDesc: isEdit ? "Vinte e um contos curtos escritos à mão sobre o quintal de uma casa em Piracicaba." : "",
+      slugTaken: validation,
+      slugHint: !validation,
+      slugBorder: validation ? "#E8B4B4" : "#DDDDE0",
+
+      showDropzone: (isNew && !uploading) || false,
+      fileErrors: validation,
+      uploading,
+      hasFile: isEdit,
+      submitError,
+      saveBtnLabel: uploading ? "Enviando…" : (isEdit ? "Salvar alterações" : "Salvar rascunho"),
+      saveBtnBg: uploading ? "#5B8AE3" : ACCENT,
+
+      confirmDelete: isEdit && variant === "Excluir",
+      confirmSlug: isEdit && variant === "Trocar slug",
+      askDelete: () => this.setState({ variant: "Excluir" }),
+      closeModal: () => this.setState({ variant: "Rascunho" }),
+      previewLines: [ { w: "94%" }, { w: "72%" }, { w: "88%" }, { w: "60%" }, { w: "92%" }, { w: "48%" } ],
+
+      catalogLoading: route === "catalog" && variant === "Carregando",
+      catalogEmpty: route === "catalog" && variant === "Vazio",
+      catalogReady: route === "catalog" && variant === "Padrão",
+      publishedBooks: books.filter(b => b.published),
+
+      readerNotFound: route === "reader" && variant === "404",
+      readerLoading: route === "reader" && variant === "Carregando",
+      readerDraft: route === "reader" && variant === "Prévia (rascunho)",
+      readerReady: route === "reader" && (variant === "Publicado" || variant === "Prévia (rascunho)"),
+      readerLines: lines.map(w => ({ w })),
+      spread: this.props.readerSpread ?? true,
+      spreadMax: (this.props.readerSpread ?? true) ? "900px" : "460px",
+      pageLeft: String(this.state.page),
+      pageRight: String(this.state.page + 1),
+      pageIndicator: this.state.page + "–" + (this.state.page + 1) + " de 48",
+      zoomLabel: this.state.zoom + "%",
+      tools: [ { label: "Tela cheia" }, { label: "Baixar" }, { label: "Imprimir" }, { label: "Compartilhar" } ],
+      prevPage: () => this.setState(s => ({ page: Math.max(1, s.page - 2) })),
+      nextPage: () => this.setState(s => ({ page: Math.min(47, s.page + 2) })),
+      zoomIn: () => this.setState(s => ({ zoom: Math.min(200, s.zoom + 10) })),
+      zoomOut: () => this.setState(s => ({ zoom: Math.max(50, s.zoom - 10) })),
+
+      goList: () => this.setRoute("list"),
+      goNew: () => this.setRoute("new"),
+      goCatalog: () => this.setRoute("catalog")
+    };
+  }
+}
+
+</script>
+</body>
+</html>

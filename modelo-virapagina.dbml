@@ -1,0 +1,36 @@
+// Modelo de dados — Virapágina
+// Gerado a partir da seção 7 do spec.md — colar direto no dbdiagram.io
+
+Table administradores {
+  id uuid [pk, note: 'Mesmo id do auth.users (Supabase Auth) — chave estrangeira 1:1']
+  email text [not null, note: 'Espelha o e-mail do Auth, só para conferência visual no painel do Supabase']
+  criado_em timestamptz [not null, default: `now()`]
+
+  Note: 'Allowlist de administradores. Sem soft delete — tabela de baixíssimo volume, editada manualmente.'
+}
+
+Table livros {
+  id uuid [pk, default: `gen_random_uuid()`]
+  titulo text [not null, note: 'Título de exibição']
+  subtitulo text [note: 'Nulo quando o livro não tem subtítulo']
+  slug text [not null, unique, note: 'Identificador na URL (/l/<slug>); check: apenas minúsculas, números e hífen']
+  autor text [not null, default: `'Alexandre Siqueira'`]
+  descricao text [note: 'Nulo se o admin não preencher; usado no catálogo e em meta tag de compartilhamento']
+  arquivo_pdf_url text [not null, note: 'Caminho no bucket livros-pdfs']
+  arquivo_pdf_tamanho_bytes integer [note: 'Preenchido no upload; nulo se upload antigo não capturou']
+  capa_url text [note: 'Caminho no bucket livros-capas; nulo até ser gerada (regra 11.1)']
+  total_paginas integer [note: 'Preenchido no upload a partir da leitura do PDF; nulo se extração falhar']
+  publicado boolean [not null, default: false, note: 'Controla visibilidade pública — RLS seção 6']
+  criado_por uuid [not null]
+  criado_em timestamptz [not null, default: `now()`]
+  atualizado_em timestamptz [not null, default: `now()`, note: 'Atualizado por trigger livros_atualiza_timestamp a cada UPDATE']
+
+  indexes {
+    slug [unique]
+    publicado
+  }
+
+  Note: 'Hard delete — exclusão remove a linha e os arquivos correspondentes nos buckets (regra 11.6).'
+}
+
+Ref: livros.criado_por > administradores.id
