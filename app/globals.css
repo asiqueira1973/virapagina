@@ -1,26 +1,63 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Sistema visual do Virapágina (spec seção 16 + canvas de design "Vira Pagina design").
+   Paleta neutra com um único tom de destaque azul, hairlines em vez de bordas
+   pesadas, cantos arredondados suaves. O produto é uma casca neutra: a
+   personalidade visual pertence ao conteúdo dos livros, não à interface. */
+@theme {
+  /* Superfícies */
+  --color-tela: #f5f5f6;
+  --color-superficie: #ffffff;
+  --color-superficie-suave: #fafafb;
+  --color-superficie-fraca: #fcfcfd;
+
+  /* Texto, do mais forte ao mais apagado */
+  --color-tinta: #17181a;
+  --color-tinta-media: #42444a;
+  --color-tinta-suave: #5c5e64;
+  --color-tinta-fraca: #75777c;
+  --color-tinta-apagada: #8a8c91;
+
+  /* Hairlines e preenchimentos de esqueleto */
+  --color-hairline: #e4e4e6;
+  --color-hairline-forte: #dddde0;
+  --color-hairline-tracejada: #dcdcdf;
+  --color-preenchimento: #efeff1;
+  --color-preenchimento-fraco: #f0f0f2;
+
+  /* Único tom de destaque (seção 16) */
+  --color-destaque: #1c5fd8;
+  --color-destaque-escuro: #12439b;
+  --color-destaque-fraco: #eef3fd;
+
+  /* Estados */
+  --color-perigo: #a32020;
+  --color-perigo-fundo: #fdf2f2;
+  --color-perigo-borda: #f3d2d2;
+  --color-publicado: #1a7f4b;
+  --color-publicado-fundo: #eaf6ef;
+
+  --font-sans: var(--font-instrument-sans), system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-tela);
+  color: var(--color-tinta);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Foco visível em tudo que recebe teclado — requisito de acessibilidade da
+   seção 17. O leitor de flipbook depende de foco para as setas funcionarem. */
+:focus-visible {
+  outline: 2px solid var(--color-destaque);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
