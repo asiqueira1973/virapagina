@@ -26,6 +26,8 @@ descreve('camada de dados no emulador', () => {
 
   beforeAll(async () => {
     process.env.ADMIN_ALLOWED_EMAILS = 'alexandre@dablab.com.br'
+    // Os testes de conta abaixo ligam e desligam esta chave; o padrão é ligado.
+    process.env.EARLY_ADOPTER_ABERTO = 'true'
     firestore = await import('@/lib/firebase/firestore')
     storage = await import('@/lib/firebase/storage')
   })
@@ -39,6 +41,7 @@ descreve('camada de dados no emulador', () => {
     for (const livro of await firestore.listarLivrosDoDono(idComum)) {
       await firestore.excluirLivro(livro.id)
     }
+    process.env.EARLY_ADOPTER_ABERTO = 'true'
   })
 
   describe('contas — regra 11.13', () => {
@@ -51,13 +54,13 @@ descreve('camada de dados no emulador', () => {
       expect(conta.plano).toBe('ilimitado')
     })
 
-    it('conta comum nasce gratuita', async () => {
+    it('com a plataforma aberta, conta comum nasce early adopter', async () => {
       const conta = await firestore.garantirUsuario({
         id: idComum,
         email: 'maria@exemplo.com',
         nome: 'Maria',
       })
-      expect(conta.plano).toBe('gratuito')
+      expect(conta.plano).toBe('early_adopter')
       expect(conta.handle).toBeNull()
     })
 
@@ -69,6 +72,64 @@ descreve('camada de dados no emulador', () => {
         nome: 'Alexandre',
       })
       expect(conta.plano).toBe('ilimitado')
+    })
+
+    it('a regra do dono vence a do early adopter', async () => {
+      // Um e-mail da plataforma, criado com a chave ligada, nasce ilimitado —
+      // não early adopter (regra 11.14, ordem das regras).
+      const id = `${marca}-dono-2`
+      const conta = await firestore.garantirUsuario({
+        id,
+        email: 'alexandre@dablab.com.br',
+        nome: 'Alexandre',
+      })
+      expect(conta.plano).toBe('ilimitado')
+    })
+  })
+
+  // O teste que prova o "vitalício" da regra 11.14, nos dois sentidos.
+  describe('early adopter é vitalício — regra 11.14', () => {
+    const idAntes = `${marca}-entrou-antes`
+    const idDepois = `${marca}-entrou-depois`
+
+    it('com a chave ligada, a conta nova nasce early adopter', async () => {
+      process.env.EARLY_ADOPTER_ABERTO = 'true'
+      const conta = await firestore.garantirUsuario({
+        id: idAntes,
+        email: 'antes@exemplo.com',
+        nome: 'Antes',
+      })
+      expect(conta.plano).toBe('early_adopter')
+    })
+
+    it('desligar a chave NÃO rebaixa quem já entrou, nem no login seguinte', async () => {
+      process.env.EARLY_ADOPTER_ABERTO = 'false'
+      const conta = await firestore.garantirUsuario({
+        id: idAntes,
+        email: 'antes@exemplo.com',
+        nome: 'Antes',
+      })
+      expect(conta.plano).toBe('early_adopter')
+    })
+
+    it('com a chave desligada, a conta nova nasce gratuita', async () => {
+      process.env.EARLY_ADOPTER_ABERTO = 'false'
+      const conta = await firestore.garantirUsuario({
+        id: idDepois,
+        email: 'depois@exemplo.com',
+        nome: 'Depois',
+      })
+      expect(conta.plano).toBe('gratuito')
+    })
+
+    it('religar a chave NÃO promove quem entrou depois', async () => {
+      process.env.EARLY_ADOPTER_ABERTO = 'true'
+      const conta = await firestore.garantirUsuario({
+        id: idDepois,
+        email: 'depois@exemplo.com',
+        nome: 'Depois',
+      })
+      expect(conta.plano).toBe('gratuito')
     })
   })
 

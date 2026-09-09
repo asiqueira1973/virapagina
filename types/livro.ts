@@ -9,9 +9,23 @@
 // o mapeamento converte na fronteira. Sem isso, todo componente de servidor que
 // passasse um documento adiante quebraria na serialização.
 
-// Faixa de limite de livros da conta (regra 11.8). `ilimitado` é o plano das
-// contas do próprio dono da plataforma (regra 11.13).
-export type Plano = 'gratuito' | 'ate_20' | 'ate_50' | 'ate_100' | 'ilimitado'
+// Faixa de limite de livros da conta (regra 11.8).
+//
+// `early_adopter` é quem entrou enquanto a plataforma estava aberta (regra
+// 11.14) — livros ilimitados, para sempre. `ilimitado` é o plano das contas do
+// próprio dono da plataforma (regra 11.13).
+//
+// O valor `early_adopter` está em inglês, ao contrário dos outros: é o nome que
+// o produto dá à categoria, e é a palavra que o dono vai procurar no console do
+// Firebase. Traduzi-lo honraria a letra da convenção de idioma e trairia o
+// motivo dela.
+export type Plano =
+  | 'gratuito'
+  | 'early_adopter'
+  | 'ate_20'
+  | 'ate_50'
+  | 'ate_100'
+  | 'ilimitado'
 
 // O que o admin da plataforma pode fazer, registrado em `acoes_admin` (seção 7).
 export type AcaoAdmin =

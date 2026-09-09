@@ -10,8 +10,12 @@ conta para ler.
 - **Painel do autor:** `/conta/livros`
 - **Painel da plataforma:** `/admin` (só para os e-mails em `ADMIN_ALLOWED_EMAILS`)
 
-Grátis até 5 livros. **Não há cobrança nesta versão** — o desenho está pronto em
-`EPICO-COBRANCA.md`, para o dia em que alguém pedir mais espaço.
+**Não há cobrança nesta versão** — o desenho está pronto em `EPICO-COBRANCA.md`.
+
+Enquanto a plataforma estiver **aberta a early adopters**, toda conta nova nasce
+com **livros ilimitados, para sempre**. Isso é controlado pela variável
+`EARLY_ADOPTER_ABERTO`. Desligá-la faz as contas novas nascerem com o limite de 5
+livros — e **não rebaixa ninguém que já entrou**, nem quando a cobrança existir.
 
 **Documentos:** `spec.md` é a fonte de verdade do produto. `CLAUDE.md` traz as
 convenções e as armadilhas. `DOCUMENTACAO-TECNICA.md` descreve o que está
@@ -46,8 +50,8 @@ Abre em `http://localhost:3000`; o livro semeado fica em `/alexandre`.
 O emulador exige **Java** instalado (`java -version`).
 
 ```bash
-npm test        # 80 testes, sem dependência externa
-npm run test:emu # 19 testes de integração — exige o emulador no ar
+npm test        # 85 testes, sem dependência externa
+npm run test:emu # 24 testes de integração — exige o emulador no ar
 npm run lint
 npm run typecheck
 npm run build
@@ -140,12 +144,35 @@ Quem não está na lista recebe **404** em `/admin`, não uma tela de acesso neg
 | `NEXTAUTH_SECRET` | **sim** | Assina o cookie de sessão. Gere com `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | não | URL do deploy |
 | `ADMIN_ALLOWED_EMAILS` | **sim** | Admins da plataforma; estas contas também nascem ilimitadas |
+| `EARLY_ADOPTER_ABERTO` | não | `true` enquanto a plataforma aceitar early adopters. Ausente ou escrita errado conta como `true` |
 | `CRON_SECRET` | **sim** | Protege a rotina diária de aviso de tráfego |
 | `EMAIL_CONTATO` | não | Aparece nos termos, na privacidade, no canal de denúncia e no botão "Falar com a gente" |
 
 Em desenvolvimento, no lugar das credenciais: `FIRESTORE_EMULATOR_HOST`,
 `FIREBASE_STORAGE_EMULATOR_HOST` e `STORAGE_EMULATOR_HOST`, como no
 `.env.example`.
+
+---
+
+## Fechar a porta dos early adopters
+
+Enquanto `EARLY_ADOPTER_ABERTO` for `true`, toda conta **criada** nasce
+`early_adopter`: livros ilimitados, para sempre. O estado aparece no topo de
+`/admin/contas`, junto com quantas contas já entraram assim.
+
+Para fechar:
+
+1. Na Vercel, **Settings → Environment Variables**, mude `EARLY_ADOPTER_ABERTO`
+   para `false`.
+2. **Refaça o deploy** — variável de ambiente só passa a valer no próximo build.
+
+O que muda: contas criadas dali em diante nascem `gratuito`, com 5 livros. **O
+que não muda: ninguém é rebaixado.** Quem já é early adopter continua sendo, no
+próximo login e sempre — e continuará quando a cobrança existir (decisão C8 do
+`EPICO-COBRANCA.md`). Religar a chave também não promove quem entrou no meio.
+
+Se alguém criou a conta minutos depois de você fechar e vale a pena atender, dá
+para conceder `early_adopter` à mão em `/admin/contas/<conta>`.
 
 ---
 

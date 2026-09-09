@@ -1,11 +1,12 @@
 // Regras de negócio da seção 11 e os limites do critério 8.2, testados sem
 // depender do Google. São as regras que, se mudarem sozinhas, quebram o produto
 // em silêncio.
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { livroVisivelPara, nomeArquivoDownload, ordenarPorCriadoEmDesc, toLivroPublico } from '@/lib/books'
 import {
   LIMIAR_AVISO_AUTOR,
   LIMIAR_AVISO_PLATAFORMA,
+  PLANOS_CONCEDIVEIS,
   fracaoDaFranquia,
   limiteDeLivros,
   planoValido,
@@ -138,6 +139,21 @@ describe('limites dos planos — regra 11.8', () => {
     expect(fracaoDaFranquia('ilimitado', 999 * 1024 ** 3)).toBeNull()
   })
 
+  it('o early adopter não tem limite de livros, mas mantém franquia — regra 11.14', () => {
+    expect(limiteDeLivros('early_adopter')).toBeNull()
+    expect(temVagaParaNovoLivro('early_adopter', 10_000)).toBe(true)
+    // A franquia existe de propósito: ela não limita nada, só avisa — e é o
+    // único alarme contra a fatura do Blaze numa categoria que pode crescer
+    // (assunção 24.8).
+    expect(fracaoDaFranquia('early_adopter', 100 * 1024 ** 3)).toBeCloseTo(0.5)
+  })
+
+  it('`ilimitado` não está entre os planos concedíveis pela tela', () => {
+    expect(PLANOS_CONCEDIVEIS).not.toContain('ilimitado')
+    expect(PLANOS_CONCEDIVEIS).toContain('early_adopter')
+    expect(PLANOS_CONCEDIVEIS).toContain('gratuito')
+  })
+
   it('plano desconhecido não é aceito — o padrão seguro é errar para menos', () => {
     expect(planoValido('gratuito')).toBe(true)
     expect(planoValido('premium')).toBe(false)
@@ -170,5 +186,34 @@ describe('visibilidade de um livro — regra 11.4', () => {
     expect(livroVisivelPara(rascunho, 'conta-a')).toBe(true)
     expect(livroVisivelPara(rascunho, 'conta-b')).toBe(false)
     expect(livroVisivelPara(rascunho, null)).toBe(false)
+  })
+})
+
+describe('a chave que abre e fecha a plataforma — regra 11.14', () => {
+  const original = process.env.EARLY_ADOPTER_ABERTO
+  afterEach(() => {
+    process.env.EARLY_ADOPTER_ABERTO = original
+  })
+
+  it('variável ausente deixa a plataforma aberta', async () => {
+    delete process.env.EARLY_ADOPTER_ABERTO
+    const { earlyAdopterAberto } = await import('@/lib/flags')
+    expect(earlyAdopterAberto()).toBe(true)
+  })
+
+  it('fecha só com um "não" explícito', async () => {
+    const { earlyAdopterAberto } = await import('@/lib/flags')
+    for (const valor of ['false', 'FALSE', '0', 'nao', 'não', ' false ']) {
+      process.env.EARLY_ADOPTER_ABERTO = valor
+      expect(earlyAdopterAberto()).toBe(false)
+    }
+  })
+
+  it('qualquer outra coisa mantém aberta — errar para o lado de dar acesso é recuperável', async () => {
+    const { earlyAdopterAberto } = await import('@/lib/flags')
+    for (const valor of ['true', 'TRUE', 'sim', '1', 'talvez', '']) {
+      process.env.EARLY_ADOPTER_ABERTO = valor
+      expect(earlyAdopterAberto()).toBe(true)
+    }
   })
 })

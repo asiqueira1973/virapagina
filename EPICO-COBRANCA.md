@@ -24,12 +24,14 @@ Desenho, não implementação. A seção 3 do `spec.md` mantém a cobrança **fo
 | **C5** | **Rebaixar não apaga e não tira do ar.** Bloqueia publicar livro novo; não bloqueia leitura, não despublica, não exclui | Descarta apagar ou esconder dado de quem parou de pagar. Link que circula é o produto inteiro: quebrá-lo por atraso destrói mais valor do que a mensalidade recupera, e gera raiva desproporcional ao dinheiro envolvido |
 | **C6** | **Cortesia é uma coluna**, não uma integração | Uma conta pode ser paga sem nunca ter passado pelo Stripe. É como a conta do próprio dono funciona |
 | **C7** | **O webhook é a verdade; o retorno do navegador não é** | Descarta aplicar o plano no redirect de volta do Checkout. Redirect é o navegador falando; webhook é o Stripe falando, e só um dos dois é confiável |
+| **C8** | **Early adopter nunca é cobrado** (ver seção logo abaixo) | Descarta converter as primeiras contas em pagantes. Foi o que as trouxe |
 
 ### Preços e franquias
 
 | Plano | Limite de livros | Preço mensal | Franquia de tráfego |
 |---|---|---|---|
 | `gratuito` | 5 | R$ 0 | 20 GB |
+| `early_adopter` | sem limite | **R$ 0, para sempre** | 200 GB |
 | `ilimitado` | sem limite | — (contas do dono) | sem franquia |
 | `ate_20` | 20 | R$ 20,00 | 50 GB |
 | `ate_50` | 50 | R$ 40,00 | 100 GB |
@@ -143,6 +145,22 @@ Leva ao **Portal do Cliente do Stripe**. A plataforma não implementa tela de ca
 ### 3.6 Cortesia
 
 O admin da plataforma marca `cortesia = true`. A conta passa a valer como `ate_100` e **toda rotina de cobrança passa direto por ela**: sem cliente no Stripe, sem assinatura, sem rebaixamento. Fica registrado em `acoes_admin`.
+
+### C8 — Early adopter nunca é cobrado
+
+Quem entrou enquanto a plataforma estava aberta (regra 11.14 do spec) tem livros
+ilimitados **para sempre**, e isso foi prometido antes de existir cobrança. Quando
+o Stripe entrar, `plano = early_adopter` precisa se comportar como cortesia:
+nenhuma rotina de cobrança encosta na conta, nenhuma tela oferece assinatura,
+nenhum rebaixamento a alcança.
+
+Não é gentileza: é a promessa que trouxe as primeiras contas. Quebrá-la depois
+custaria mais do que qualquer receita que essas contas gerariam.
+
+Implicação prática para o dia de implementar: a lista de planos que a cobrança
+ignora é `['ilimitado', 'early_adopter']` mais quem tiver `cortesia = true`.
+
+---
 
 A cortesia é para conceder conta paga a **outras pessoas**. As contas do próprio dono já resolvem isso sozinhas por outro caminho: elas nascem com `plano = ilimitado` por estarem em `ADMIN_ALLOWED_EMAILS` (regra 11.13 do spec), e nenhuma rotina de cobrança as toca — sem precisar de coluna, de clique nem de cliente no Stripe.
 

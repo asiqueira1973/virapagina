@@ -1,9 +1,9 @@
 ---
 Documento: spec.md — Virapágina
-Versão: 3.0
+Versão: 3.1
 Responsável de produto: Alexandre Siqueira
 Status: aprovado para implementação
-Data: 2026-09-09
+Data: 2026-09-10
 ---
 
 # Virapágina — Especificação de Software (SDD)
@@ -21,6 +21,7 @@ Destina-se a ser consumido por um agente de código (Claude Code). A **seção 2
 | 1.0 | Ferramenta pessoal. Supabase (Postgres + Auth + Storage + RLS). Um único admin. |
 | 2.0 | Ferramenta pessoal. Google Sheets (dados) + Google Drive (arquivos), login Google por allowlist. **Implementada e funcionando.** |
 | **3.0** | **Produto multi-tenant.** Firestore + Firebase Storage. Qualquer pessoa cria conta. URL pública passa a ser `/<usuário>/<slug>`. Plano gratuito de 5 livros, com limite aplicado. **Sem cobrança** — o desenho da cobrança está pronto em `EPICO-COBRANCA.md` e entra numa versão futura. |
+| **3.1** | **Categoria early adopter.** Enquanto a plataforma estiver aberta, toda conta nova nasce `early_adopter`: livros ilimitados, para sempre. Controlado por uma chave que o Alexandre desliga quando quiser — desligar não mexe em quem já entrou. |
 
 ### O que a v3.0 muda, em uma frase
 
@@ -170,6 +171,8 @@ Três perfis. Note que **admin da plataforma é papel de plataforma, não de con
 | Alterar o plano de uma conta | ❌ | ❌ | ✅ |
 | Remover livro por denúncia | ❌ | ❌ | ✅ **despublica; não exclui** |
 
+**Nota sobre early adopter.** `early_adopter` é uma **faixa de plano**, não um perfil de acesso: quem tem essa conta é um Autor comum com livros ilimitados. Ela **não** dá acesso a `/admin`, não deixa ver conta de ninguém e não muda nada nesta matriz. Quem entra no painel da plataforma continua sendo só quem está em `ADMIN_ALLOWED_EMAILS`.
+
 **Nota sobre rascunho.** O admin da plataforma **não** enxerga rascunho de terceiros. Rascunho é material não publicado de outra pessoa; dar acesso a isso por conveniência de suporte é o começo do vazamento entre contas. Se precisar agir sobre um livro denunciado, ele age sobre um livro **publicado** — que é justamente o que a denúncia alcança.
 
 **Primeiro admin da plataforma (seed).** Não existe autocadastro nem promoção pela interface. A lista vive na variável de ambiente `ADMIN_ALLOWED_EMAILS` (e-mails separados por vírgula). Adicionar um admin é editar essa variável na Vercel e refazer o deploy. É deliberadamente pouco prático: a operação é rara e o custo do erro é alto.
@@ -235,7 +238,7 @@ Id do documento: o `sub` do Google.
 | `email` | string | não | — | Espelho do Google, para exibição e suporte. Nunca é chave |
 | `nome` | string | sim | — | Nome do Google. Nulo se a conta não expõe |
 | `handle` | string | sim | — | Identificador público na URL. **Nulo até o primeiro acesso concluir a escolha** — é o único estado em que a conta existe sem URL pública |
-| `plano` | `plano` | não | `gratuito` | Define o limite de livros (regra 11.8). No v3 muda por ação do admin da plataforma, **ou automaticamente para `ilimitado`** quando o e-mail está em `ADMIN_ALLOWED_EMAILS` (regra 11.13) |
+| `plano` | `plano` | não | ver regras 11.13 e 11.14 | Define o limite de livros (regra 11.8). Na criação: `ilimitado` para e-mail em `ADMIN_ALLOWED_EMAILS` (regra 11.13), `early_adopter` enquanto a plataforma estiver aberta (regra 11.14), `gratuito` no resto. Depois disso, muda só por ação do admin da plataforma — exceto a 11.13, que se reaplica a cada login |
 | `trafego_mes_bytes` | number | não | `0` | Bytes servidos no mês corrente. Alimenta a válvula da regra 11.11 |
 | `trafego_mes_referencia` | string | não | mês atual | `AAAA-MM`. Quando não bate com o mês de hoje, o contador zera |
 | `criado_em` | timestamp | não | agora | — |
@@ -298,7 +301,7 @@ Vale para o Alexandre também. Auditoria com exceção para o dono não é audit
 
 | Enum | Valores | Significado |
 |---|---|---|
-| `plano` | `gratuito`, `ate_20`, `ate_50`, `ate_100`, `ilimitado` | Faixa de limite de livros (regra 11.8). As faixas intermediárias já existem no v3 porque o admin as concede à mão; o que falta é só o caminho de pagar por elas. `ilimitado` é o plano das contas do próprio dono (regra 11.13) — sem limite, sem franquia e fora de qualquer cobrança |
+| `plano` | `gratuito`, `early_adopter`, `ate_20`, `ate_50`, `ate_100`, `ilimitado` | Faixa de limite de livros (regra 11.8). As faixas intermediárias já existem no v3 porque o admin as concede à mão; o que falta é só o caminho de pagar por elas. `early_adopter` é quem entrou enquanto a plataforma estava aberta (regra 11.14) — livros ilimitados, para sempre. `ilimitado` é o plano das contas do próprio dono (regra 11.13) |
 | `acao_admin` | `alterou_plano`, `alterou_handle`, `removeu_livro`, `consultou_conta` | — |
 
 ### Estratégia de exclusão
@@ -330,6 +333,9 @@ Ordem de implementação. Os épicos 8.3 e 8.4 estão **implementados desde a v2
 - Qualquer conta Google consegue entrar. Não existe allowlist para autores.
 - No primeiro login, o documento em `usuarios` é criado com `plano = gratuito` e `handle` nulo.
 - **E-mail presente em `ADMIN_ALLOWED_EMAILS` nasce com `plano = ilimitado`**, sem passo manual nenhum. Se o e-mail for acrescentado à variável depois, o próximo login da conta corrige o plano sozinho (regra 11.13).
+- **Com `EARLY_ADOPTER_ABERTO` verdadeiro, toda outra conta nova nasce `early_adopter`** — livros ilimitados (regra 11.14).
+- **Desligar `EARLY_ADOPTER_ABERTO` não rebaixa ninguém.** Quem já é early adopter continua sendo no próximo login, e para sempre; só as contas criadas dali em diante nascem `gratuito`.
+- Quando os dois se aplicam ao mesmo tempo, **a regra do dono vence**: e-mail da plataforma nasce `ilimitado`, não `early_adopter`.
 - Enquanto o `handle` for nulo, qualquer rota `/conta/*` redireciona para a tela de escolha; ela não é pulável.
 - A tela sugere um handle a partir do nome ou do e-mail do Google, e o campo é editável.
 - Handle inválido (fora de `^[a-z0-9-]{3,30}$`) é recusado com "Use de 3 a 30 letras minúsculas, números ou hífen."
@@ -493,12 +499,14 @@ Qualquer rota que não conseguir falar com o Google devolve ao usuário "Algo de
 | 11.11 | **Válvula de tráfego.** Cada plano tem franquia mensal de saída de dados. Passar dela **não corta nada e não gera cobrança**: gera aviso ao autor em 80% e ao dono da plataforma em 100%, para conversa. Conta `ilimitado` não tem franquia e nunca dispara aviso | Proxy de arquivo + rotina diária |
 | 11.12 | Livro com `removido_por_denuncia = true` não pode ser republicado pelo dono. Só o admin da plataforma reverte | Servidor |
 | 11.13 | **As contas do dono da plataforma são ilimitadas.** Todo e-mail presente em `ADMIN_ALLOWED_EMAILS` recebe `plano = ilimitado` no primeiro login e a cada login seguinte: sem limite de livros, sem franquia de tráfego, e fora de qualquer cobrança quando ela existir. Não é ação manual e não pode ser desfeita pela tela | Servidor, no login |
+| 11.14 | **Early adopter é vitalício, e só se ganha na entrada.** Enquanto `EARLY_ADOPTER_ABERTO` for verdadeiro, toda conta **criada** nasce `early_adopter`: livros ilimitados, para sempre. A regra é aplicada **uma vez, na criação** — ao contrário da 11.13, ela **não** é reaplicada nos logins seguintes. Desligar a chave só muda quem entra a partir dali; ninguém é rebaixado, nem quando a cobrança existir | Servidor, na criação da conta |
 
 ### 11.8 — Limites por plano
 
 | Plano | Limite de livros | Franquia de tráfego (regra 11.11) | Como se chega nele no v3 |
 |---|---|---|---|
-| `gratuito` | 5 | 20 GB | Padrão de toda conta nova |
+| `gratuito` | 5 | 20 GB | Padrão quando a plataforma **não** está mais aberta a early adopters |
+| `early_adopter` | **sem limite** | 200 GB | **Automático** para toda conta nova enquanto `EARLY_ADOPTER_ABERTO` for verdadeiro (regra 11.14) |
 | `ate_20` | 20 | 50 GB | Concedido à mão pelo admin da plataforma |
 | `ate_50` | 50 | 100 GB | Concedido à mão pelo admin da plataforma |
 | `ate_100` | 100 | 200 GB | Concedido à mão pelo admin da plataforma |
@@ -688,6 +696,7 @@ Livre para o agente: a ilustração da home.
   | `NEXTAUTH_SECRET` | **sim** | Assina o cookie de sessão |
   | `NEXTAUTH_URL` | não | URL do deploy |
   | `ADMIN_ALLOWED_EMAILS` | **sim** | Admins **da plataforma**. As contas destes e-mails também nascem `ilimitado` (regra 11.13). No v3: `alexandre.silva.siqueira@gmail.com`, `alexandre@dablab.com.br`, `alexandre.siqueira@outlook.com` |
+  | `EARLY_ADOPTER_ABERTO` | não | `true` enquanto a plataforma aceitar early adopters (regra 11.14). Desligar exige mudar a variável **e refazer o deploy** |
   | `CRON_SECRET` | **sim** | Protege a rotina da seção 13.4 |
   | `EMAIL_CONTATO` | não | `alexandre@dablab.com.br` (decisão 25.3). Aparece nos termos, na política de privacidade, no canal de denúncia e no botão "Falar com a gente" |
   | `LIVRO_EXEMPLO_HOME` | não | Qual livro a home mostra folheável |
@@ -774,6 +783,7 @@ Hospedar arquivo de outras pessoas traz risco que a v2.0 não tinha: violação 
 - Limite de plano: a rota de criação e a de sessão de upload recusam quando a conta está no limite; excluir um livro libera a vaga.
 - Baixar o plano de uma conta acima do novo limite **não** exclui nem despublica nada (regra 11.9).
 - Conta com e-mail em `ADMIN_ALLOWED_EMAILS` nasce `ilimitado`, não esbarra em limite nenhum e não dispara aviso de tráfego (regra 11.13); e uma conta comum promovida à mão continua respeitando o limite da faixa.
+- **Com a chave ligada, conta nova nasce `early_adopter` e não esbarra em limite. Com a chave desligada, conta nova nasce `gratuito` — e a conta que já era early adopter continua sendo depois de logar de novo** (regra 11.14). É o teste que prova o "vitalício".
 
 Manual, antes de cada deploy: o fluxo da seção 9 ponta a ponta. E, ao menos uma vez por release, o leitor num **iPhone e num Android reais** — emulador não valida swipe nem Fullscreen API.
 
@@ -803,9 +813,10 @@ Manual, antes de cada deploy: o fluxo da seção 9 ponta a ponta. E, ao menos um
 5. **Franquias de tráfego de 20/50/100/200 GB** (regra 11.11). São chute calibrado: 20 GB são cerca de 2.200 downloads de um PDF de 9 MB, o que cobre um post que foi bem no LinkedIn. **Revisada e aprovada por Alexandre em 09/09/2026.** Continua sendo o número que segura a fatura sozinho enquanto não houver receita — se a franquia começar a disparar aviso toda semana, ela é o primeiro lugar a reabrir.
 6. **Aviso, nunca corte**, ao passar da franquia. Cortar o livro de quem está sendo lido é o pior momento possível para intervir.
 7. **Ser admin da plataforma implica ser ilimitado** (regra 11.13). São os mesmos três e-mails, numa variável só, em vez de duas listas para manter em sincronia. A consequência a olhar: se um dia você acrescentar um e-mail de suporte a `ADMIN_ALLOWED_EMAILS`, ele também ganha conta ilimitada. Se isso incomodar, a separação é uma variável nova — me avise.
-8. **A home mostra um livro de exemplo** definido por variável de ambiente, não uma lista dos livros de todo mundo — expor livro de autor na home sem ele pedir é usar o conteúdo dele como propaganda.
-9. **O `/l/<slug>` da v2.0 simplesmente deixa de existir.** Não há redirecionamento, porque não há links antigos em circulação: nada foi publicado ainda.
-10. **A home não menciona preço nem "em breve".** Prometer cobrança futura na home afasta gente sem trazer nada — quando os planos existirem, a página entra.
+8. **O early adopter tem livros ilimitados, mas mantém franquia de tráfego** — a mesma da faixa mais alta, 200 GB por mês. A franquia não limita nada: ela só dispara aviso (regra 11.11). Deixá-la em nulo, como no plano do dono, seria tirar o único alarme que existe contra a fatura do Blaze — que não tem teto — numa categoria que pode crescer para centenas de contas. Se você quiser exatamente igual ao seu, é uma linha em `lib/planos.ts`.
+9. **A home mostra um livro de exemplo** definido por variável de ambiente, não uma lista dos livros de todo mundo — expor livro de autor na home sem ele pedir é usar o conteúdo dele como propaganda.
+10. **O `/l/<slug>` da v2.0 simplesmente deixa de existir.** Não há redirecionamento, porque não há links antigos em circulação: nada foi publicado ainda.
+11. **A home não menciona preço nem "em breve".** Prometer cobrança futura na home afasta gente sem trazer nada — quando os planos existirem, a página entra.
 
 ---
 

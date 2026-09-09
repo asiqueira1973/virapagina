@@ -21,6 +21,12 @@ interface DefinicaoDePlano {
 
 export const PLANOS: Record<Plano, DefinicaoDePlano> = {
   gratuito: { limiteLivros: 5, franquiaTrafegoBytes: 20 * GB, rotulo: 'Gratuito' },
+  // Quem entrou enquanto a plataforma estava aberta (regra 11.14). Livros
+  // ilimitados, para sempre — mas com franquia de tráfego, ao contrário do plano
+  // do dono. A franquia não limita nada: ela só avisa (regra 11.11). Sem ela,
+  // uma categoria que pode crescer para centenas de contas ficaria sem nenhum
+  // alarme contra a fatura do Blaze, que não tem teto (assunção 24.8).
+  early_adopter: { limiteLivros: null, franquiaTrafegoBytes: 200 * GB, rotulo: 'Early adopter' },
   ate_20: { limiteLivros: 20, franquiaTrafegoBytes: 50 * GB, rotulo: 'Até 20 livros' },
   ate_50: { limiteLivros: 50, franquiaTrafegoBytes: 100 * GB, rotulo: 'Até 50 livros' },
   ate_100: { limiteLivros: 100, franquiaTrafegoBytes: 200 * GB, rotulo: 'Até 100 livros' },
@@ -28,11 +34,29 @@ export const PLANOS: Record<Plano, DefinicaoDePlano> = {
   ilimitado: { limiteLivros: null, franquiaTrafegoBytes: null, rotulo: 'Ilimitado' },
 }
 
-// Plano de toda conta nova, salvo o caso da regra 11.13.
+// Plano de uma conta nova quando nenhuma regra especial se aplica.
 export const PLANO_PADRAO: Plano = 'gratuito'
 
 // Plano das contas do dono da plataforma (regra 11.13).
 export const PLANO_DO_DONO: Plano = 'ilimitado'
+
+// Plano de quem entra enquanto a plataforma está aberta (regra 11.14).
+export const PLANO_EARLY_ADOPTER: Plano = 'early_adopter'
+
+// Planos que o admin da plataforma pode conceder à mão, na ordem em que
+// aparecem na tela. `ilimitado` fica de fora de propósito: ele é automático para
+// os e-mails da plataforma (regra 11.13) e dá conta sem franquia de tráfego —
+// concedê-lo a terceiros tiraria o único alarme contra a fatura do Blaze.
+//
+// `early_adopter` está na lista porque conceder é um caso real de suporte:
+// alguém que criou a conta minutos depois de a chave ser desligada.
+export const PLANOS_CONCEDIVEIS: Plano[] = [
+  'gratuito',
+  'early_adopter',
+  'ate_20',
+  'ate_50',
+  'ate_100',
+]
 
 // Diz se um valor vindo do banco é um plano conhecido. Plano desconhecido — de
 // uma escrita manual no console, por exemplo — é lido como `gratuito`, que é o

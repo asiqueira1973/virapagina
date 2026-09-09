@@ -103,14 +103,16 @@ Navegação lateral: grupo "Livros" ativo.
 
 ### [Admin da plataforma] Contas — `/admin`
 
-Mostra: tabela densa de contas com e-mail, handle, plano, quantidade de livros contra o limite do plano, e tráfego do mês contra a franquia. Campo de busca por e-mail ou handle no topo.
+Mostra: uma faixa no topo com o estado da plataforma — **aberta ou fechada a early adopters** —, e abaixo a tabela densa de contas com e-mail, handle, plano, quantidade de livros contra o limite do plano, e tráfego do mês contra a franquia. Campo de busca por e-mail ou handle.
+Enquanto a plataforma está aberta, toda conta nova nasce **early adopter**: livros ilimitados, para sempre. O selo do plano distingue três casos — plataforma (azul), early adopter (verde) e faixa comum (cinza).
+Estados: aberta e fechada.
 Estados: carregando (esqueleto de linhas); vazio; conta acima de 80% da franquia de tráfego destacada em alerta.
 **Não mostre rascunho de ninguém.**
 Navegação lateral: grupo "Plataforma", item "Contas" ativo.
 
 ### [Admin da plataforma] Detalhe da conta — `/admin/contas/[id]`
 
-Mostra: dados da conta, uso de livros contra o limite, tráfego do mês, e as ações: alterar o plano da conta, alterar handle, e a lista dos **livros publicados** daquela conta com a ação "Remover" em cada um. Abaixo, o registro das ações de admin já feitas sobre essa conta.
+Mostra: dados da conta, uso de livros contra o limite, tráfego do mês, e as ações: alterar o plano da conta — com aviso quando ela é early adopter, porque isso é vitalício —, alterar handle, e a lista dos **livros publicados** daquela conta com a ação "Remover" em cada um. Abaixo, o registro das ações de admin já feitas sobre essa conta.
 Estados: confirmação em modal para cada ação; a remoção pede um motivo curto.
 Navegação lateral: grupo "Plataforma", item "Contas" ativo.
 

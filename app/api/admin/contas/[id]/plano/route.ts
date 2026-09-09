@@ -8,7 +8,7 @@ import { NextResponse } from 'next/server'
 import { isAdminEmail } from '@/lib/admins'
 import { alterarPlano, buscarUsuarioPorId, registrarAcaoAdmin } from '@/lib/firebase/firestore'
 import { requireAdminPlataforma } from '@/lib/guards'
-import { planoValido } from '@/lib/planos'
+import { PLANOS_CONCEDIVEIS, planoValido } from '@/lib/planos'
 
 export async function POST(
   request: Request,
@@ -34,6 +34,15 @@ export async function POST(
     const corpo = await request.json()
     if (!planoValido(corpo?.plano)) {
       return NextResponse.json({ erro: 'Plano desconhecido.' }, { status: 400 })
+    }
+    // `ilimitado` não se concede: ele é automático para os e-mails da plataforma
+    // (regra 11.13) e dá conta sem franquia de tráfego. Dá-lo a um terceiro
+    // tiraria o único alarme que existe contra a fatura do Blaze.
+    if (!PLANOS_CONCEDIVEIS.includes(corpo.plano)) {
+      return NextResponse.json(
+        { erro: 'Esse plano não pode ser concedido pela tela.' },
+        { status: 409 },
+      )
     }
 
     await alterarPlano(id, corpo.plano)

@@ -20,11 +20,17 @@
 // Enums (seção 7)
 // ---------------------------------------------------------------------------
 
-// Define o limite de livros da conta (regra 11.8). No v3 as faixas intermediárias
-// são concedidas à mão pelo admin; `ilimitado` é automático para todo e-mail em
-// ADMIN_ALLOWED_EMAILS (regra 11.13) — sem limite, sem franquia, fora de cobrança.
+// Define o limite de livros da conta (regra 11.8).
+//   `ilimitado`     — automático para todo e-mail em ADMIN_ALLOWED_EMAILS
+//                     (regra 11.13). Sem limite, sem franquia de tráfego.
+//   `early_adopter` — automático para toda conta CRIADA enquanto
+//                     EARLY_ADOPTER_ABERTO for verdadeiro (regra 11.14). Sem
+//                     limite de livros, mas com franquia. É vitalício: desligar
+//                     a chave não rebaixa ninguém.
+//   demais          — concedidos à mão pelo admin da plataforma.
 enum plano {
   gratuito
+  early_adopter
   ate_20
   ate_50
   ate_100
@@ -49,7 +55,7 @@ Table usuarios {
   email text [not null, note: 'Espelho do Google, para exibição e suporte']
   nome text [note: 'Nulo se a conta Google não expõe o nome']
   handle text [unique, note: 'Identificador público na URL. Nulo até o primeiro acesso concluir a escolha — único estado em que a conta existe sem URL pública. Unicidade garantida pela coleção handles, em transação']
-  plano plano [not null, default: 'gratuito']
+  plano plano [not null, note: 'Na criação: ilimitado para e-mail da plataforma (11.13), early_adopter enquanto a plataforma estiver aberta (11.14), gratuito no resto. Depois disso só muda por ação do admin — exceto a 11.13, reaplicada a cada login']
   trafego_mes_bytes number [not null, default: 0, note: 'Bytes servidos no mês corrente. Alimenta a válvula da regra 11.11']
   trafego_mes_referencia text [not null, note: 'AAAA-MM. Quando não bate com o mês de hoje, o contador zera']
   criado_em timestamp [not null]

@@ -11,12 +11,8 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { ConfirmDialog } from '@/components/account/ConfirmDialog'
 import { COPY } from '@/lib/copy'
-import { PLANOS } from '@/lib/planos'
-import type { Livro, Plano, Usuario } from '@/types/livro'
-
-// As faixas que o admin pode conceder à mão. `ilimitado` fica de fora: ele é
-// automático para os e-mails da plataforma e não se dá a ninguém (regra 11.13).
-const FAIXAS: Plano[] = ['gratuito', 'ate_20', 'ate_50', 'ate_100']
+import { PLANOS, PLANOS_CONCEDIVEIS } from '@/lib/planos'
+import type { Livro, Usuario } from '@/types/livro'
 
 export function AccountActions({
   conta,
@@ -76,6 +72,16 @@ export function AccountActions({
           para leitura, mesmo que a conta fique acima do novo limite.
         </p>
 
+        {/* Early adopter é vitalício (regra 11.14): trocá-lo por uma faixa com
+            limite é tirar algo que foi prometido para sempre. A tela não impede
+            — é a plataforma dele —, mas diz o que está em jogo. */}
+        {conta.plano === 'early_adopter' && !ehDonoDaPlataforma ? (
+          <p className="mb-4 rounded-lg border border-hairline bg-superficie-suave px-3.5 py-3 text-[13px] leading-relaxed text-tinta-media">
+            Esta conta é <strong className="font-semibold">early adopter</strong>: livros
+            ilimitados, para sempre. Mudar para uma faixa com limite tira isso dela.
+          </p>
+        ) : null}
+
         {ehDonoDaPlataforma ? (
           <p className="text-[13px] text-tinta-suave">
             Esta é uma conta da plataforma: ela é ilimitada por definição e o plano não é
@@ -83,7 +89,7 @@ export function AccountActions({
           </p>
         ) : (
           <div className="flex flex-wrap gap-2">
-            {FAIXAS.map((faixa) => {
+            {PLANOS_CONCEDIVEIS.map((faixa) => {
               const atual = conta.plano === faixa
               return (
                 <button

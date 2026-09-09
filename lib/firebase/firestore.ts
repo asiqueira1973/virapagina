@@ -13,7 +13,8 @@
 import { randomUUID } from 'node:crypto'
 import { FieldValue, Timestamp, type DocumentData } from 'firebase-admin/firestore'
 import { isAdminEmail } from '@/lib/admins'
-import { PLANO_DO_DONO, PLANO_PADRAO, planoValido } from '@/lib/planos'
+import { earlyAdopterAberto } from '@/lib/flags'
+import { PLANO_DO_DONO, PLANO_EARLY_ADOPTER, PLANO_PADRAO, planoValido } from '@/lib/planos'
 import { proximoSlugLivre } from '@/lib/slug'
 import type { AcaoAdmin, Livro, Plano, Usuario } from '@/types/livro'
 import { COLECOES, db } from './admin'
@@ -94,14 +95,32 @@ function paraUsuario(id: string, dados: DocumentData): Usuario {
   }
 }
 
+// Decide o plano de uma conta que está nascendo (regras 11.13 e 11.14).
+//
+// A ordem importa: a regra do dono vence a do early adopter. Um e-mail da
+// plataforma nasce `ilimitado`, não `early_adopter` — senão a conta do dono
+// ficaria com franquia de tráfego e apareceria como early adopter na tela de
+// admin.
+function planoDeContaNova(email: string) {
+  if (isAdminEmail(email)) return PLANO_DO_DONO
+  if (earlyAdopterAberto()) return PLANO_EARLY_ADOPTER
+  return PLANO_PADRAO
+}
+
 // Garante que a conta existe e devolve o estado atual dela. É chamada em todo
 // login (seção 6): cria a conta no primeiro acesso e, nos seguintes, corrige o
 // que precisa ser corrigido.
 //
-// A correção que importa é a regra 11.13: e-mail em ADMIN_ALLOWED_EMAILS tem
-// `plano = ilimitado`, sempre. Isso é reaplicado a cada login de propósito — se
-// o e-mail for acrescentado à variável depois, a conta se conserta sozinha, sem
-// passo manual nenhum.
+// **Duas regras de plano, com comportamentos deliberadamente diferentes:**
+//
+//   - A 11.13 (contas do dono) é reaplicada **a cada login**. Se o e-mail for
+//     acrescentado a ADMIN_ALLOWED_EMAILS depois, a conta se conserta sozinha; e
+//     se alguém a rebaixar no console, o próximo login desfaz.
+//   - A 11.14 (early adopter) é aplicada **uma vez, na criação, e nunca mais**.
+//     É isso que faz o "vitalício" ser verdade nos dois sentidos: desligar a
+//     chave não rebaixa quem já entrou, e religá-la não promove quem entrou
+//     depois. Reaplicar esta regra no login seria o bug mais fácil de escrever
+//     aqui, e o mais difícil de perceber.
 export async function garantirUsuario(params: {
   id: string
   email: string
@@ -117,7 +136,7 @@ export async function garantirUsuario(params: {
       email: params.email,
       nome: params.nome,
       handle: null,
-      plano: ehDono ? PLANO_DO_DONO : PLANO_PADRAO,
+      plano: planoDeContaNova(params.email),
       trafego_mes_bytes: 0,
       trafego_mes_referencia: mesCorrente(),
       criado_em: agora,
@@ -130,6 +149,9 @@ export async function garantirUsuario(params: {
   const atual = paraUsuario(params.id, documento.data() as DocumentData)
 
   // Só grava se algo mudou de verdade: login não precisa gerar escrita.
+  //
+  // Note o que NÃO está aqui: nada que mexa em `early_adopter`. O plano de quem
+  // já existe só muda por ação do admin — ou pela regra do dono, logo abaixo.
   const correcoes: Record<string, unknown> = {}
   if (atual.email !== params.email) correcoes.email = params.email
   if (atual.nome !== params.nome) correcoes.nome = params.nome

@@ -5,7 +5,7 @@ seis itens exigidos pela seção 19 do `spec.md`. Se alguma coisa aqui não bate
 com o código, o código está certo e este documento está velho — corrija-o no
 mesmo commit.
 
-**Versão implementada: 3.0** — produto multi-tenant sobre Firestore e Cloud
+**Versão implementada: 3.1** — produto multi-tenant sobre Firestore e Cloud
 Storage, **sem cobrança**. O desenho da cobrança está pronto em
 `EPICO-COBRANCA.md` e não foi implementado: não há Stripe, tela de preços, campo
 de assinatura nem coleta de dado fiscal em lugar nenhum do código.
@@ -28,7 +28,7 @@ conta Google pode mudar.
 | `email` | Espelho do Google, para exibição e suporte |
 | `nome` | Nome do Google. Nulo quando a conta não expõe |
 | `handle` | O endereço público que forma a URL (`virapagina.app.br/<handle>`). **Nulo até o primeiro acesso concluir a escolha** — é o único estado em que a conta existe sem URL pública, e o painel inteiro redireciona para a escolha enquanto ele for nulo |
-| `plano` | A faixa de limite de livros. Um de: `gratuito`, `ate_20`, `ate_50`, `ate_100`, `ilimitado` |
+| `plano` | A faixa de limite de livros. Um de: `gratuito`, `early_adopter`, `ate_20`, `ate_50`, `ate_100`, `ilimitado` |
 | `trafego_mes_bytes` | Quantos bytes de PDF e capa foram servidos para os livros desta conta no mês corrente |
 | `trafego_mes_referencia` | O mês do contador, em `AAAA-MM`. Quando não bate com o mês de hoje, o contador recomeça do zero |
 | `criado_em`, `atualizado_em` | Datas. `atualizado_em` é reescrito pela aplicação em toda gravação — **não existe trigger** |
@@ -37,7 +37,8 @@ conta Google pode mudar.
 
 | Plano | Limite de livros | Franquia de tráfego | Como se chega nele |
 |---|---|---|---|
-| `gratuito` | 5 | 20 GB/mês | Padrão de toda conta nova |
+| `gratuito` | 5 | 20 GB/mês | Padrão quando a plataforma **não** está mais aberta |
+| `early_adopter` | **sem limite** | 200 GB/mês | **Automático** para toda conta criada enquanto `EARLY_ADOPTER_ABERTO` for verdadeiro. É vitalício |
 | `ate_20` | 20 | 50 GB/mês | Concedido à mão na tela de admin |
 | `ate_50` | 50 | 100 GB/mês | Concedido à mão na tela de admin |
 | `ate_100` | 100 | 200 GB/mês | Concedido à mão na tela de admin |
@@ -132,15 +133,36 @@ mostram o rascunho ao próprio dono.
 confirma a existência de um rascunho alheio. Livro inexistente e livro de outra
 pessoa devolvem exatamente a mesma resposta — e há teste que compara as duas.
 
-### A regra que se reaplica sozinha
+### As duas regras de plano, e por que se comportam ao contrário uma da outra
 
-`garantirUsuario()` roda em **todo** login e em toda entrada no painel. Além de
-criar a conta no primeiro acesso, ela reaplica a regra 11.13: e-mail em
-`ADMIN_ALLOWED_EMAILS` tem `plano = ilimitado`, sempre. Se um e-mail for
-acrescentado à variável depois, a conta se conserta no próximo login, sem passo
-manual. Se alguém rebaixar a conta à mão no console, o próximo login desfaz.
+Ambas vivem em `garantirUsuario()`, que roda em **todo** login e em toda entrada
+no painel. A diferença entre elas é a coisa mais fácil de quebrar neste código.
 
-A função só grava quando algo mudou de verdade — login não gera escrita à toa.
+| Regra | Quando é aplicada | Por quê |
+|---|---|---|
+| **11.13** — contas do dono são `ilimitado` | **A cada login** | É uma correção: se o e-mail entrar em `ADMIN_ALLOWED_EMAILS` depois, a conta se conserta sozinha; se alguém a rebaixar no console, o próximo login desfaz |
+| **11.14** — conta nova é `early_adopter` | **Só na criação, uma vez** | É uma promessa. Reaplicá-la no login faria a chave desligada **rebaixar** quem já entrou, e a chave religada **promover** quem entrou depois. As duas coisas quebrariam o "vitalício", em direções opostas |
+
+Quando as duas se aplicam, **a do dono vence**: um e-mail da plataforma nasce
+`ilimitado`, não `early_adopter` — senão a conta do dono ficaria com franquia de
+tráfego e apareceria como early adopter na tela de admin.
+
+A função só grava quando algo mudou de verdade — login não gera escrita à toa. E
+o bloco de correções por login **não toca em `early_adopter`**, de propósito.
+
+### A chave que abre e fecha a plataforma
+
+`EARLY_ADOPTER_ABERTO`, lida em `lib/flags.ts`. O padrão é **ligado**: variável
+ausente ou escrita errado deixa a plataforma aberta. Errar para o lado de dar
+acesso a mais gente é recuperável; errar para o lado de negar cria uma leva de
+contas gratuitas que deveriam ter sido vitalícias, e isso não dá para consertar
+depois sem saber quem entrou quando.
+
+Fecha só com um "não" explícito: `false`, `0`, `nao` ou `não`, em qualquer caixa.
+
+O estado dela aparece no topo de `/admin/contas`, porque é olhando a lista de
+contas que se decide fechar a porta. **Mudá-la exige refazer o deploy na Vercel**
+— ver as divergências.
 
 ### As duas transações
 
@@ -185,7 +207,7 @@ nada. O Admin SDK, usado no servidor, passa por cima das regras por definição.
 | `/conta/livros` | `usuarios`, `livros` (servidor, sem cache) | — |
 | `/conta/livros/novo` | `GET /api/conta/livros/slug-disponivel` | `POST /api/conta/livros/sessao-upload` → Storage → `POST /api/conta/livros` |
 | `/conta/livros/[id]` | `livros` (servidor) | `PUT`/`DELETE /api/conta/livros/[id]`, `/publicar`, `/despublicar`, `/substituir-pdf` |
-| `/admin/contas` | `usuarios`, `livros` (servidor) | — |
+| `/admin/contas` | `usuarios`, `livros` (servidor) · o estado da chave `EARLY_ADOPTER_ABERTO` | — |
 | `/admin/contas/[id]` | `usuarios`, `livros` (servidor) | `/api/admin/contas/[id]/plano`, `/handle`, `/api/admin/livros/[id]/remover` → `acoes_admin` |
 
 **As telas leem em componente de servidor e escrevem por rota de API.** Ler
@@ -347,7 +369,32 @@ Auth.js): `CompressionStream` não seria suportado no Edge Runtime. É um falso
 positivo da análise estática do Next — a API existe no Edge Runtime da Vercel e o
 middleware funciona. O aviso não vem de código nosso.
 
-### 6.10 O contador de tráfego é aproximado
+### 6.10 A chave do early adopter é variável de ambiente, não interruptor na tela
+
+A regra 11.14 não diz onde a chave mora. Ela ficou em `EARLY_ADOPTER_ABERTO`,
+seguindo o mesmo padrão de `ADMIN_ALLOWED_EMAILS`: sem coleção nova, sem leitura
+extra no caminho do cadastro, e testável.
+
+**A consequência:** desligá-la exige mudar a variável na Vercel **e refazer o
+deploy** — cerca de dois minutos, não um clique. O estado aparece em
+`/admin/contas` para ser descoberto sem precisar lembrar da variável. Se um dia
+o interruptor na tela fizer falta, mover a chave para um documento no Firestore é
+uma mudança pequena e contida.
+
+### 6.11 O early adopter mantém franquia de tráfego
+
+O pedido foi "acesso ilimitado vitalício, similar ao que eu tenho como admin". A
+conta do dono não tem franquia nenhuma; a do early adopter tem — 200 GB por mês,
+a mesma da faixa mais alta.
+
+**Por quê:** a franquia não limita nada. Ela só dispara aviso (regra 11.11).
+Zerá-la, como no plano do dono, tiraria o único alarme que existe contra a fatura
+do Blaze — que não tem teto — numa categoria que pode crescer para centenas de
+contas, enquanto o plano do dono são três. Livros continuam ilimitados de
+verdade. Está registrado como assunção 24.8, e voltar ao comportamento pedido é
+trocar `200 * GB` por `null` em `lib/planos.ts`.
+
+### 6.12 O contador de tráfego é aproximado
 
 O Firestore tolera cerca de uma escrita por segundo no mesmo documento. Um livro
 viral gera mais leituras do que isso, e parte da contagem se perde. Para uma
@@ -359,20 +406,22 @@ custaria mais do que o problema.
 
 ## Testes
 
-`npm test` roda **80 testes** que não precisam de nada externo:
+`npm test` roda **85 testes** que não precisam de nada externo:
 
 | Arquivo | O que garante |
 |---|---|
 | `tests/guardas.test.ts` | Cada rota devolve 401/403 sem sessão ou com sessão errada, e **nenhuma função do Firestore ou do Storage é chamada** nesses casos |
 | `tests/isolamento-entre-contas.test.ts` | A conta A não lê, edita, publica nem exclui livro da conta B por rota nenhuma; livro inexistente e livro alheio dão a mesma resposta; o limite do plano é aplicado; a exclusão apaga o documento antes dos arquivos |
 | `tests/visibilidade-publica.test.ts` | Rascunho devolve 404 para visitante, para outro autor e para o admin da plataforma; publicado é servido a qualquer um; o que sai do servidor não contém caminho do Storage, dono nem e-mail |
-| `tests/regras-de-negocio.test.ts` | Slug, limites de plano, franquias e visibilidade, como funções puras |
+| `tests/regras-de-negocio.test.ts` | Slug, limites de plano, franquias, visibilidade e a chave do early adopter, como funções puras |
 
-`npm run test:emu` roda **19 testes de integração contra o emulador do Firebase**
+`npm run test:emu` roda **24 testes de integração contra o emulador do Firebase**
 (`npm run emu` primeiro). São eles que verificam o que mock nenhum verifica: que
 a transação de handle realmente impede dois donos para o mesmo nome, que a
-contagem por dono usa o índice certo, que apagar o livro apaga os arquivos, e que
-a conta do dono nasce e permanece ilimitada. Sem o emulador no ar, esses testes
+contagem por dono usa o índice certo, que apagar o livro apaga os arquivos, que a
+conta do dono nasce e permanece ilimitada, e — o que prova o "vitalício" da regra
+11.14 — que **desligar a chave não rebaixa quem já entrou e religá-la não promove
+quem entrou depois**. Sem o emulador no ar, esses testes
 são pulados — `npm test` continua funcionando em qualquer máquina.
 
 ---

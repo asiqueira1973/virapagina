@@ -16,7 +16,8 @@ Atualize-o **no mesmo commit**.
 
 Plataforma multi-tenant de flipbooks. Qualquer pessoa entra com o Google, escolhe
 um endereço público e sobe PDFs; quem recebe o link folheia no navegador, sem
-conta. Grátis até 5 livros.
+conta. Enquanto `EARLY_ADOPTER_ABERTO` for verdadeiro, toda conta nova nasce com livros
+ilimitados, para sempre. Desligada a chave, conta nova nasce com 5 livros.
 
 **Sem banco relacional:** Cloud Firestore para os dados, Cloud Storage para os
 arquivos, tudo pelo Admin SDK no servidor.
@@ -58,8 +59,8 @@ npm run emu        # emulador do Firebase (Firestore + Storage)
 npm run build      # build de produção
 npm run typecheck  # tsc --noEmit
 npm run lint       # eslint
-npm test           # 80 testes, sem dependência externa
-npm run test:emu   # 19 testes de integração — exige `npm run emu` no ar
+npm test           # 85 testes, sem dependência externa
+npm run test:emu   # 24 testes de integração — exige `npm run emu` no ar
 ```
 
 Para ver algo em tela local, suba o emulador e semeie uma conta com um livro:
@@ -100,6 +101,7 @@ lib/
   guards.ts  requireAutor, requireDonoDoLivro, requireAdminPlataforma
   admins.ts  a allowlist, sem imports, para não criar ciclo
   planos.ts  limites e franquias — os números vivem só aqui
+  flags.ts   a chave EARLY_ADOPTER_ABERTO, sem imports, para não criar ciclo
   pdf/render.ts, copy.ts, slug.ts, books.ts, format.ts
 ```
 
@@ -124,7 +126,7 @@ Nenhum outro arquivo sabe que existe Firestore — mantenha assim.
 
 ---
 
-## Sete coisas que quebram em silêncio
+## Oito coisas que quebram em silêncio
 
 Cada uma destas já mordeu. Nenhuma dá erro de compilação.
 
@@ -140,20 +142,27 @@ Cada uma destas já mordeu. Nenhuma dá erro de compilação.
 3. **`lib/auth.ts` não pode importar o Firebase.** O middleware roda no Edge, e o
    Admin SDK é de Node. Guarda nova vai em `lib/guards.ts`.
 
-4. **`atualizado_em` não tem trigger.** É a aplicação que reescreve o campo em
+4. **As duas regras de plano se comportam ao contrário uma da outra, e isso é
+   intencional.** A do dono (11.13) é reaplicada a cada login, porque é uma
+   correção. A do early adopter (11.14) é aplicada **só na criação**, porque é uma
+   promessa: reaplicá-la no login faria a chave desligada rebaixar quem já entrou
+   e a chave religada promover quem entrou depois. Há teste de integração para as
+   duas direções — se ele quebrar, alguém mexeu nisso sem perceber.
+
+5. **`atualizado_em` não tem trigger.** É a aplicação que reescreve o campo em
    toda gravação. Uma escrita nova que esqueça disso deixa a data velha para
    sempre.
 
-5. **O PDF.js recusa dois desenhos no mesmo canvas** e só o libera quando o
+6. **O PDF.js recusa dois desenhos no mesmo canvas** e só o libera quando o
    anterior termina — cancelar não basta, é preciso esperar. `PdfPage` enfileira
    os desenhos por página. Simplificar deixa páginas em branco no zoom rápido.
 
-6. **Medir o container só na montagem não funciona.** Numa aba aberta em segundo
+7. **Medir o container só na montagem não funciona.** Numa aba aberta em segundo
    plano o Chrome zera o layout, e o leitor ficaria em branco para sempre —
    cenário comum quando o link chega pelo LinkedIn e a pessoa abre em nova aba.
    Por isso o `BookReader` usa `ResizeObserver`.
 
-7. **Excluir é documento primeiro, arquivos depois.** Ao contrário, sobra
+8. **Excluir é documento primeiro, arquivos depois.** Ao contrário, sobra
    metadado apontando para arquivo que não existe mais. Há teste da ordem.
 
 ---

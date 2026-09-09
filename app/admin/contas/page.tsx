@@ -7,6 +7,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { isAdminEmail } from '@/lib/admins'
+import { earlyAdopterAberto } from '@/lib/flags'
 import { formatarTrafego } from '@/lib/format'
 import { contarLivrosDoDono, listarUsuarios } from '@/lib/firebase/firestore'
 import { LIMIAR_AVISO_AUTOR, PLANOS, fracaoDaFranquia, limiteDeLivros } from '@/lib/planos'
@@ -33,6 +34,8 @@ export default async function ContasPage() {
   )
 
   const emAlerta = contas.filter((conta) => conta.emAlerta).length
+  const earlyAdopters = contas.filter((conta) => conta.plano === 'early_adopter').length
+  const aberta = earlyAdopterAberto()
 
   return (
     <>
@@ -40,8 +43,38 @@ export default async function ContasPage() {
         <h1 className="mb-[5px] text-[25px] font-semibold tracking-[-0.02em]">Contas</h1>
         <p className="text-[13px] text-tinta-apagada">
           {contas.length} {contas.length === 1 ? 'conta' : 'contas'}
+          {earlyAdopters > 0 ? ` · ${earlyAdopters} early adopter${earlyAdopters === 1 ? '' : 's'}` : ''}
           {emAlerta > 0 ? ` · ${emAlerta} acima de 80% da franquia de tráfego` : ''}
         </p>
+      </div>
+
+      {/* O estado da chave da regra 11.14 fica visível aqui porque é onde ele
+          importa: é olhando a lista de contas que se decide fechar a porta. */}
+      <div
+        className={`mb-5 flex flex-wrap items-center gap-3 rounded-xl border px-[18px] py-3.5 ${
+          aberta ? 'border-destaque/25 bg-destaque-fraco' : 'border-hairline bg-superficie'
+        }`}
+      >
+        <span
+          aria-hidden="true"
+          className={`h-2 w-2 shrink-0 rounded-full ${aberta ? 'bg-destaque' : 'bg-tinta-apagada'}`}
+        />
+        <p className={`text-[13px] ${aberta ? 'text-destaque' : 'text-tinta-suave'}`}>
+          {aberta ? (
+            <>
+              <strong className="font-semibold">Aberta a early adopters.</strong> Toda conta nova
+              nasce com livros ilimitados, para sempre.
+            </>
+          ) : (
+            <>
+              <strong className="font-semibold">Fechada a early adopters.</strong> Conta nova nasce
+              no plano gratuito. Quem já entrou continua ilimitado.
+            </>
+          )}
+        </p>
+        <span className="ml-auto font-mono text-[12px] text-tinta-apagada">
+          EARLY_ADOPTER_ABERTO={aberta ? 'true' : 'false'}
+        </span>
       </div>
 
       {contas.length === 0 ? (
@@ -71,7 +104,9 @@ export default async function ContasPage() {
                   className={`inline-flex items-center rounded-full px-2.5 py-[3px] text-[12px] font-medium ${
                     conta.ehDono
                       ? 'bg-destaque-fraco text-destaque'
-                      : 'bg-preenchimento text-tinta-fraca'
+                      : conta.plano === 'early_adopter'
+                        ? 'bg-publicado-fundo text-publicado'
+                        : 'bg-preenchimento text-tinta-fraca'
                   }`}
                 >
                   {PLANOS[conta.plano].rotulo}
