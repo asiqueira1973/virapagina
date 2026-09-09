@@ -10,6 +10,7 @@ import { redirect } from 'next/navigation'
 import { HandleForm } from '@/components/account/HandleForm'
 import { auth } from '@/lib/auth'
 import { garantirUsuario } from '@/lib/firebase/firestore'
+import { dominioDoSite } from '@/lib/site'
 import { slugify } from '@/lib/slug'
 
 export const metadata: Metadata = { title: 'Escolha seu endereço' }
@@ -46,7 +47,10 @@ export default async function HandlePage() {
             É por ele que as pessoas vão chegar nos seus livros. Escolha com calma: ele não pode
             ser trocado depois.
           </p>
-          <HandleForm sugestaoInicial={sugestao.length >= 3 ? sugestao : ''} />
+          <HandleForm
+            sugestaoInicial={sugestao.length >= 3 ? sugestao : ''}
+            dominio={dominioDoSite()}
+          />
         </div>
       </div>
     </main>

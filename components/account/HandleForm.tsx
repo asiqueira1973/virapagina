@@ -13,7 +13,15 @@ import { slugify } from '@/lib/slug'
 // Mesmo formato que o servidor aplica (critério 8.1).
 const FORMATO = /^[a-z0-9-]{3,30}$/
 
-export function HandleForm({ sugestaoInicial }: { sugestaoInicial: string }) {
+export function HandleForm({
+  sugestaoInicial,
+  dominio,
+}: {
+  sugestaoInicial: string
+  // Vem do servidor por prop: componente de cliente não lê NEXTAUTH_URL, e o
+  // domínio não pode ser escrito à mão numa tela que decide algo permanente.
+  dominio: string
+}) {
   const router = useRouter()
   const [handle, setHandle] = useState(sugestaoInicial)
   const [erro, setErro] = useState<string | null>(null)
@@ -92,7 +100,7 @@ export function HandleForm({ sugestaoInicial }: { sugestaoInicial: string }) {
           }`}
         >
           <span className="shrink-0 border-r border-hairline bg-tela px-3 py-[11px] text-[13px] text-tinta-apagada">
-            virapagina.app.br/
+            {dominio}/
           </span>
           <input
             type="text"

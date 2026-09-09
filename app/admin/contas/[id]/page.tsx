@@ -11,6 +11,7 @@ import { ordenarPorCriadoEmDesc } from '@/lib/books'
 import { formatarData, formatarTrafego } from '@/lib/format'
 import { buscarUsuarioPorId, listarLivrosDoDono } from '@/lib/firebase/firestore'
 import { PLANOS, fracaoDaFranquia, limiteDeLivros } from '@/lib/planos'
+import { dominioDoSite } from '@/lib/site'
 
 export const metadata: Metadata = { title: 'Conta' }
 export const dynamic = 'force-dynamic'
@@ -37,7 +38,7 @@ export default async function ContaPage({ params }: { params: Promise<{ id: stri
         </Link>
         <h1 className="text-[25px] font-semibold tracking-[-0.02em]">{conta.email}</h1>
         <p className="mt-1 text-[13px] text-tinta-apagada">
-          {conta.handle ? `virapagina.app.br/${conta.handle}` : 'ainda sem endereço'} · conta desde{' '}
+          {conta.handle ? `${dominioDoSite()}/${conta.handle}` : 'ainda sem endereço'} · conta desde{' '}
           {formatarData(conta.criado_em)}
         </p>
       </div>

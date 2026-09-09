@@ -3,6 +3,7 @@
 // no MVP (seção 17).
 import type { Metadata } from 'next'
 import { Instrument_Sans, Instrument_Serif } from 'next/font/google'
+import { urlDoSite } from '@/lib/site'
 import './globals.css'
 
 const instrumentSans = Instrument_Sans({
@@ -18,10 +19,10 @@ const instrumentSerif = Instrument_Serif({
   display: 'swap',
 })
 
-// metadataBase deixa os links de compartilhamento absolutos. O domínio é o
-// virapagina.app.br, decidido na revisão da seção 25.
+// metadataBase deixa os links de compartilhamento absolutos. O domínio vem de
+// `lib/site.ts`, que o deriva de NEXTAUTH_URL — nunca escrito à mão aqui.
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXTAUTH_URL ?? 'https://virapagina.app.br'),
+  metadataBase: new URL(urlDoSite()),
   title: { default: 'Virapágina', template: '%s — Virapágina' },
   description: 'Livros e revistas digitais para folhear no navegador.',
 }

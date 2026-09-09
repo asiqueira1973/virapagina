@@ -10,6 +10,7 @@ import { CabecalhoPublico, RodapePublico } from '@/components/marketing/Chrome'
 import { BookCover } from '@/components/reader/BookCover'
 import { ordenarPorCriadoEmDesc } from '@/lib/books'
 import { COPY } from '@/lib/copy'
+import { dominioDoSite } from '@/lib/site'
 import { buscarUsuarioPorHandle, listarLivrosDoDono } from '@/lib/firebase/firestore'
 import type { Livro, Usuario } from '@/types/livro'
 
@@ -77,7 +78,7 @@ export default async function VitrinePage({
                 {resultado.autor.nome ?? `/${resultado.autor.handle}`}
               </h1>
               <p className="font-mono text-[13px] text-tinta-apagada">
-                virapagina.app.br/{resultado.autor.handle}
+                {dominioDoSite()}/{resultado.autor.handle}
               </p>
             </header>
 
