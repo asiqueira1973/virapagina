@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "emu": "firebase emulators:start --project virapagina-local --only firestore,storage",
+    "emu": "npx --yes -p firebase-tools@14 firebase emulators:start --project virapagina-local --only firestore,storage",
     "test:emu": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_STORAGE_EMULATOR_HOST=127.0.0.1:9199 STORAGE_EMULATOR_HOST=http://127.0.0.1:9199 FIREBASE_PROJECT_ID=virapagina-local FIREBASE_STORAGE_BUCKET=virapagina-local.firebasestorage.app vitest run tests/firestore-emulador.test.ts"
   },
   "dependencies": {
@@ -32,7 +32,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.25",
-    "firebase-tools": "^14.27.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^3.2.7"

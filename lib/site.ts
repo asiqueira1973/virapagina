@@ -10,8 +10,10 @@
 // se ela estiver errada, o problema aparece antes, no lugar certo.
 
 // URL canônica, com protocolo. Usada nos metadados e nos links absolutos.
+import { env } from '@/lib/env'
+
 export function urlDoSite(): string {
-  return (process.env.NEXTAUTH_URL ?? 'https://virapagina.app.br').replace(/\/+$/, '')
+  return env('NEXTAUTH_URL', 'https://virapagina.app.br').replace(/\/+$/, '')
 }
 
 // Só o domínio, sem protocolo e sem barra final — é assim que ele aparece na

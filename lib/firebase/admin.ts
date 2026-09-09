@@ -22,8 +22,23 @@ function requireEnv(nome: string): string {
 // O SDK detecta isso sozinho pelas variáveis FIRESTORE_EMULATOR_HOST e
 // FIREBASE_STORAGE_EMULATOR_HOST; aqui só evitamos exigir credencial real, que
 // o emulador não usa.
+//
+// **Em produção, essas variáveis são ignoradas de propósito.** Emulador em
+// produção nunca é o que alguém quis: é configuração que vazou do exemplo para
+// o painel de deploy — o que acontece com um clique de "importar .env". Se
+// respeitássemos, o site subiria tentando falar com 127.0.0.1 e cada tela
+// mostraria o erro genérico, com a causa a três camadas de distância. Ignorar e
+// gritar no log é o único desfecho útil.
 function usandoEmulador(): boolean {
-  return Boolean(process.env.FIRESTORE_EMULATOR_HOST)
+  const configurado = Boolean(process.env.FIRESTORE_EMULATOR_HOST)
+  if (configurado && process.env.NODE_ENV === 'production') {
+    console.error(
+      '[firebase] FIRESTORE_EMULATOR_HOST está definida em produção e foi IGNORADA. ' +
+        'Apague as variáveis de emulador do ambiente de produção: elas só valem no desenvolvimento local.',
+    )
+    return false
+  }
+  return configurado
 }
 
 let aplicativo: App | null = null

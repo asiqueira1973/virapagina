@@ -30,8 +30,11 @@ Não precisa de credencial nenhuma do Google: o desenvolvimento roda contra o
 
 ```bash
 npm install
-cp .env.example .env.local
 ```
+
+Não precisa copiar nem preencher nada: o `.env.development` é versionado e já
+aponta tudo para o emulador. O `.env.example` é a lista de **produção** — é o que
+vai na Vercel, e não deve ser importado para lá sem revisar.
 
 Em um terminal, o emulador:
 
@@ -47,7 +50,10 @@ node scripts/seed-emulador.mjs caminho/do/arquivo.pdf
 ```
 
 Abre em `http://localhost:3000`; o livro semeado fica em `/alexandre`.
-O emulador exige **Java** instalado (`java -version`).
+O emulador exige **Java** instalado (`java -version`). O `firebase-tools` **não**
+é dependência do projeto: ele vem por `npx` na primeira vez que você roda
+`npm run emu`, e fica em cache depois. Manter fora do `package.json` tira umas
+900 dependências — várias com compilação nativa — do caminho de todo build.
 
 ```bash
 npm test        # 85 testes, sem dependência externa
@@ -58,9 +64,14 @@ npm run build
 ```
 
 O login com Google não funciona contra o emulador sem um OAuth Client ID real;
-para exercitar o painel, preencha `GOOGLE_OAUTH_CLIENT_ID` e
-`GOOGLE_OAUTH_CLIENT_SECRET` no `.env.local` com as credenciais de teste do passo
-3 abaixo.
+para exercitar o painel, crie um `.env.local` (não versionado) com
+`GOOGLE_OAUTH_CLIENT_ID` e `GOOGLE_OAUTH_CLIENT_SECRET` de teste — ele tem
+prioridade sobre o `.env.development`.
+
+> **Nunca leve as variáveis de emulador para a Vercel.** `FIRESTORE_EMULATOR_HOST`,
+> `FIREBASE_STORAGE_EMULATOR_HOST` e `STORAGE_EMULATOR_HOST` só existem em
+> `.env.development`. Se aparecerem em produção, o código as ignora e registra um
+> erro no log, mas apague-as mesmo assim.
 
 ---
 
@@ -120,7 +131,7 @@ desenvolvimento.
 ### 5. Regras e índices
 
 ```bash
-npx firebase deploy --only firestore:rules,firestore:indexes,storage
+npx --yes -p firebase-tools@14 firebase deploy --only firestore:rules,firestore:indexes,storage
 ```
 
 O projeto de destino está fixado no `.firebaserc` (`vira-pagina`), para não haver

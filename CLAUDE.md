@@ -55,7 +55,7 @@ implementado** — nem "só a estrutura", nem um campo "para depois".
 
 ```bash
 npm run dev        # servidor local (copia o worker do PDF.js antes)
-npm run emu        # emulador do Firebase (Firestore + Storage)
+npm run emu        # emulador do Firebase (vem por npx; exige Java)
 npm run build      # build de produção
 npm run typecheck  # tsc --noEmit
 npm run lint       # eslint

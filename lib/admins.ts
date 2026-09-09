@@ -1,6 +1,6 @@
 // A allowlist de administradores da plataforma (spec seções 5 e 6).
 //
-// Fica num arquivo próprio, sem nenhum import, porque duas camadas precisam dela
+// Fica num arquivo próprio, quase sem imports, porque duas camadas precisam dela
 // e importariam uma à outra: a autorização (`lib/auth.ts`) e a criação de conta
 // (`lib/firebase/firestore.ts`, que aplica a regra 11.13).
 //
@@ -11,8 +11,10 @@
 
 // Lê a lista, normalizando para minúsculas e ignorando espaços, para que um
 // espaço a mais na Vercel não tranque o dono fora do próprio painel.
+import { env } from '@/lib/env'
+
 export function adminAllowedEmails(): string[] {
-  return (process.env.ADMIN_ALLOWED_EMAILS ?? '')
+  return env('ADMIN_ALLOWED_EMAILS', '')
     .split(',')
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean)

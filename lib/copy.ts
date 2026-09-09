@@ -1,6 +1,8 @@
 // Copy final da interface, exatamente como está na tabela da seção 15 do spec.
 // Fica num arquivo só para que nenhuma tela reescreva um texto com outras
 // palavras — a copy é decisão de produto, não de implementação.
+import { env } from '@/lib/env'
+
 export const COPY = {
   // Vitrine de um autor sem livros publicados (critério 8.5)
   vitrineVazia: 'Nenhum livro publicado ainda.',
@@ -47,7 +49,7 @@ export const COPY = {
 // Endereço de contato dos termos, da privacidade, do canal de denúncia e do
 // botão "Falar com a gente" (decisão 25.3).
 export function emailDeContato(): string {
-  return process.env.EMAIL_CONTATO ?? 'alexandre@dablab.com.br'
+  return env('EMAIL_CONTATO', 'alexandre@dablab.com.br')
 }
 
 // Responsável pela plataforma, nomeado nos termos (decisão 25.4).

@@ -1,6 +1,6 @@
 // Chaves de funcionalidade da plataforma (spec regra 11.14).
 //
-// Ficam num arquivo próprio, sem nenhum import, porque a criação de conta e as
+// Ficam num arquivo próprio, quase sem imports, porque a criação de conta e as
 // telas de admin precisam delas e importariam uma à outra.
 
 // Diz se a plataforma ainda aceita early adopters.
@@ -14,7 +14,9 @@
 // recuperável — errar para o lado de negar cria uma leva de contas gratuitas que
 // deveriam ter sido vitalícias, e isso não dá para consertar depois sem saber
 // quem entrou quando.
+import { env } from '@/lib/env'
+
 export function earlyAdopterAberto(): boolean {
-  const valor = (process.env.EARLY_ADOPTER_ABERTO ?? 'true').trim().toLowerCase()
+  const valor = env('EARLY_ADOPTER_ABERTO', 'true').trim().toLowerCase()
   return valor !== 'false' && valor !== '0' && valor !== 'nao' && valor !== 'não'
 }

@@ -217,3 +217,41 @@ describe('a chave que abre e fecha a plataforma — regra 11.14', () => {
     }
   })
 })
+
+// Regressão de um defeito real: variável definida com valor VAZIO não é a mesma
+// coisa que variável ausente, e `?? padrão` não protegia disso. Um
+// NEXTAUTH_URL vazio virava `new URL('')` e derrubava o build inteiro, com um
+// "Invalid URL" a três camadas de distância da causa.
+describe('variável de ambiente vazia se comporta como ausente', () => {
+  const originais = { ...process.env }
+  afterEach(() => {
+    process.env = { ...originais }
+  })
+
+  it('NEXTAUTH_URL vazia volta ao padrão em vez de gerar URL inválida', async () => {
+    const { urlDoSite, dominioDoSite } = await import('@/lib/site')
+    for (const valor of ['', '   ']) {
+      process.env.NEXTAUTH_URL = valor
+      expect(() => new URL(urlDoSite())).not.toThrow()
+      expect(dominioDoSite()).toBe('virapagina.app.br')
+    }
+  })
+
+  it('EMAIL_CONTATO vazio volta ao padrão', async () => {
+    const { emailDeContato } = await import('@/lib/copy')
+    process.env.EMAIL_CONTATO = ''
+    expect(emailDeContato()).toBe('alexandre@dablab.com.br')
+  })
+
+  it('EARLY_ADOPTER_ABERTO vazia mantém a plataforma aberta', async () => {
+    const { earlyAdopterAberto } = await import('@/lib/flags')
+    process.env.EARLY_ADOPTER_ABERTO = ''
+    expect(earlyAdopterAberto()).toBe(true)
+  })
+
+  it('ADMIN_ALLOWED_EMAILS vazia não promove ninguém a admin', async () => {
+    const { isAdminEmail } = await import('@/lib/admins')
+    process.env.ADMIN_ALLOWED_EMAILS = ''
+    expect(isAdminEmail('alexandre@dablab.com.br')).toBe(false)
+  })
+})
