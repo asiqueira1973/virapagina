@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #f5f5f6; }
+    * { box-sizing: border-box; }
+    a { color: #1c5fd8; text-decoration: none; }
+    a:hover { color: #12439b; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="font-family: 'Instrument Sans', system-ui, sans-serif; color: #17181a; display: flex; min-height: 980px; background: #ffffff; position: relative">
+
+  <dc-import name="Sidebar" variante="autor" ativo="Meus livros" email="alexandre@dablab.com.br" hint-size="232px,100%"></dc-import>
+
+  <main style="flex: 1; min-width: 0; background: #f5f5f6; padding: 34px 40px 60px">
+    <div style="max-width: 1180px">
+
+      <div style="margin-bottom: 26px">
+        <a href="#" style="margin-bottom: 12px; display: inline-block; font-size: 13px; color: #8a8c91">← Livros</a>
+        <h1 style="margin: 0; font-size: 25px; font-weight: 600; letter-spacing: -0.02em">Conceitos de Tecnologia para Pessoas Executivas</h1>
+        <p style="margin: 4px 0 0; font-size: 13px; color: #8a8c91">/alexandre/conceitos-de-tecnologia</p>
+      </div>
+
+      <div style="display: flex; gap: 36px; align-items: flex-start">
+
+        <div style="flex: 1; max-width: 560px; display: flex; flex-direction: column; gap: 24px">
+
+          <div style="display: flex; flex-direction: column; gap: 20px">
+            <label style="display: block">
+              <span style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: #42444a">Título <span style="color: #a32020">*</span></span>
+              <div style="border-radius: 10px; border: 1px solid #dddde0; background: #ffffff; padding: 10px 12px; font-size: 14px">Conceitos de Tecnologia para Pessoas Executivas</div>
+            </label>
+
+            <div>
+              <span style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: #42444a">Link</span>
+              <div style="display: flex; align-items: center; overflow: hidden; border-radius: 10px; border: 1px solid #dddde0; background: #ffffff">
+                <span style="flex-shrink: 0; border-right: 1px solid #e4e4e6; background: #f5f5f6; padding: 10px 12px; font-size: 13px; color: #8a8c91">/alexandre/</span>
+                <span style="min-width: 0; flex: 1; padding: 10px 12px; font-size: 14px">conceitos-de-tecnologia</span>
+              </div>
+            </div>
+
+            <div>
+              <button style="cursor: pointer; border: none; border-radius: 10px; background: #1c5fd8; padding: 10px 16px; font-size: 13px; font-weight: 600; color: #ffffff; font-family: inherit">Salvar alterações</button>
+            </div>
+          </div>
+
+          <div style="border-top: 1px solid #e4e4e6; padding-top: 24px">
+            <h2 style="margin: 0 0 4px; font-size: 15px; font-weight: 600">Substituir PDF</h2>
+            <p style="margin: 0 0 16px; font-size: 12px; color: #8a8c91; line-height: 1.5">Troca o arquivo mantendo os metadados. A capa e o total de páginas são recalculados a partir do novo PDF.</p>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; border-radius: 14px; border: 1px dashed #dcdcdf; background: #fcfcfd; padding: 32px 24px; text-align: center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8a8c91" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5"></path><path d="M8 9l4-4 4 4"></path><path d="M5 19h14"></path></svg>
+              <span style="font-size: 14px; font-weight: 500; color: #42444a">Arraste o PDF aqui ou clique para escolher</span>
+              <span style="font-size: 12px; color: #8a8c91">Até 100 MB</span>
+            </div>
+          </div>
+
+          <div style="border-top: 1px solid #e4e4e6; padding-top: 24px">
+            <h2 style="margin: 0 0 4px; font-size: 15px; font-weight: 600; color: #a32020">Excluir livro</h2>
+            <p style="margin: 0 0 16px; font-size: 12px; color: #8a8c91; line-height: 1.5">Remove o arquivo do nosso armazenamento e o link do ar. Não há como desfazer.</p>
+            <button style="cursor: pointer; border-radius: 10px; border: 1px solid #f3d2d2; background: #fdf2f2; padding: 8px 14px; font-size: 13px; font-weight: 600; color: #a32020; font-family: inherit">Excluir</button>
+          </div>
+
+        </div>
+
+        <aside style="width: 300px; flex-shrink: 0">
+          <div style="border-radius: 14px; border: 1px solid #e4e4e6; background: #ffffff; padding: 20px">
+            <div style="margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+              <span style="font-size: 13px; font-weight: 500; color: #42444a">Status</span>
+              <span style="display: inline-flex; align-items: center; border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 500; background: {{ fundoDoSelo }}; color: {{ corDoSelo }}">{{ selo }}</span>
+            </div>
+
+            <button style="margin-bottom: 12px; width: 100%; cursor: pointer; border-radius: 10px; padding: 10px 16px; font-size: 13px; font-weight: 600; font-family: inherit; border: {{ bordaDoBotaoDePublicar }}; background: {{ fundoDoBotaoDePublicar }}; color: {{ corDoBotaoDePublicar }}">{{ rotuloDoBotaoDePublicar }}</button>
+
+            <a href="#" style="display: block; width: 100%; border-radius: 10px; border: 1px solid #dddde0; background: #ffffff; padding: 10px 16px; text-align: center; font-size: 13px; font-weight: 500; color: #42444a; text-decoration: none">{{ rotuloDaPrevia }}</a>
+
+            <dl style="margin: 20px 0 0; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid #e4e4e6; padding-top: 16px; font-size: 12px">
+              <div style="display: flex; justify-content: space-between; gap: 12px"><dt style="margin: 0; color: #8a8c91">Páginas</dt><dd style="margin: 0; color: #42444a">44</dd></div>
+              <div style="display: flex; justify-content: space-between; gap: 12px"><dt style="margin: 0; color: #8a8c91">Tamanho</dt><dd style="margin: 0; color: #42444a">8,7 MB</dd></div>
+              <div style="display: flex; justify-content: space-between; gap: 12px"><dt style="margin: 0; color: #8a8c91">Criado em</dt><dd style="margin: 0; color: #42444a">14 jun 2026</dd></div>
+              <div style="display: flex; justify-content: space-between; gap: 12px"><dt style="margin: 0; color: #8a8c91">Atualizado em</dt><dd style="margin: 0; color: #42444a">2 set 2026</dd></div>
+            </dl>
+          </div>
+
+          <sc-if value="{{ removidoPorDenuncia }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top: 16px; border-radius: 12px; border: 1px solid #f3d2d2; background: #fdf2f2; padding: 14px 16px">
+              <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #a32020">Este livro foi despublicado por violar os termos de uso. Fale com o suporte.</p>
+            </div>
+          </sc-if>
+        </aside>
+
+      </div>
+    </div>
+  </main>
+
+  <sc-if value="{{ mostrarDialogo }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(23,24,26,0.25); padding: 20px">
+      <div style="width: 100%; max-width: 420px; border-radius: 16px; border: 1px solid #e4e4e6; background: #ffffff; padding: 24px; box-shadow: 0 20px 60px rgba(23,24,26,0.24)">
+        <p style="margin: 0 0 20px; font-size: 14px; line-height: 1.55; color: #17181a">{{ textoDoDialogo }}</p>
+        <div style="display: flex; justify-content: flex-end; gap: 10px">
+          <button style="cursor: pointer; border-radius: 10px; border: 1px solid #dddde0; background: #ffffff; padding: 8px 14px; font-size: 13px; font-weight: 500; color: #42444a; font-family: inherit">Cancelar</button>
+          <button style="cursor: pointer; border: none; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 600; color: #ffffff; font-family: inherit; background: {{ corDoBotaoDoDialogo }}">{{ rotuloDoBotaoDoDialogo }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"estado":{"editor":"enum","options":["publicado","rascunho","confirmar-exclusao","aviso-de-link","removido-por-denuncia"],"default":"publicado","section":"Estado"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const estado = this.props.estado ?? 'publicado';
+    const rascunho = estado === 'rascunho';
+    const removido = estado === 'removido-por-denuncia';
+    const publicado = !rascunho && !removido;
+
+    const dialogos = {
+      'confirmar-exclusao': {
+        texto: 'Excluir "Conceitos de Tecnologia para Pessoas Executivas"? Essa ação não pode ser desfeita.',
+        rotulo: 'Excluir',
+        cor: '#a32020',
+      },
+      'aviso-de-link': {
+        texto: 'Isso muda o link público. Quem tinha o link antigo vai receber página não encontrada. Continuar?',
+        rotulo: 'Continuar',
+        cor: '#1c5fd8',
+      },
+    };
+    const dialogo = dialogos[estado];
+
+    return {
+      selo: publicado ? 'Publicado' : 'Rascunho',
+      fundoDoSelo: publicado ? '#eaf6ef' : '#efeff1',
+      corDoSelo: publicado ? '#1a7f4b' : '#75777c',
+      rotuloDoBotaoDePublicar: publicado ? 'Despublicar' : 'Publicar',
+      fundoDoBotaoDePublicar: publicado ? '#ffffff' : (removido ? '#8a8c91' : '#1c5fd8'),
+      corDoBotaoDePublicar: publicado ? '#42444a' : '#ffffff',
+      bordaDoBotaoDePublicar: publicado ? '1px solid #dddde0' : 'none',
+      rotuloDaPrevia: publicado ? 'Ver página pública' : 'Ver como ficaria',
+      removidoPorDenuncia: removido,
+      mostrarDialogo: Boolean(dialogo),
+      textoDoDialogo: dialogo ? dialogo.texto : '',
+      rotuloDoBotaoDoDialogo: dialogo ? dialogo.rotulo : '',
+      corDoBotaoDoDialogo: dialogo ? dialogo.cor : '#1c5fd8',
+    };
+  }
+}
+</script>
+</body>
+</html>

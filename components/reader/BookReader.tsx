@@ -24,9 +24,11 @@ const LARGURA_DE_PAGINA_DUPLA = 1024
 const JANELA_DE_RENDERIZACAO = 3
 
 export function BookReader({
+  handle,
   slug,
   totalDePaginasConhecido,
 }: {
+  handle: string
   slug: string
   totalDePaginasConhecido: number | null
 }) {
@@ -53,7 +55,7 @@ export function BookReader({
     setCarregando(true)
     setFalhou(false)
 
-    abrirPdfDeUrl(`/api/livros/${slug}/pdf`)
+    abrirPdfDeUrl(`/api/livros/${handle}/${slug}/pdf`)
       .then(async (doc) => {
         if (cancelado) return
         const primeira = await doc.getPage(1)
@@ -75,7 +77,7 @@ export function BookReader({
     return () => {
       cancelado = true
     }
-  }, [slug])
+  }, [handle, slug])
 
   // 2. Mede o espaço disponível. O livro é redimensionado a cada mudança de
   // tamanho para funcionar de 360px a 2560px (seção 17).
@@ -220,6 +222,7 @@ export function BookReader({
 
       <div className="flex justify-center px-3 pb-5">
         <FlipbookToolbar
+          handle={handle}
           slug={slug}
           zoom={zoom}
           aoAfastar={() => setZoom((atual) => ajustarZoom(atual, -1))}

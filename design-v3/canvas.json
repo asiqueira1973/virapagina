@@ -1,0 +1,48 @@
+{
+  "pages": [
+    { "id": "publico", "name": "Público" },
+    { "id": "autor", "name": "Painel do autor" },
+    { "id": "plataforma", "name": "Plataforma" }
+  ],
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Home", "page": "publico", "x": 0, "y": 0, "w": 1280, "h": 900 },
+    { "file": "Vitrine.dc.html", "title": "Vitrine do autor — /alexandre", "page": "publico", "x": 1400, "y": 0, "w": 1280, "h": 900 },
+    { "file": "Entrar.dc.html", "title": "Entrar", "page": "publico", "x": 0, "y": 1020, "w": 1280, "h": 700 },
+    { "file": "Endereco.dc.html", "title": "Escolher endereço", "page": "publico", "x": 1400, "y": 1020, "w": 1280, "h": 700 },
+
+    { "file": "MeusLivros.dc.html", "title": "Meus livros", "page": "autor", "x": 0, "y": 0, "w": 1280, "h": 840 },
+    { "file": "NovoLivro.dc.html", "title": "Novo livro", "page": "autor", "x": 1400, "y": 0, "w": 1280, "h": 900 },
+    { "file": "EditarLivro.dc.html", "title": "Editar livro", "page": "autor", "x": 2800, "y": 0, "w": 1280, "h": 980 },
+
+    { "file": "AdminContas.dc.html", "title": "Contas", "page": "plataforma", "x": 0, "y": 0, "w": 1280, "h": 780 },
+    { "file": "AdminConta.dc.html", "title": "Detalhe da conta", "page": "plataforma", "x": 1400, "y": 0, "w": 1280, "h": 880 },
+    { "file": "Sidebar.dc.html", "title": "Menu lateral (componente)", "page": "plataforma", "x": 2800, "y": 0, "w": 232, "h": 620 }
+  ],
+  "annotations": [
+    {
+      "id": "nota-handle",
+      "page": "publico",
+      "x": 0,
+      "y": -150,
+      "w": 420,
+      "text": "O endereço é escolhido uma vez e não muda.\nTrocar depois herdaria o tráfego dos links antigos — sequestro de audiência. A troca existe, mas passa pelo suporte (regra 11.10)."
+    },
+    {
+      "id": "nota-limite",
+      "page": "autor",
+      "x": 0,
+      "y": -170,
+      "w": 460,
+      "text": "Chegar no limite bloqueia publicar o próximo livro — nunca tira do ar os que já estão lá (princípio 0.5).\nVeja o estado \"limite-atingido\" no seletor acima do artboard: o botão desabilita e aparece \"Falar com a gente\", porque no v1 quem libera mais espaço é o dono, na tela de Contas."
+    },
+    {
+      "id": "nota-rascunho",
+      "page": "plataforma",
+      "x": 0,
+      "y": -150,
+      "w": 440,
+      "text": "O painel da plataforma nunca mostra rascunho de ninguém — só livros publicados, que é o que uma denúncia alcança.\n\"Remover\" despublica e marca; não apaga o arquivo, porque remoção indevida precisa ser reversível."
+    }
+  ],
+  "launch": { "view": "canvas", "page": "publico" }
+}

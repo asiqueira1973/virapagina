@@ -1,11 +1,11 @@
 'use client'
 
-// Hook do envio de PDF do painel (spec épico 8.2, fluxo da seção 9).
+// Hook do envio de PDF do painel do autor (spec épico 8.2, fluxo da seção 9).
 //
-// O caminho do arquivo é: valida no navegador → abre uma sessão de upload
-// resumável pela nossa rota de servidor → envia os bytes direto para o Google
-// com XHR, para ter barra de progresso real (critério 8.2) → devolve o id do
-// arquivo no Drive. A credencial da conta de serviço nunca sai do servidor.
+// O caminho do arquivo é: valida no navegador → abre uma sessão de upload pela
+// nossa rota de servidor → envia os bytes direto para o Google com XHR, para ter
+// barra de progresso real (critério 8.2) → devolve o que a rota de criação
+// precisa. A credencial nunca sai do servidor.
 import { useCallback, useRef, useState } from 'react'
 import { COPY } from '@/lib/copy'
 import { abrirPdfDeArquivo, gerarCapaPngBase64, lerTotalDePaginas } from '@/lib/pdf/render'
@@ -13,12 +13,15 @@ import { abrirPdfDeArquivo, gerarCapaPngBase64, lerTotalDePaginas } from '@/lib/
 // Teto da regra 11.2. A rejeição acontece antes de qualquer byte subir.
 const TAMANHO_MAXIMO_BYTES = 100 * 1024 * 1024
 
-// Etapas que a tela mostra ao admin enquanto o envio acontece.
+// Etapas que a tela mostra ao autor enquanto o envio acontece.
 export type EtapaEnvio = 'ocioso' | 'lendo' | 'enviando' | 'salvando'
 
 // O que a leitura do PDF e o upload produzem, e que vai no corpo do POST.
 export interface ResultadoEnvio {
-  arquivo_pdf_drive_id: string
+  // Id do livro: vem da sessão de upload, porque o arquivo precisa nascer na
+  // pasta definitiva — `livros/<dono>/<livro>/original.pdf` — antes de o
+  // documento existir.
+  livro_id: string
   arquivo_pdf_tamanho_bytes: number
   total_paginas: number | null
   capa_base64: string | null
@@ -33,14 +36,14 @@ export function validarArquivoPdf(arquivo: File): string | null {
   return null
 }
 
-// Envia os bytes para a URL da sessão resumável, reportando o progresso real.
-// XHR em vez de fetch porque só ele expõe evento de progresso de upload.
+// Envia os bytes para a URL da sessão, reportando o progresso real. XHR em vez
+// de fetch porque só ele expõe evento de progresso de upload.
 function enviarBytes(
   uploadUrl: string,
   arquivo: File,
   aoProgredir: (fracao: number) => void,
   registrarXhr: (xhr: XMLHttpRequest) => void,
-): Promise<string> {
+): Promise<void> {
   return new Promise((resolver, rejeitar) => {
     const xhr = new XMLHttpRequest()
     registrarXhr(xhr)
@@ -52,16 +55,10 @@ function enviarBytes(
     }
     xhr.onload = () => {
       if (xhr.status < 200 || xhr.status >= 300) {
-        rejeitar(new Error(`Drive recusou o upload: ${xhr.status}`))
+        rejeitar(new Error(`Storage recusou o upload: ${xhr.status}`))
         return
       }
-      try {
-        const corpo = JSON.parse(xhr.responseText)
-        if (!corpo?.id) throw new Error('Drive não devolveu o id do arquivo')
-        resolver(corpo.id as string)
-      } catch (erro) {
-        rejeitar(erro)
-      }
+      resolver()
     }
     // Conexão que cai no meio cai aqui — o formulário mostra o erro e mantém os
     // campos preenchidos (fluxo de exceção da seção 9).
@@ -77,56 +74,62 @@ export function useBookUpload() {
   const [progresso, setProgresso] = useState(0)
   const xhrRef = useRef<XMLHttpRequest | null>(null)
 
-  // Lê o PDF, gera a capa e sobe o arquivo. Lança em caso de falha — quem chama
-  // decide o que mostrar na tela.
-  const enviarPdf = useCallback(async (arquivo: File): Promise<ResultadoEnvio> => {
-    setProgresso(0)
+  // Lê o PDF, gera a capa e sobe o arquivo. `livroExistente` só é passado ao
+  // substituir o PDF de um livro que já existe — assim o arquivo novo cai na
+  // mesma pasta e sobrescreve o antigo (critério 8.2).
+  const enviarPdf = useCallback(
+    async (arquivo: File, livroExistente?: string): Promise<ResultadoEnvio> => {
+      setProgresso(0)
 
-    // 1. Lê o arquivo no navegador: total de páginas e capa da primeira página
-    // (regra 11.1). Falha aqui não impede o upload — os campos são anuláveis.
-    setEtapa('lendo')
-    let totalPaginas: number | null = null
-    let capaBase64: string | null = null
-    try {
-      const documento = await abrirPdfDeArquivo(arquivo)
-      totalPaginas = lerTotalDePaginas(documento)
-      capaBase64 = await gerarCapaPngBase64(documento)
-    } catch (erro) {
-      console.error('Falha ao ler o PDF no navegador:', erro)
-    }
+      // 1. Lê o arquivo no navegador: total de páginas e capa da primeira
+      // página (regra 11.1). Falha aqui não impede o upload — os campos são
+      // anuláveis e não bloqueiam a publicação.
+      setEtapa('lendo')
+      let totalPaginas: number | null = null
+      let capaBase64: string | null = null
+      try {
+        const documento = await abrirPdfDeArquivo(arquivo)
+        totalPaginas = lerTotalDePaginas(documento)
+        capaBase64 = await gerarCapaPngBase64(documento)
+      } catch (erro) {
+        console.error('Falha ao ler o PDF no navegador:', erro)
+      }
 
-    // 2. Abre a sessão de upload pela nossa rota de servidor.
-    setEtapa('enviando')
-    const resposta = await fetch('/api/admin/livros/sessao-upload', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        nome: arquivo.name,
-        mimeType: 'application/pdf',
-        tamanhoBytes: arquivo.size,
-      }),
-    })
-    if (!resposta.ok) {
-      const corpo = await resposta.json().catch(() => null)
-      throw new Error(corpo?.erro ?? COPY.erroDeUpload)
-    }
-    const { uploadUrl } = await resposta.json()
+      // 2. Abre a sessão de upload pela nossa rota de servidor, que também
+      // confere o limite do plano antes de deixar qualquer byte subir.
+      setEtapa('enviando')
+      const resposta = await fetch('/api/conta/livros/sessao-upload', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          mimeType: 'application/pdf',
+          tamanhoBytes: arquivo.size,
+          ...(livroExistente ? { livro_id: livroExistente } : {}),
+        }),
+      })
+      if (!resposta.ok) {
+        const corpo = await resposta.json().catch(() => null)
+        throw new Error(corpo?.erro ?? COPY.erroDeUpload)
+      }
+      const { uploadUrl, livro_id: livroId } = await resposta.json()
 
-    // 3. Envia os bytes direto para o Google, com progresso real.
-    const driveId = await enviarBytes(uploadUrl, arquivo, setProgresso, (xhr) => {
-      xhrRef.current = xhr
-    })
+      // 3. Envia os bytes direto para o Google, com progresso real.
+      await enviarBytes(uploadUrl, arquivo, setProgresso, (xhr) => {
+        xhrRef.current = xhr
+      })
 
-    setEtapa('salvando')
-    return {
-      arquivo_pdf_drive_id: driveId,
-      arquivo_pdf_tamanho_bytes: arquivo.size,
-      total_paginas: totalPaginas,
-      capa_base64: capaBase64,
-    }
-  }, [])
+      setEtapa('salvando')
+      return {
+        livro_id: livroId,
+        arquivo_pdf_tamanho_bytes: arquivo.size,
+        total_paginas: totalPaginas,
+        capa_base64: capaBase64,
+      }
+    },
+    [],
+  )
 
-  // Volta o hook ao estado inicial depois de um erro, para o admin tentar de novo.
+  // Volta o hook ao estado inicial depois de um erro, para o autor tentar de novo.
   const reiniciar = useCallback(() => {
     xhrRef.current?.abort()
     xhrRef.current = null

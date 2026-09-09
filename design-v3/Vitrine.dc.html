@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #f5f5f6; }
+    * { box-sizing: border-box; }
+    a { color: #1c5fd8; text-decoration: none; }
+    a:hover { color: #12439b; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="font-family: 'Instrument Sans', system-ui, sans-serif; color: #17181a; background: #f5f5f6; min-height: 900px">
+
+  <header style="display: flex; align-items: center; justify-content: space-between; padding: 22px 48px; border-bottom: 1px solid #e4e4e6; background: #ffffff">
+    <div style="display: flex; align-items: center; gap: 8px">
+      <span style="display: inline-block; width: 16px; height: 16px; border-radius: 4px; background: #1c5fd8"></span>
+      <span style="font-size: 14px; font-weight: 600; letter-spacing: -0.01em">Virapágina</span>
+    </div>
+    <a href="#" style="font-size: 13px; font-weight: 500; color: #42444a">Entrar</a>
+  </header>
+
+  <main style="max-width: 1180px; margin: 0 auto; padding: 56px 48px 72px">
+
+    <div style="margin-bottom: 44px">
+      <h1 style="font-family: 'Instrument Serif', serif; font-size: 40px; line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 8px">Alexandre Siqueira</h1>
+      <p style="font-size: 13px; color: #8a8c91; margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace">virapagina.app.br/alexandre</p>
+    </div>
+
+    <sc-if value="{{ temLivros }}" hint-placeholder-val="{{ true }}">
+      <ul style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px 20px">
+        <sc-for list="{{ livros }}" as="livro" hint-placeholder-count="4">
+          <li>
+            <a href="#" style="display: block; text-decoration: none; color: inherit">
+              <div style="aspect-ratio: 1 / 1.414; width: 100%; border-radius: 5px; border: 1px solid #e4e4e6; background: #ffffff; box-shadow: 0 2px 10px rgba(23,24,26,0.10); margin-bottom: 14px; padding: 20px 18px; overflow: hidden">
+                <div style="font-family: 'Instrument Serif', serif; font-size: 17px; line-height: 1.2; margin-bottom: 12px">{{ livro.titulo }}</div>
+                <div style="display: flex; flex-direction: column; gap: 6px">
+                  <div style="height: 4px; border-radius: 2px; background: #efeff1; width: 100%"></div>
+                  <div style="height: 4px; border-radius: 2px; background: #efeff1; width: 86%"></div>
+                  <div style="height: 4px; border-radius: 2px; background: #efeff1; width: 94%"></div>
+                </div>
+                <div style="margin-top: 14px; height: 96px; border-radius: 4px; background: {{ livro.tomDaCapa }}"></div>
+              </div>
+              <h2 style="font-size: 14px; font-weight: 500; line-height: 1.35; margin: 0">{{ livro.titulo }}</h2>
+              <p style="font-size: 13px; line-height: 1.35; color: #5c5e64; margin: 2px 0 0">{{ livro.subtitulo }}</p>
+              <p style="font-size: 12px; color: #8a8c91; margin: 4px 0 0">{{ livro.autor }}</p>
+            </a>
+          </li>
+        </sc-for>
+      </ul>
+    </sc-if>
+
+    <sc-if value="{{ vazia }}" hint-placeholder-val="{{ false }}">
+      <p style="font-size: 15px; color: #8a8c91; margin: 0">Nenhum livro publicado ainda.</p>
+    </sc-if>
+
+  </main>
+
+  <footer style="border-top: 1px solid #e4e4e6; background: #ffffff; padding: 26px 48px">
+    <div style="max-width: 1180px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #8a8c91">
+      <span>Publicado no Virapágina</span>
+      <a href="#" style="color: #8a8c91">Publique o seu</a>
+    </div>
+  </footer>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"estado":{"editor":"enum","options":["com-livros","vazia"],"default":"com-livros","section":"Estado"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const vazia = (this.props.estado ?? 'com-livros') === 'vazia';
+    return {
+      vazia,
+      temLivros: !vazia,
+      livros: [
+        { titulo: 'Conceitos de Tecnologia', subtitulo: 'Para pessoas executivas e não técnicas', autor: 'Alexandre Siqueira', tomDaCapa: 'linear-gradient(160deg, #eef3fd, #dde6f8)' },
+        { titulo: 'I See Life — 03', subtitulo: 'Edição de inverno', autor: 'Alexandre Siqueira', tomDaCapa: 'linear-gradient(160deg, #f5f5f6, #e4e4e6)' },
+        { titulo: 'I See Life — 02', subtitulo: 'Edição de outono', autor: 'Alexandre Siqueira', tomDaCapa: 'linear-gradient(160deg, #fdf2f2, #f3d2d2)' },
+        { titulo: 'I See Life — 01', subtitulo: 'Edição de estreia', autor: 'Alexandre Siqueira', tomDaCapa: 'linear-gradient(160deg, #eaf6ef, #d6ecdf)' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

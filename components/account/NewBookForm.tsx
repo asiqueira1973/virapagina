@@ -13,8 +13,8 @@ import {
   BarraDeProgresso,
   BookFormFields,
   type MetadadosEmEdicao,
-} from '@/components/admin/BookFormFields'
-import { PdfPicker } from '@/components/admin/PdfPicker'
+} from '@/components/account/BookFormFields'
+import { PdfPicker } from '@/components/account/PdfPicker'
 import { useBookUpload, type ResultadoEnvio } from '@/hooks/useBookUpload'
 import { COPY } from '@/lib/copy'
 import { slugify } from '@/lib/slug'
@@ -27,7 +27,7 @@ const VALORES_INICIAIS: MetadadosEmEdicao = {
   descricao: '',
 }
 
-export function NewBookForm() {
+export function NewBookForm({ handle }: { handle: string }) {
   const router = useRouter()
   const { etapa, progresso, enviarPdf, reiniciar } = useBookUpload()
 
@@ -79,7 +79,7 @@ export function NewBookForm() {
       // 1. Slug livre? A checagem definitiva é a do POST, mas antecipá-la aqui
       // evita subir um arquivo que seria descartado (critério 8.2).
       const checagem = await fetch(
-        `/api/admin/livros/slug-disponivel?slug=${encodeURIComponent(slugEfetivo)}`,
+        `/api/conta/livros/slug-disponivel?slug=${encodeURIComponent(slugEfetivo)}`,
       )
       if (checagem.ok) {
         const resultado = await checagem.json()
@@ -95,7 +95,7 @@ export function NewBookForm() {
       setEnvioConcluido(enviado)
 
       // 3. Só agora a linha entra na planilha, sempre como rascunho (seção 12).
-      const resposta = await fetch('/api/admin/livros', {
+      const resposta = await fetch('/api/conta/livros', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -125,7 +125,7 @@ export function NewBookForm() {
       // 4. Vai para a tela de edição, onde estão a prévia e o botão Publicar
       // (passo 5 do fluxo da seção 9).
       const { livro } = await resposta.json()
-      router.push(`/admin/livros/${livro.id}`)
+      router.push(`/conta/livros/${livro.id}`)
       router.refresh()
     } catch (erro) {
       console.error('Falha ao criar o livro:', erro)
@@ -146,6 +146,7 @@ export function NewBookForm() {
       {erroGeral ? <AvisoDeErro mensagem={erroGeral} /> : null}
 
       <BookFormFields
+        handle={handle}
         valores={valores}
         aoMudar={mudarCampo}
         erroDeSlug={erroDeSlug}

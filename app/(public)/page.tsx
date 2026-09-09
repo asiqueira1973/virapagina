@@ -1,83 +1,147 @@
-// / — catálogo público (spec seção 10, épico 8.5).
+// / — home pública (spec seção 10, épico 8.6).
 //
-// Lista só os livros publicados, do mais recente para o mais antigo. É a mesma
-// tela para visitante e admin: o catálogo nunca mostra rascunho, nem para quem o
-// criou (regra 11.4 e prompt de design). Página consumer, sem menu lateral.
+// Explica o produto em menos de dez segundos e leva ao cadastro. Não menciona
+// preço nem plano pago: eles não existem no v3 (assunção 24.10).
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { BookCover } from '@/components/admin/BookCover'
-import { ordenarPorCriadoEmDesc } from '@/lib/books'
-import { COPY } from '@/lib/copy'
-import { readAllBooksCached } from '@/lib/google/sheets'
+import { CabecalhoPublico, RodapePublico } from '@/components/marketing/Chrome'
 
 export const metadata: Metadata = {
-  // `absolute` evita o sufixo do template do layout raiz, que deixaria a aba
-  // do catálogo como "Virapágina — Virapágina".
-  title: { absolute: 'Virapágina — Livros e revistas para folhear' },
-  description: 'Livros e revistas digitais para folhear no navegador.',
+  title: { absolute: 'Virapágina — livros e revistas para folhear no navegador' },
+  description:
+    'Suba seu PDF e receba um link onde as pessoas folheiam o livro no navegador, sem instalar nada e sem criar conta.',
 }
 
-// Cache de 60 segundos, invalidado na hora por qualquer ação do admin (regra 11.7).
-export const revalidate = 60
-
-export default async function CatalogoPage() {
-  // Uma falha de integração com o Google não pode deixar a home quebrada, mas
-  // também não pode virar "nenhum livro publicado ainda": são coisas diferentes e
-  // a mensagem errada mandaria o Alexandre procurar o problema no lugar errado
-  // (fluxo de exceção da seção 9).
-  let publicados: Awaited<ReturnType<typeof readAllBooksCached>> = []
-  let falhouAIntegracao = false
-  try {
-    publicados = ordenarPorCriadoEmDesc(
-      (await readAllBooksCached()).filter((livro) => livro.publicado === 'sim'),
-    )
-  } catch (erro) {
-    console.error('Falha ao ler o catálogo na planilha:', erro)
-    falhouAIntegracao = true
-  }
-
+export default function HomePage() {
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-[1180px] px-5 py-12 sm:px-8 sm:py-16">
-      <header className="mb-10 sm:mb-14">
-        <div className="mb-3 flex items-center gap-2">
-          <span className="inline-block h-4 w-4 rounded-[4px] bg-destaque" aria-hidden="true" />
-          <span className="text-[14px] font-semibold tracking-[-0.01em]">Virapágina</span>
-        </div>
-        <h1 className="font-display text-[34px] leading-[1.1] tracking-[-0.02em] sm:text-[44px]">
-          Livros e revistas para folhear
-        </h1>
-      </header>
+    <div className="flex min-h-dvh flex-col bg-tela">
+      <CabecalhoPublico />
 
-      {falhouAIntegracao ? (
-        <p className="text-[15px] text-tinta-apagada">{COPY.erroGenerico}</p>
-      ) : publicados.length === 0 ? (
-        // Estado vazio simples, sem tom de erro (critério 8.5).
-        <p className="text-[15px] text-tinta-apagada">{COPY.catalogoVazio}</p>
-      ) : (
-        <ul className="grid grid-cols-2 gap-x-5 gap-y-9 sm:grid-cols-3 lg:grid-cols-4">
-          {publicados.map((livro) => (
-            <li key={livro.id}>
-              <Link href={`/l/${livro.slug}`} className="group block">
-                <BookCover
-                  slug={livro.slug}
-                  titulo={livro.titulo}
-                  temCapa={Boolean(livro.capa_drive_id)}
-                  className="mb-3.5 aspect-[1/1.414] w-full shadow-[0_2px_10px_rgba(23,24,26,0.10)] transition-shadow group-hover:shadow-[0_6px_22px_rgba(23,24,26,0.16)]"
-                />
-                <h2 className="text-[14px] font-medium leading-snug text-tinta group-hover:text-destaque">
-                  {livro.titulo}
-                </h2>
-                {livro.subtitulo ? (
-                  <p className="mt-0.5 text-[13px] leading-snug text-tinta-suave">
-                    {livro.subtitulo}
-                  </p>
-                ) : null}
-                <p className="mt-1 text-[12px] text-tinta-apagada">{livro.autor}</p>
+      <main className="flex-1">
+        <section className="mx-auto grid max-w-[1180px] items-center gap-10 px-6 py-14 sm:px-12 lg:grid-cols-2 lg:gap-16 lg:py-[72px]">
+          <div>
+            <h1 className="mb-5 font-display text-[38px] leading-[1.06] tracking-[-0.02em] text-pretty sm:text-[52px]">
+              Seu PDF vira um livro que dá vontade de folhear
+            </h1>
+            <p className="mb-7 max-w-[44ch] text-[16px] leading-relaxed text-tinta-suave text-pretty">
+              Suba o arquivo, escolha o endereço e pronto: quem receber o link abre no navegador
+              e vira as páginas — no computador ou no celular, sem instalar nada.
+            </p>
+            <div className="flex flex-wrap items-center gap-4">
+              <Link
+                href="/entrar"
+                className="rounded-[10px] bg-destaque px-5 py-3.5 text-[14px] font-semibold text-white transition-colors hover:bg-destaque-escuro"
+              >
+                Começar de graça
               </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </main>
+              <span className="text-[13px] text-tinta-apagada">5 livros, sem cartão</span>
+            </div>
+          </div>
+
+          <LivroDeExemplo />
+        </section>
+
+        <section className="mx-auto max-w-[1180px] px-6 pb-[72px] sm:px-12">
+          <div className="grid gap-5 sm:grid-cols-3">
+            <Argumento
+              titulo="Sem marca d'água"
+              caminho="M4 5h16v14H4z M4 15l5-5 4 4 3-3 4 4"
+            >
+              O plano gratuito publica o livro inteiro, limpo. Nada de carimbo no canto da página
+              nem aviso de teste no meio da leitura.
+            </Argumento>
+            <Argumento
+              titulo="Nada sai do ar"
+              caminho="M12 3l7 4v5c0 4.2-2.9 7.6-7 9-4.1-1.4-7-4.8-7-9V7z M9 12l2 2 4-4"
+            >
+              O link que você espalhou continua funcionando. Chegar no limite impede publicar o
+              próximo livro — nunca tira do ar os que já estão lá.
+            </Argumento>
+            <Argumento
+              titulo="Quem lê não faz conta"
+              caminho="M12 5c-4 0-7.5 2.6-9 7 1.5 4.4 5 7 9 7s7.5-2.6 9-7c-1.5-4.4-5-7-9-7z M14.5 12a2.5 2.5 0 1 1-5 0 2.5 2.5 0 1 1 5 0z"
+            >
+              Sem cadastro, sem login, sem cookie de rastreio. A pessoa abre o link e já está
+              lendo — que é o único jeito de alguém ler mesmo.
+            </Argumento>
+          </div>
+        </section>
+      </main>
+
+      <RodapePublico />
+    </div>
   )
+}
+
+// Um dos três argumentos da home. O ícone é SVG inline, nunca emoji.
+function Argumento({
+  titulo,
+  caminho,
+  children,
+}: {
+  titulo: string
+  caminho: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="rounded-2xl border border-hairline bg-superficie p-6">
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        className="mb-3.5 text-destaque"
+      >
+        <path d={caminho} />
+      </svg>
+      <h2 className="mb-1.5 text-[15px] font-semibold">{titulo}</h2>
+      <p className="text-[13px] leading-relaxed text-tinta-suave">{children}</p>
+    </div>
+  )
+}
+
+// Ilustração de um livro aberto. É decorativa: o exemplo folheável de verdade
+// depende de um livro publicado, e o v3 nasce sem nenhum (seção 8.6 e
+// assunção 24.8).
+function LivroDeExemplo() {
+  return (
+    <div className="flex justify-center" aria-hidden="true">
+      <div className="flex overflow-hidden rounded-[3px] shadow-[0_18px_48px_rgba(23,24,26,0.16)]">
+        <div className="h-[288px] w-[208px] border-r border-[#e9e9eb] bg-superficie px-5 py-[22px]">
+          <div className="mb-3.5 font-display text-[19px] leading-tight">
+            Conceitos de Tecnologia
+          </div>
+          <div className="flex flex-col gap-[7px]">
+            <Linha largura="100%" />
+            <Linha largura="92%" />
+            <Linha largura="97%" />
+            <Linha largura="64%" />
+          </div>
+          <div className="mt-[18px] h-[92px] rounded bg-tela" />
+        </div>
+        <div className="relative h-[288px] w-[208px] bg-superficie-fraca px-5 py-[22px]">
+          <div className="flex flex-col gap-[7px]">
+            <Linha largura="88%" />
+            <Linha largura="100%" />
+            <Linha largura="74%" />
+          </div>
+          <div className="mt-4 h-[118px] rounded bg-gradient-to-br from-destaque-fraco to-hairline" />
+          <div className="mt-4 flex flex-col gap-[7px]">
+            <Linha largura="96%" />
+            <Linha largura="58%" />
+          </div>
+          <div className="absolute inset-y-0 right-0 w-11 bg-gradient-to-l from-tinta/10 to-transparent" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Linha({ largura }: { largura: string }) {
+  return <div className="h-[5px] rounded-[3px] bg-preenchimento" style={{ width: largura }} />
 }

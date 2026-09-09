@@ -43,3 +43,9 @@ next-env.d.ts
 # Documentos de produto e material de design que vivem fora do build
 .env*.local
 public/pdf.worker.min.mjs
+
+# Emulador do Firebase
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+.firebase/

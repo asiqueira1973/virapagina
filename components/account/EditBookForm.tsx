@@ -13,17 +13,17 @@ import {
   BarraDeProgresso,
   BookFormFields,
   type MetadadosEmEdicao,
-} from '@/components/admin/BookFormFields'
-import { ConfirmDialog } from '@/components/admin/ConfirmDialog'
-import { PdfPicker } from '@/components/admin/PdfPicker'
-import { StatusBadge } from '@/components/admin/StatusBadge'
+} from '@/components/account/BookFormFields'
+import { ConfirmDialog } from '@/components/account/ConfirmDialog'
+import { PdfPicker } from '@/components/account/PdfPicker'
+import { StatusBadge } from '@/components/account/StatusBadge'
 import { useBookUpload } from '@/hooks/useBookUpload'
 import { COPY } from '@/lib/copy'
 import { formatarData, formatarTamanho } from '@/lib/format'
 import { slugify } from '@/lib/slug'
 import type { Livro } from '@/types/livro'
 
-export function EditBookForm({ livro }: { livro: Livro }) {
+export function EditBookForm({ livro, handle }: { livro: Livro; handle: string }) {
   const router = useRouter()
   const { etapa, progresso, enviarPdf, reiniciar } = useBookUpload()
 
@@ -45,7 +45,7 @@ export function EditBookForm({ livro }: { livro: Livro }) {
   const enviando = etapa !== 'ocioso'
   const ocupado = salvando || enviando
   const slugEfetivo = slugify(valores.slug || valores.titulo)
-  const estaPublicado = livro.publicado === 'sim'
+  const estaPublicado = livro.publicado
 
   function mudarCampo(campo: keyof MetadadosEmEdicao, valor: string) {
     if (campo === 'slug') {
@@ -65,7 +65,7 @@ export function EditBookForm({ livro }: { livro: Livro }) {
     setMensagemDeSucesso(null)
     setSalvando(true)
     try {
-      const resposta = await fetch(`/api/admin/livros/${livro.id}`, {
+      const resposta = await fetch(`/api/conta/livros/${livro.id}`, {
         method: 'PUT',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ ...valores, slug: slugEfetivo }),
@@ -109,7 +109,7 @@ export function EditBookForm({ livro }: { livro: Livro }) {
     setSalvando(true)
     try {
       const acao = estaPublicado ? 'despublicar' : 'publicar'
-      const resposta = await fetch(`/api/admin/livros/${livro.id}/${acao}`, { method: 'POST' })
+      const resposta = await fetch(`/api/conta/livros/${livro.id}/${acao}`, { method: 'POST' })
       if (!resposta.ok) {
         const corpo = await resposta.json().catch(() => null)
         setErroGeral(corpo?.erro ?? COPY.erroGenerico)
@@ -130,8 +130,10 @@ export function EditBookForm({ livro }: { livro: Livro }) {
     setErroGeral(null)
     setMensagemDeSucesso(null)
     try {
-      const enviado = await enviarPdf(novoArquivo)
-      const resposta = await fetch(`/api/admin/livros/${livro.id}/substituir-pdf`, {
+      // Passa o id do livro para o arquivo novo cair na mesma pasta e
+      // sobrescrever o antigo (critério 8.2).
+      const enviado = await enviarPdf(novoArquivo, livro.id)
+      const resposta = await fetch(`/api/conta/livros/${livro.id}/substituir-pdf`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(enviado),
@@ -159,13 +161,13 @@ export function EditBookForm({ livro }: { livro: Livro }) {
     setErroGeral(null)
     setSalvando(true)
     try {
-      const resposta = await fetch(`/api/admin/livros/${livro.id}`, { method: 'DELETE' })
+      const resposta = await fetch(`/api/conta/livros/${livro.id}`, { method: 'DELETE' })
       if (!resposta.ok) {
         const corpo = await resposta.json().catch(() => null)
         setErroGeral(corpo?.erro ?? COPY.erroGenerico)
         return
       }
-      router.push('/admin/livros')
+      router.push('/conta/livros')
       router.refresh()
     } catch (erro) {
       console.error('Falha ao excluir o livro:', erro)
@@ -187,6 +189,7 @@ export function EditBookForm({ livro }: { livro: Livro }) {
           ) : null}
 
           <BookFormFields
+            handle={handle}
             valores={valores}
             aoMudar={mudarCampo}
             erroDeSlug={erroDeSlug}
@@ -270,7 +273,7 @@ export function EditBookForm({ livro }: { livro: Livro }) {
             <button
               type="button"
               onClick={alternarPublicacao}
-              disabled={ocupado}
+              disabled={ocupado || (!estaPublicado && livro.removido_por_denuncia)}
               className={`mb-3 w-full cursor-pointer rounded-[10px] px-4 py-2.5 text-[13px] font-semibold transition-colors disabled:opacity-60 ${
                 estaPublicado
                   ? 'border border-hairline-forte bg-superficie text-tinta-media hover:bg-tela'
@@ -283,13 +286,21 @@ export function EditBookForm({ livro }: { livro: Livro }) {
             {/* A prévia abre a página pública mesmo com o livro em rascunho: a
                 sessão de admin é o que libera isso (passo 5 do fluxo da seção 9). */}
             <a
-              href={`/l/${livro.slug}`}
+              href={`/${handle}/${livro.slug}`}
               target="_blank"
               rel="noreferrer"
               className="block w-full rounded-[10px] border border-hairline-forte bg-superficie px-4 py-2.5 text-center text-[13px] font-medium text-tinta-media transition-colors hover:bg-tela"
             >
               {estaPublicado ? 'Ver página pública' : 'Ver como ficaria'}
             </a>
+
+            {/* Livro despublicado pelo admin da plataforma não volta pela mão
+                do dono (regra 11.12). */}
+            {livro.removido_por_denuncia ? (
+              <p className="mt-3 rounded-lg border border-perigo-borda bg-perigo-fundo px-3 py-2.5 text-[12px] leading-relaxed text-perigo">
+                {COPY.removidoPorDenuncia}
+              </p>
+            ) : null}
 
             <dl className="mt-5 flex flex-col gap-2.5 border-t border-hairline pt-4 text-[12px]">
               <Linha rotulo="Páginas" valor={livro.total_paginas ? String(livro.total_paginas) : '—'} />

@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #f5f5f6; }
+    * { box-sizing: border-box; }
+    a { color: #1c5fd8; text-decoration: none; }
+    a:hover { color: #12439b; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="font-family: 'Instrument Sans', system-ui, sans-serif; color: #17181a; display: flex; min-height: 880px; background: #ffffff">
+
+  <dc-import name="Sidebar" variante="plataforma" ativo="Contas" email="alexandre@dablab.com.br" hint-size="232px,100%"></dc-import>
+
+  <main style="flex: 1; min-width: 0; background: #f5f5f6; padding: 34px 40px 60px">
+    <div style="max-width: 1180px">
+
+      <div style="margin-bottom: 26px">
+        <a href="#" style="margin-bottom: 12px; display: inline-block; font-size: 13px; color: #8a8c91">← Contas</a>
+        <h1 style="margin: 0; font-size: 25px; font-weight: 600; letter-spacing: -0.02em">maria.helena@exemplo.com</h1>
+        <p style="margin: 4px 0 0; font-size: 13px; color: #8a8c91">virapagina.app.br/mariahelena · conta desde 3 de setembro de 2026</p>
+      </div>
+
+      <div style="display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap">
+
+        <div style="flex: 1; min-width: 460px; display: flex; flex-direction: column; gap: 20px">
+
+          <div style="border-radius: 14px; border: 1px solid #e4e4e6; background: #ffffff; padding: 20px">
+            <h2 style="margin: 0 0 4px; font-size: 15px; font-weight: 600">Plano</h2>
+            <p style="margin: 0 0 16px; font-size: 12px; color: #8a8c91; line-height: 1.5">Alterar o plano não mexe em livro nenhum: nada é excluído, despublicado ou bloqueado para leitura, mesmo que a conta fique acima do novo limite.</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px">
+              <sc-for list="{{ planos }}" as="plano" hint-placeholder-count="4">
+                <button style="cursor: pointer; border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 500; font-family: inherit; border: 1px solid {{ plano.borda }}; background: {{ plano.fundo }}; color: {{ plano.cor }}">{{ plano.rotulo }}</button>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="border-radius: 14px; border: 1px solid #e4e4e6; background: #ffffff; padding: 20px">
+            <h2 style="margin: 0 0 4px; font-size: 15px; font-weight: 600">Livros publicados</h2>
+            <p style="margin: 0 0 16px; font-size: 12px; color: #8a8c91; line-height: 1.5">Só os publicados aparecem aqui — rascunho de outra pessoa não é assunto do painel da plataforma.</p>
+            <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px">
+              <sc-for list="{{ livros }}" as="livro" hint-placeholder-count="4">
+                <li style="display: flex; align-items: center; gap: 14px; border-bottom: 1px solid #f0f0f2; padding: 12px 0">
+                  <div style="height: 40px; width: 29px; flex-shrink: 0; border-radius: 4px; border: 1px solid #e4e4e6; background: {{ livro.tomDaCapa }}"></div>
+                  <div style="min-width: 0; flex: 1">
+                    <div style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ livro.titulo }}</div>
+                    <div style="font-size: 12px; color: #8a8c91">{{ livro.caminho }}</div>
+                  </div>
+                  <button style="flex-shrink: 0; cursor: pointer; border-radius: 8px; border: 1px solid #f3d2d2; background: #fdf2f2; padding: 5px 11px; font-size: 12px; font-weight: 600; color: #a32020; font-family: inherit">Remover</button>
+                </li>
+              </sc-for>
+            </ul>
+          </div>
+
+          <div style="border-radius: 14px; border: 1px solid #e4e4e6; background: #ffffff; padding: 20px">
+            <h2 style="margin: 0 0 16px; font-size: 15px; font-weight: 600">Ações registradas</h2>
+            <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px">
+              <sc-for list="{{ acoes }}" as="acao" hint-placeholder-count="2">
+                <li style="display: flex; justify-content: space-between; gap: 16px; font-size: 12px">
+                  <span style="color: #42444a">{{ acao.texto }}</span>
+                  <span style="flex-shrink: 0; color: #8a8c91">{{ acao.quando }}</span>
+                </li>
+              </sc-for>
+            </ul>
+          </div>
+
+        </div>
+
+        <aside style="width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px">
+
+          <div style="border-radius: 14px; border: 1px solid #e4e4e6; background: #ffffff; padding: 20px">
+            <h2 style="margin: 0 0 14px; font-size: 15px; font-weight: 600">Uso</h2>
+            <div style="margin-bottom: 6px; display: flex; justify-content: space-between; font-size: 12px; color: #8a8c91"><span>Livros</span><span style="color: #42444a">5 de 5</span></div>
+            <div style="height: 5px; overflow: hidden; border-radius: 999px; background: #efeff1; margin-bottom: 16px"><div style="height: 100%; width: 100%; border-radius: 999px; background: #1c5fd8"></div></div>
+            <div style="margin-bottom: 6px; display: flex; justify-content: space-between; font-size: 12px; color: #8a8c91"><span>Tráfego do mês</span><span style="color: #a32020">18,4 de 20 GB</span></div>
+            <div style="height: 5px; overflow: hidden; border-radius: 999px; background: #efeff1"><div style="height: 100%; width: 92%; border-radius: 999px; background: #a32020"></div></div>
+            <p style="margin: 14px 0 0; font-size: 12px; color: #8a8c91; line-height: 1.5">Passar da franquia não corta nada e não cobra nada — só levanta a mão para conversarmos.</p>
+          </div>
+
+          <div style="border-radius: 14px; border: 1px solid #e4e4e6; background: #ffffff; padding: 20px">
+            <h2 style="margin: 0 0 4px; font-size: 15px; font-weight: 600">Endereço público</h2>
+            <p style="margin: 0 0 14px; font-size: 12px; color: #8a8c91; line-height: 1.5">O autor não troca o próprio endereço. Trocar aqui quebra os links que já circulam.</p>
+            <div style="display: flex; align-items: center; overflow: hidden; border-radius: 10px; border: 1px solid #dddde0; background: #ffffff; margin-bottom: 12px">
+              <span style="flex-shrink: 0; border-right: 1px solid #e4e4e6; background: #f5f5f6; padding: 9px 10px; font-size: 12px; color: #8a8c91">/</span>
+              <span style="min-width: 0; flex: 1; padding: 9px 10px; font-size: 13px">mariahelena</span>
+            </div>
+            <button style="width: 100%; cursor: pointer; border-radius: 10px; border: 1px solid #dddde0; background: #ffffff; padding: 8px 14px; font-size: 13px; font-weight: 500; color: #42444a; font-family: inherit">Alterar endereço</button>
+          </div>
+
+        </aside>
+
+      </div>
+    </div>
+  </main>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  renderVals() {
+    const nomes = [
+      { rotulo: 'Gratuito', atual: true },
+      { rotulo: 'Até 20', atual: false },
+      { rotulo: 'Até 50', atual: false },
+      { rotulo: 'Até 100', atual: false },
+    ];
+    return {
+      planos: nomes.map((plano) => ({
+        rotulo: plano.rotulo,
+        fundo: plano.atual ? '#eef3fd' : '#ffffff',
+        cor: plano.atual ? '#1c5fd8' : '#42444a',
+        borda: plano.atual ? '#1c5fd8' : '#dddde0',
+      })),
+      livros: [
+        { titulo: 'Caderno de campo — outono', caminho: '/mariahelena/caderno-outono', tomDaCapa: 'linear-gradient(160deg, #eaf6ef, #d6ecdf)' },
+        { titulo: 'Caderno de campo — inverno', caminho: '/mariahelena/caderno-inverno', tomDaCapa: 'linear-gradient(160deg, #eef3fd, #dde6f8)' },
+        { titulo: 'Ensaios sobre o rio', caminho: '/mariahelena/ensaios-sobre-o-rio', tomDaCapa: 'linear-gradient(160deg, #f5f5f6, #e4e4e6)' },
+        { titulo: 'Fotografias de quintal', caminho: '/mariahelena/fotografias-de-quintal', tomDaCapa: 'linear-gradient(160deg, #fdf2f2, #f3d2d2)' },
+      ],
+      acoes: [
+        { texto: 'Plano alterado de Gratuito para Até 20 · alexandre@dablab.com.br', quando: 'há 2 dias' },
+        { texto: 'Conta consultada · alexandre@dablab.com.br', quando: 'há 2 dias' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

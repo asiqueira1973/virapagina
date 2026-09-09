@@ -3,18 +3,25 @@
 // Menu lateral do painel, no padrão App Store Connect exigido pela seção 16:
 // grupo em negrito escuro, itens indentados sem marcador, hairline separando,
 // um item ativo por vez na cor de destaque, e rodapé com o e-mail e "Sair".
-// No MVP existe um grupo só, "Livros" — não há outras seções ainda (seção 16).
+//
+// Serve os dois painéis — o do autor e o da plataforma —, que têm a mesma forma
+// e mudam só o grupo e os itens.
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-// Itens do grupo "Livros". A lista de livros fica ativa também nas telas de
-// criação e edição, que são filhas dela no fluxo (seção 9).
-const ITENS = [{ href: '/admin/livros', rotulo: 'Todos os livros' }]
+export interface ItemDeMenu {
+  href: string
+  rotulo: string
+}
 
-export function AdminSidebar({
+export function Sidebar({
+  grupo,
+  itens,
   email,
   acaoSair,
 }: {
+  grupo: string
+  itens: ItemDeMenu[]
   email: string
   acaoSair: () => Promise<void>
 }) {
@@ -22,14 +29,14 @@ export function AdminSidebar({
 
   return (
     <aside className="flex w-[232px] shrink-0 flex-col border-r border-hairline bg-superficie py-5">
-      <div className="mb-6 flex items-center gap-2 px-[18px]">
+      <Link href="/" className="mb-6 flex items-center gap-2 px-[18px]">
         <span className="inline-block h-4 w-4 rounded-[4px] bg-destaque" aria-hidden="true" />
-        <span className="text-[14px] font-semibold tracking-[-0.01em]">Virapágina</span>
-      </div>
+        <span className="text-[14px] font-semibold tracking-[-0.01em] text-tinta">Virapágina</span>
+      </Link>
 
       <nav className="flex flex-col gap-0.5 px-2.5" aria-label="Seções do painel">
-        <div className="px-2 pt-2 pb-1 text-[13px] font-bold text-tinta">Livros</div>
-        {ITENS.map((item) => {
+        <div className="px-2 pt-2 pb-1 text-[13px] font-bold text-tinta">{grupo}</div>
+        {itens.map((item) => {
           const ativo = caminho.startsWith(item.href)
           return (
             <Link

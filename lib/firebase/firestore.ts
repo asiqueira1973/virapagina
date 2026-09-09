@@ -59,6 +59,21 @@ function mesCorrente(): string {
   return new Date().toISOString().slice(0, 7)
 }
 
+// Remove chaves com valor `undefined` antes de gravar.
+//
+// O Firestore recusa `undefined` e derruba a escrita inteira. A alternativa
+// seria `settings({ ignoreUndefinedProperties: true })`, mas ela só pode ser
+// chamada uma vez e antes de qualquer uso da instância — coisa que nenhuma rota
+// do Next.js consegue garantir (ver comentário em admin.ts). Limpar na origem
+// resolve o mesmo problema sem depender de ordem de execução.
+function semUndefined<T extends Record<string, unknown>>(dados: T): T {
+  const limpo: Record<string, unknown> = {}
+  for (const [chave, valor] of Object.entries(dados)) {
+    if (valor !== undefined) limpo[chave] = valor
+  }
+  return limpo as T
+}
+
 // ---------------------------------------------------------------------------
 // Contas
 // ---------------------------------------------------------------------------
@@ -108,7 +123,7 @@ export async function garantirUsuario(params: {
       criado_em: agora,
       atualizado_em: agora,
     }
-    await referencia.set(novo)
+    await referencia.set(semUndefined(novo))
     return paraUsuario(params.id, novo)
   }
 
@@ -123,7 +138,7 @@ export async function garantirUsuario(params: {
   if (Object.keys(correcoes).length === 0) return atual
 
   correcoes.atualizado_em = agora
-  await referencia.update(correcoes)
+  await referencia.update(semUndefined(correcoes))
   return { ...atual, ...(correcoes as Partial<Usuario>), atualizado_em: agora.toDate().toISOString() }
 }
 
@@ -402,7 +417,7 @@ export async function criarLivro(
     criado_em: agora,
     atualizado_em: agora,
   }
-  await db().collection(COLECOES.livros).doc(id).set(documento)
+  await db().collection(COLECOES.livros).doc(id).set(semUndefined(documento))
   return paraLivro(id, documento)
 }
 
@@ -416,7 +431,7 @@ export async function atualizarLivro(
   const documento = await referencia.get()
   if (!documento.exists) return null
   const agora = Timestamp.now()
-  await referencia.update({ ...alteracoes, atualizado_em: agora })
+  await referencia.update(semUndefined({ ...alteracoes, atualizado_em: agora }))
   const atualizado = await referencia.get()
   return paraLivro(id, atualizado.data() as DocumentData)
 }
@@ -445,14 +460,14 @@ export async function registrarAcaoAdmin(params: {
     await db()
       .collection(COLECOES.acoesAdmin)
       .doc(randomUUID())
-      .set({
+      .set(semUndefined({
         admin_email: params.admin_email,
         acao: params.acao,
         conta_alvo: params.conta_alvo ?? null,
         livro_alvo: params.livro_alvo ?? null,
         detalhe: params.detalhe ?? null,
         feito_em: Timestamp.now(),
-      })
+      }))
   } catch (erro) {
     // Falhar a auditoria não pode desfazer a ação que já aconteceu.
     console.error('Falha ao registrar ação de admin:', erro)

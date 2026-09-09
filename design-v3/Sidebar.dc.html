@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; }
+    * { box-sizing: border-box; }
+    a { color: #1c5fd8; text-decoration: none; }
+    a:hover { color: #12439b; }
+  </style>
+</helmet>
+<div style="font-family: 'Instrument Sans', system-ui, sans-serif; color: #17181a; display: flex; width: 232px; flex-shrink: 0; flex-direction: column; border-right: 1px solid #e4e4e6; background: #ffffff; padding: 20px 0; height: 100%">
+
+  <div style="margin-bottom: 24px; display: flex; align-items: center; gap: 8px; padding: 0 18px">
+    <span style="display: inline-block; width: 16px; height: 16px; border-radius: 4px; background: #1c5fd8"></span>
+    <span style="font-size: 14px; font-weight: 600; letter-spacing: -0.01em">Virapágina</span>
+  </div>
+
+  <nav style="display: flex; flex-direction: column; gap: 2px; padding: 0 10px">
+    <div style="padding: 8px 8px 4px; font-size: 13px; font-weight: 700; color: #17181a">{{ grupo }}</div>
+    <sc-for list="{{ itens }}" as="item" hint-placeholder-count="2">
+      <a href="#" style="border-radius: 8px; padding: 7px 10px 7px 20px; font-size: 13px; text-decoration: none; background: {{ item.fundo }}; color: {{ item.cor }}; font-weight: {{ item.peso }}">{{ item.rotulo }}</a>
+    </sc-for>
+  </nav>
+
+  <div style="flex: 1"></div>
+
+  <div style="margin: 0 18px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #e4e4e6; padding-top: 14px">
+    <div style="font-size: 12px; color: #8a8c91; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ email }}</div>
+    <button style="align-self: flex-start; cursor: pointer; border-radius: 8px; border: 1px solid #dddde0; background: #ffffff; padding: 5px 11px; font-size: 12px; font-weight: 500; color: #42444a; font-family: inherit">Sair</button>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"variante":{"editor":"enum","options":["autor","plataforma"],"default":"autor"},"ativo":{"editor":"text","default":"Meus livros"},"email":{"editor":"text","default":"alexandre@dablab.com.br"},"$preview":{"width":232,"height":620}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const variante = this.props.variante ?? 'autor';
+    const ativo = this.props.ativo ?? 'Meus livros';
+    const grupo = variante === 'plataforma' ? 'Plataforma' : 'Livros';
+    const rotulos = variante === 'plataforma' ? ['Contas'] : ['Meus livros'];
+    return {
+      grupo,
+      email: this.props.email ?? 'alexandre@dablab.com.br',
+      itens: rotulos.map((rotulo) => {
+        const selecionado = rotulo === ativo;
+        return {
+          rotulo,
+          fundo: selecionado ? '#eef3fd' : 'transparent',
+          cor: selecionado ? '#1c5fd8' : '#5c5e64',
+          peso: selecionado ? '500' : '400',
+        };
+      }),
+    };
+  }
+}
+</script>
+</body>
+</html>

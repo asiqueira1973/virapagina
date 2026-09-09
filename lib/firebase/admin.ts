@@ -58,17 +58,17 @@ function getApp(): App {
   return aplicativo
 }
 
-let bancoDeDados: Firestore | null = null
-
-// Cliente do Firestore, criado na primeira vez que alguém precisa dele.
+// Cliente do Firestore. O SDK devolve sempre a mesma instância por aplicativo.
+//
+// Não chamamos `settings()` aqui de propósito. Ele só aceita ser chamado uma vez
+// e **antes de qualquer outro uso** da instância — e no Next.js cada rota tem o
+// seu próprio grafo de módulos, então nenhuma delas consegue saber se foi a
+// primeira. Na prática a segunda rota a rodar derrubava a requisição com
+// "Firestore has already been initialized", e a falha dependia da ordem em que
+// as páginas eram abertas. Em vez de coordenar isso, as escritas limpam os
+// campos `undefined` na origem (ver `semUndefined` em firestore.ts).
 export function db(): Firestore {
-  if (!bancoDeDados) {
-    bancoDeDados = getFirestore(getApp())
-    // Campo ausente e campo nulo passam a ser a mesma coisa na escrita, o que
-    // evita gravar `undefined` por engano num campo opcional e derrubar a rota.
-    bancoDeDados.settings({ ignoreUndefinedProperties: true })
-  }
-  return bancoDeDados
+  return getFirestore(getApp())
 }
 
 // Bucket de arquivos do projeto.

@@ -1,0 +1,139 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #f5f5f6; }
+    * { box-sizing: border-box; }
+    a { color: #1c5fd8; text-decoration: none; }
+    a:hover { color: #12439b; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="font-family: 'Instrument Sans', system-ui, sans-serif; color: #17181a; display: flex; min-height: 900px; background: #ffffff">
+
+  <dc-import name="Sidebar" variante="autor" ativo="Meus livros" email="alexandre@dablab.com.br" hint-size="232px,100%"></dc-import>
+
+  <main style="flex: 1; min-width: 0; background: #f5f5f6; padding: 34px 40px 60px">
+    <div style="max-width: 560px">
+
+      <div style="margin-bottom: 26px">
+        <a href="#" style="margin-bottom: 12px; display: inline-block; font-size: 13px; color: #8a8c91">← Livros</a>
+        <h1 style="margin: 0; font-size: 25px; font-weight: 600; letter-spacing: -0.02em">Novo livro</h1>
+      </div>
+
+      <sc-if value="{{ mostrarErroGeral }}" hint-placeholder-val="{{ false }}">
+        <p style="margin: 0 0 24px; border-radius: 8px; border: 1px solid #f3d2d2; background: #fdf2f2; padding: 12px 14px; font-size: 13px; color: #a32020">Não foi possível concluir o envio. Tente novamente.</p>
+      </sc-if>
+
+      <div style="display: flex; flex-direction: column; gap: 20px">
+
+        <label style="display: block">
+          <span style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: #42444a">Título <span style="color: #a32020">*</span></span>
+          <div style="width: 100%; border-radius: 10px; border: 1px solid #dddde0; background: #ffffff; padding: 10px 12px; font-size: 14px">{{ titulo }}</div>
+        </label>
+
+        <label style="display: block">
+          <span style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: #42444a">Subtítulo <span style="font-weight: 400; color: #8a8c91">(opcional)</span></span>
+          <div style="width: 100%; border-radius: 10px; border: 1px solid #dddde0; background: #ffffff; padding: 10px 12px; font-size: 14px; color: {{ corDoSubtitulo }}">{{ subtitulo }}</div>
+        </label>
+
+        <div>
+          <span style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: #42444a">Link</span>
+          <span style="display: block; margin-bottom: 8px; font-size: 12px; color: #8a8c91">Endereço público do livro. Só letras minúsculas, números e hífen.</span>
+          <div style="display: flex; align-items: center; overflow: hidden; border-radius: 10px; border: 1px solid {{ corDaBordaDoSlug }}; background: #ffffff">
+            <span style="flex-shrink: 0; border-right: 1px solid #e4e4e6; background: #f5f5f6; padding: 10px 12px; font-size: 13px; color: #8a8c91">/alexandre/</span>
+            <span style="min-width: 0; flex: 1; padding: 10px 12px; font-size: 14px">{{ slug }}</span>
+          </div>
+          <sc-if value="{{ mostrarErroDeSlug }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 8px 0 0; font-size: 13px; color: #a32020">Esse link já está em uso, escolha outro. <button style="border: none; background: none; padding: 0; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 500; color: #1c5fd8; text-decoration: underline">Usar conceitos-de-tecnologia-2</button></p>
+          </sc-if>
+        </div>
+
+        <label style="display: block">
+          <span style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: #42444a">Autor</span>
+          <div style="width: 100%; border-radius: 10px; border: 1px solid #dddde0; background: #ffffff; padding: 10px 12px; font-size: 14px">Alexandre Siqueira</div>
+        </label>
+
+        <label style="display: block">
+          <span style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: #42444a">Descrição <span style="font-weight: 400; color: #8a8c91">(opcional)</span></span>
+          <span style="display: block; margin-bottom: 8px; font-size: 12px; color: #8a8c91">Aparece na sua vitrine e no card de quem compartilhar o link.</span>
+          <div style="width: 100%; min-height: 72px; border-radius: 10px; border: 1px solid #dddde0; background: #ffffff; padding: 10px 12px; font-size: 14px; color: #8a8c91">{{ descricao }}</div>
+        </label>
+
+        <div>
+          <span style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: #42444a">Arquivo PDF</span>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; border-radius: 14px; border: 1px dashed {{ corDaBordaDoArquivo }}; background: {{ fundoDoArquivo }}; padding: 36px 24px; text-align: center">
+            <sc-if value="{{ temArquivo }}" hint-placeholder-val="{{ true }}">
+              <span style="font-size: 14px; font-weight: 500; color: #17181a">conceitos-de-tecnologia.pdf</span>
+              <span style="font-size: 12px; color: #8a8c91">8,7 MB · clique para trocar</span>
+            </sc-if>
+            <sc-if value="{{ semArquivo }}" hint-placeholder-val="{{ false }}">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8a8c91" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5"></path><path d="M8 9l4-4 4 4"></path><path d="M5 19h14"></path></svg>
+              <span style="font-size: 14px; font-weight: 500; color: #42444a">Arraste o PDF aqui ou clique para escolher</span>
+              <span style="font-size: 12px; color: #8a8c91">Até 100 MB</span>
+            </sc-if>
+          </div>
+        </div>
+
+        <sc-if value="{{ enviando }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="margin-bottom: 6px; display: flex; justify-content: space-between; font-size: 12px; color: #8a8c91">
+              <span>Enviando o arquivo</span>
+              <span>62%</span>
+            </div>
+            <div style="height: 6px; overflow: hidden; border-radius: 999px; background: #efeff1">
+              <div style="height: 100%; width: 62%; border-radius: 999px; background: #1c5fd8"></div>
+            </div>
+          </div>
+        </sc-if>
+
+        <div style="display: flex; align-items: center; gap: 12px">
+          <button style="cursor: pointer; border: none; border-radius: 10px; background: #1c5fd8; padding: 10px 16px; font-size: 13px; font-weight: 600; color: #ffffff; font-family: inherit; opacity: {{ opacidadeDoSalvar }}">{{ rotuloDoSalvar }}</button>
+          <p style="margin: 0; font-size: 12px; color: #8a8c91">O livro nasce como rascunho. A publicação é o próximo passo.</p>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"estado":{"editor":"enum","options":["preenchido","vazio","enviando","link-em-uso","erro-de-envio"],"default":"preenchido","section":"Estado"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const estado = this.props.estado ?? 'preenchido';
+    const vazio = estado === 'vazio';
+    const enviando = estado === 'enviando';
+    const linkEmUso = estado === 'link-em-uso';
+    const erroDeEnvio = estado === 'erro-de-envio';
+
+    return {
+      titulo: vazio ? '' : 'Conceitos de Tecnologia para Pessoas Executivas',
+      subtitulo: vazio ? '' : 'e Não Técnicas',
+      corDoSubtitulo: vazio ? '#8a8c91' : '#17181a',
+      slug: vazio ? '' : 'conceitos-de-tecnologia',
+      descricao: vazio ? 'Um parágrafo curto sobre o livro.' : 'O guia que traduz a tecnologia do dia a dia para quem decide sem escrever código.',
+      temArquivo: !vazio,
+      semArquivo: vazio,
+      corDaBordaDoArquivo: '#dcdcdf',
+      fundoDoArquivo: '#fcfcfd',
+      corDaBordaDoSlug: linkEmUso ? '#f3d2d2' : '#dddde0',
+      mostrarErroDeSlug: linkEmUso,
+      mostrarErroGeral: erroDeEnvio,
+      enviando,
+      rotuloDoSalvar: enviando ? 'Enviando…' : 'Salvar como rascunho',
+      opacidadeDoSalvar: enviando ? '0.6' : '1',
+    };
+  }
+}
+</script>
+</body>
+</html>

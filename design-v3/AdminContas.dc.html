@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #f5f5f6; }
+    * { box-sizing: border-box; }
+    a { color: #1c5fd8; text-decoration: none; }
+    a:hover { color: #12439b; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="font-family: 'Instrument Sans', system-ui, sans-serif; color: #17181a; display: flex; min-height: 780px; background: #ffffff">
+
+  <dc-import name="Sidebar" variante="plataforma" ativo="Contas" email="alexandre@dablab.com.br" hint-size="232px,100%"></dc-import>
+
+  <main style="flex: 1; min-width: 0; background: #f5f5f6; padding: 34px 40px 60px">
+    <div style="max-width: 1180px">
+
+      <div style="margin-bottom: 26px; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px">
+        <div>
+          <h1 style="margin: 0 0 5px; font-size: 25px; font-weight: 600; letter-spacing: -0.02em">Contas</h1>
+          <p style="margin: 0; font-size: 13px; color: #8a8c91">6 contas · 1 acima de 80% da franquia de tráfego</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; border-radius: 10px; border: 1px solid #dddde0; background: #ffffff; padding: 8px 12px; width: 280px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a8c91" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"></circle><path d="M20 20l-4.5-4.5"></path></svg>
+          <span style="font-size: 13px; color: #8a8c91">Buscar por e-mail ou endereço</span>
+        </div>
+      </div>
+
+      <div style="overflow: hidden; border-radius: 14px; border: 1px solid #e4e4e6; background: #ffffff">
+        <div style="display: grid; grid-template-columns: 2fr 1.2fr 1.1fr 0.9fr 1.4fr 0.7fr; gap: 16px; border-bottom: 1px solid #e4e4e6; background: #fafafb; padding: 12px 18px; font-size: 12px; font-weight: 600; color: #75777c">
+          <span>Conta</span><span>Endereço</span><span>Plano</span><span>Livros</span><span>Tráfego do mês</span><span></span>
+        </div>
+        <sc-for list="{{ contas }}" as="conta" hint-placeholder-count="6">
+          <div style="display: grid; grid-template-columns: 2fr 1.2fr 1.1fr 0.9fr 1.4fr 0.7fr; gap: 16px; align-items: center; border-bottom: 1px solid #f0f0f2; padding: 14px 18px; font-size: 13px">
+            <div style="min-width: 0">
+              <div style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ conta.email }}</div>
+              <div style="font-size: 12px; color: #8a8c91">desde {{ conta.desde }}</div>
+            </div>
+            <span style="color: #5c5e64; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ conta.handle }}</span>
+            <span>
+              <span style="display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 9px; font-size: 12px; font-weight: 500; background: {{ conta.fundoDoPlano }}; color: {{ conta.corDoPlano }}">{{ conta.plano }}</span>
+            </span>
+            <span style="color: #42444a">{{ conta.livros }}</span>
+            <div style="display: flex; align-items: center; gap: 10px">
+              <div style="height: 5px; flex: 1; overflow: hidden; border-radius: 999px; background: #efeff1">
+                <div style="height: 100%; border-radius: 999px; width: {{ conta.larguraDaBarra }}; background: {{ conta.corDaBarra }}"></div>
+              </div>
+              <span style="font-size: 12px; color: {{ conta.corDoTexto }}; white-space: nowrap">{{ conta.trafego }}</span>
+            </div>
+            <span style="text-align: right"><a href="#" style="font-size: 12px; font-weight: 500">Abrir</a></span>
+          </div>
+        </sc-for>
+      </div>
+
+    </div>
+  </main>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  renderVals() {
+    const linhas = [
+      { email: 'alexandre@dablab.com.br', handle: '/alexandre', plano: 'Ilimitado', livros: '5', pct: 0, trafego: '—', desde: 'set 2026', dono: true },
+      { email: 'maria.helena@exemplo.com', handle: '/mariahelena', plano: 'Gratuito', livros: '5 de 5', pct: 0.92, trafego: '18,4 GB', desde: 'set 2026' },
+      { email: 'joao.pedro@exemplo.com', handle: '/jpzine', plano: 'Até 20', livros: '11 de 20', pct: 0.34, trafego: '17,1 GB', desde: 'set 2026' },
+      { email: 'estudio@exemplo.com.br', handle: '/estudio-norte', plano: 'Gratuito', livros: '2 de 5', pct: 0.11, trafego: '2,2 GB', desde: 'set 2026' },
+      { email: 'contato@revistalume.com', handle: '/lume', plano: 'Gratuito', livros: '3 de 5', pct: 0.05, trafego: '1,0 GB', desde: 'set 2026' },
+      { email: 'bruno@exemplo.com', handle: '—', plano: 'Gratuito', livros: '0 de 5', pct: 0, trafego: '—', desde: 'set 2026' },
+    ];
+    return {
+      contas: linhas.map((linha) => {
+        const alerta = linha.pct >= 0.8;
+        return {
+          ...linha,
+          larguraDaBarra: `${Math.round(Math.min(1, linha.pct) * 100)}%`,
+          corDaBarra: alerta ? '#a32020' : '#1c5fd8',
+          corDoTexto: alerta ? '#a32020' : '#8a8c91',
+          fundoDoPlano: linha.dono ? '#eef3fd' : '#efeff1',
+          corDoPlano: linha.dono ? '#1c5fd8' : '#75777c',
+        };
+      }),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -16,6 +16,7 @@ export interface MetadadosEmEdicao {
 }
 
 export function BookFormFields({
+  handle,
   valores,
   aoMudar,
   erroDeSlug,
@@ -23,6 +24,8 @@ export function BookFormFields({
   aoAceitarSugestao,
   desabilitado = false,
 }: {
+  // O endereço do autor forma o prefixo do link do livro: /<handle>/<slug>.
+  handle: string
   valores: MetadadosEmEdicao
   aoMudar: (campo: keyof MetadadosEmEdicao, valor: string) => void
   erroDeSlug?: string | null
@@ -61,7 +64,7 @@ export function BookFormFields({
       >
         <div className="flex items-center gap-0 overflow-hidden rounded-[10px] border border-hairline-forte bg-superficie focus-within:border-destaque">
           <span className="shrink-0 border-r border-hairline bg-tela px-3 py-2.5 text-[13px] text-tinta-apagada">
-            /l/
+            /{handle}/
           </span>
           <input
             type="text"
@@ -98,15 +101,15 @@ export function BookFormFields({
           onChange={(evento) => aoMudar('autor', evento.target.value)}
           disabled={desabilitado}
           className={estiloDeCampo}
-          // Em branco vira "Alexandre Siqueira" no servidor (seção 7).
-          placeholder="Alexandre Siqueira"
+          // Em branco vira o nome da conta no servidor (seção 7).
+          placeholder="Seu nome"
         />
       </Campo>
 
       <Campo
         rotulo="Descrição"
         opcional
-        ajuda="Aparece no catálogo e no card de quem compartilhar o link."
+        ajuda="Aparece na sua vitrine e no card de quem compartilhar o link."
       >
         <textarea
           value={valores.descricao}
