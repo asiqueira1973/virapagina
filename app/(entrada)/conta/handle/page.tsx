@@ -4,6 +4,14 @@
 // Tela de passo único, sem menu lateral: é o único momento em que o autor não
 // tem para onde ir. Quem já tem handle é mandado para o painel — a tela não
 // serve para trocar (regra 11.10).
+//
+// **Mora num grupo de rota, fora de `app/conta/`, e isso não é organização: é
+// correção de um laço.** O layout de `app/conta/` manda para cá quem ainda não
+// tem handle — e, quando esta página vivia lá dentro, ele fazia isso também
+// para quem já estava aqui. O navegador seguia o redirecionamento para a mesma
+// URL, sem fim: ERR_TOO_MANY_REDIRECTS no primeiro login de toda conta nova.
+// Grupo de rota não muda a URL, então o endereço continua `/conta/handle`; muda
+// só de quem esta página herda layout. Não a mova de volta.
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'

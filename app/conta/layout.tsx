@@ -26,6 +26,11 @@ export default async function ContaLayout({ children }: { children: React.ReactN
 
   // Sem handle não existe URL pública, logo não existe produto: a escolha vem
   // antes de qualquer outra tela e não é pulável (critério 8.1).
+  //
+  // O destino deste redirecionamento vive FORA de `app/conta/`, num grupo de
+  // rota, justamente para não passar por este layout — senão ele mandaria para
+  // cá quem já está lá, e o navegador ficaria em laço. Ver o comentário em
+  // `app/(entrada)/conta/handle/page.tsx`.
   if (!usuario.handle) redirect('/conta/handle')
 
   // "Sair" encerra a sessão e volta para a home pública (critério 8.1).

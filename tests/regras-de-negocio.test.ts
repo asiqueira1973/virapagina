@@ -255,3 +255,19 @@ describe('variável de ambiente vazia se comporta como ausente', () => {
     expect(isAdminEmail('alexandre@dablab.com.br')).toBe(false)
   })
 })
+
+// Guarda estrutural de um laço de redirecionamento real, que só aparecia no
+// primeiro login de uma conta nova — o caminho mais difícil de testar e o mais
+// caro de quebrar.
+//
+// `app/conta/layout.tsx` manda para `/conta/handle` quem ainda não escolheu
+// endereço. Se essa página morar dentro de `app/conta/`, o layout roda para ela
+// também e manda para ela mesma: ERR_TOO_MANY_REDIRECTS, sem log de erro, na
+// primeira tela que qualquer pessoa vê depois de criar conta.
+describe('a tela de escolha de endereço não pode herdar o layout do painel', () => {
+  it('vive fora de app/conta/, num grupo de rota', async () => {
+    const { existsSync } = await import('node:fs')
+    expect(existsSync('app/(entrada)/conta/handle/page.tsx')).toBe(true)
+    expect(existsSync('app/conta/handle/page.tsx')).toBe(false)
+  })
+})
