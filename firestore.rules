@@ -1,0 +1,18 @@
+rules_version = '2';
+
+// Regras do Firestore (spec seção 6).
+//
+// Negam TODA operação vinda do cliente. Isto não é a camada de autorização — as
+// guardas de lib/guards.ts são. Isto é a garantia de que **não existe segunda
+// porta**: o navegador nunca fala com o banco (princípio 0.3), e mesmo que uma
+// chave pública do Firebase vaze, ela não abre nada.
+//
+// O Admin SDK, usado nas rotas de servidor, passa por cima destas regras por
+// definição — é assim que a aplicação continua funcionando.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

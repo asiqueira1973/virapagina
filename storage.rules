@@ -1,0 +1,18 @@
+rules_version = '2';
+
+// Regras do Cloud Storage (spec seção 6).
+//
+// Mesma lógica do firestore.rules: negam todo acesso do cliente. Os PDFs e as
+// capas só chegam ao navegador pelas rotas de proxy, que é o que permite tirar
+// um livro do ar de verdade e medir o tráfego por conta (regra 11.11).
+//
+// A exceção necessária é o upload: ele acontece por URL de sessão assinada pelo
+// servidor, que é autorizada pela própria assinatura e não passa por estas
+// regras.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "livros",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "dono_id", "order": "ASCENDING" },
+        { "fieldPath": "criado_em", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "livros",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "dono_id", "order": "ASCENDING" },
+        { "fieldPath": "slug", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "livros",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "dono_id", "order": "ASCENDING" },
+        { "fieldPath": "publicado", "order": "ASCENDING" },
+        { "fieldPath": "criado_em", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "livros",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "publicado", "order": "ASCENDING" },
+        { "fieldPath": "criado_em", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
