@@ -2,8 +2,8 @@
 Documento: spec.md — Virapágina
 Versão: 3.0
 Responsável de produto: Alexandre Siqueira
-Status: rascunho
-Data: 2026-09-08
+Status: aprovado para implementação
+Data: 2026-09-09
 ---
 
 # Virapágina — Especificação de Software (SDD)
@@ -235,7 +235,7 @@ Id do documento: o `sub` do Google.
 | `email` | string | não | — | Espelho do Google, para exibição e suporte. Nunca é chave |
 | `nome` | string | sim | — | Nome do Google. Nulo se a conta não expõe |
 | `handle` | string | sim | — | Identificador público na URL. **Nulo até o primeiro acesso concluir a escolha** — é o único estado em que a conta existe sem URL pública |
-| `plano` | `plano` | não | `gratuito` | Define o limite de livros (regra 11.8). No v3 só o admin da plataforma altera |
+| `plano` | `plano` | não | `gratuito` | Define o limite de livros (regra 11.8). No v3 muda por ação do admin da plataforma, **ou automaticamente para `ilimitado`** quando o e-mail está em `ADMIN_ALLOWED_EMAILS` (regra 11.13) |
 | `trafego_mes_bytes` | number | não | `0` | Bytes servidos no mês corrente. Alimenta a válvula da regra 11.11 |
 | `trafego_mes_referencia` | string | não | mês atual | `AAAA-MM`. Quando não bate com o mês de hoje, o contador zera |
 | `criado_em` | timestamp | não | agora | — |
@@ -298,7 +298,7 @@ Vale para o Alexandre também. Auditoria com exceção para o dono não é audit
 
 | Enum | Valores | Significado |
 |---|---|---|
-| `plano` | `gratuito`, `ate_20`, `ate_50`, `ate_100` | Faixa de limite de livros (regra 11.8). As faixas acima de `gratuito` já existem no v3 porque o admin as concede à mão; o que falta é só o caminho de pagar por elas |
+| `plano` | `gratuito`, `ate_20`, `ate_50`, `ate_100`, `ilimitado` | Faixa de limite de livros (regra 11.8). As faixas intermediárias já existem no v3 porque o admin as concede à mão; o que falta é só o caminho de pagar por elas. `ilimitado` é o plano das contas do próprio dono (regra 11.13) — sem limite, sem franquia e fora de qualquer cobrança |
 | `acao_admin` | `alterou_plano`, `alterou_handle`, `removeu_livro`, `consultou_conta` | — |
 
 ### Estratégia de exclusão
@@ -306,8 +306,8 @@ Vale para o Alexandre também. Auditoria com exceção para o dono não é audit
 | Entidade | Estratégia | Por quê |
 |---|---|---|
 | `livros` | **Hard delete**, com os arquivos do Storage apagados **depois** da exclusão do documento | Não há histórico a preservar, e arquivo órfão no Storage é custo puro. A ordem importa: nunca sobra metadado apontando para arquivo inexistente |
-| `usuarios` | **Não há exclusão pela interface no v3.** Apagar a conta é pedido de suporte | Apagar conta apaga livros, que apaga links que circulam. Merece conversa humana. Ver pergunta aberta 25.2 |
-| `handles` | Só sai junto com a conta, pelo mesmo caminho de suporte | Handle liberado é link sequestrado: quem pegasse o nome herdaria o tráfego dos links antigos |
+| `usuarios` | **Hard delete, mas sem botão.** Apagar a conta é pedido por e-mail, atendido **em até 30 dias** direto no console do Firebase (decisão 25.2). Saem juntos: a conta, o handle, todos os livros e todos os arquivos | Apagar conta apaga livros, que apaga links que circulam — merece conversa humana e um par de olhos. Uma rota "exclua qualquer conta" seria a mais perigosa do sistema para atender um caso que acontece uma vez por ano |
+| `handles` | Sai junto com a conta | Enquanto a conta existe, handle liberado é link sequestrado: quem pegasse o nome herdaria o tráfego dos links antigos. Quando a conta some, o nome volta a ficar livre |
 
 ### Dados de seed
 
@@ -329,6 +329,7 @@ Ordem de implementação. Os épicos 8.3 e 8.4 estão **implementados desde a v2
 
 - Qualquer conta Google consegue entrar. Não existe allowlist para autores.
 - No primeiro login, o documento em `usuarios` é criado com `plano = gratuito` e `handle` nulo.
+- **E-mail presente em `ADMIN_ALLOWED_EMAILS` nasce com `plano = ilimitado`**, sem passo manual nenhum. Se o e-mail for acrescentado à variável depois, o próximo login da conta corrige o plano sozinho (regra 11.13).
 - Enquanto o `handle` for nulo, qualquer rota `/conta/*` redireciona para a tela de escolha; ela não é pulável.
 - A tela sugere um handle a partir do nome ou do e-mail do Google, e o campo é editável.
 - Handle inválido (fora de `^[a-z0-9-]{3,30}$`) é recusado com "Use de 3 a 30 letras minúsculas, números ou hífen."
@@ -405,6 +406,7 @@ Implementado na v2.0. **Nada muda** além do caminho das rotas de download e imp
 - A home **não** menciona preço nem plano pago — eles não existem no v3.
 - A home não lista livros de ninguém sem consentimento: só o exemplo escolhido pelo dono da plataforma, definido por variável de ambiente.
 - Visitante deslogado que clica em "Começar de graça" vai para o login.
+- `/termos` e `/privacidade` nomeiam o responsável (**DabLab, CNPJ 61.033.268/0001-14**), trazem `alexandre@dablab.com.br` como contato e canal de denúncia, e dizem explicitamente que a exclusão de conta é atendida em até 30 dias e **faz os links publicados pararem de funcionar** (decisões 25.2 a 25.4).
 
 ### 8.7 Administração da plataforma
 
@@ -416,6 +418,7 @@ Implementado na v2.0. **Nada muda** além do caminho das rotas de download e imp
 - A lista de contas mostra e-mail, handle, plano, quantidade de livros e tráfego do mês contra a franquia. **Não mostra rascunho de ninguém.**
 - Conta acima de 80% da franquia de tráfego aparece destacada.
 - Alterar o plano de uma conta funciona em um clique e grava em `acoes_admin`. É assim que alguém que pediu mais livros é atendido no v3.
+- Tentar alterar o plano de uma conta cujo e-mail está em `ADMIN_ALLOWED_EMAILS` é recusado: ela é `ilimitado` por definição (regra 11.13), e o próximo login desfaria a mudança de qualquer jeito.
 - Alterar o handle de uma conta é feito numa transação que libera o antigo e reserva o novo.
 - "Remover livro" despublica um livro **publicado**, marca `removido_por_denuncia` e grava a ação. Não exclui o arquivo — remoção indevida precisa ser reversível.
 - Toda ação de admin, inclusive consulta a uma conta, grava em `acoes_admin`.
@@ -487,8 +490,9 @@ Qualquer rota que não conseguir falar com o Google devolve ao usuário "Algo de
 | 11.8 | **Limite de livros por plano.** O limite conta **todos** os livros da conta, rascunho e publicado, porque o custo é o arquivo guardado, não a visibilidade | Servidor |
 | 11.9 | **Nada de mudar de plano tira coisa do ar.** Baixar o plano de uma conta que está acima do novo limite não exclui, não despublica e não bloqueia leitura de nada: só impede publicar o próximo | Servidor |
 | 11.10 | O `handle` é escolhido uma vez e **não é alterável pelo autor** no v3. Handle liberado herda o tráfego dos links antigos, o que é sequestro de audiência | Frontend + servidor |
-| 11.11 | **Válvula de tráfego.** Cada plano tem franquia mensal de saída de dados. Passar dela **não corta nada e não gera cobrança**: gera aviso ao autor em 80% e ao dono da plataforma em 100%, para conversa | Proxy de arquivo + rotina diária |
+| 11.11 | **Válvula de tráfego.** Cada plano tem franquia mensal de saída de dados. Passar dela **não corta nada e não gera cobrança**: gera aviso ao autor em 80% e ao dono da plataforma em 100%, para conversa. Conta `ilimitado` não tem franquia e nunca dispara aviso | Proxy de arquivo + rotina diária |
 | 11.12 | Livro com `removido_por_denuncia = true` não pode ser republicado pelo dono. Só o admin da plataforma reverte | Servidor |
+| 11.13 | **As contas do dono da plataforma são ilimitadas.** Todo e-mail presente em `ADMIN_ALLOWED_EMAILS` recebe `plano = ilimitado` no primeiro login e a cada login seguinte: sem limite de livros, sem franquia de tráfego, e fora de qualquer cobrança quando ela existir. Não é ação manual e não pode ser desfeita pela tela | Servidor, no login |
 
 ### 11.8 — Limites por plano
 
@@ -498,6 +502,7 @@ Qualquer rota que não conseguir falar com o Google devolve ao usuário "Algo de
 | `ate_20` | 20 | 50 GB | Concedido à mão pelo admin da plataforma |
 | `ate_50` | 50 | 100 GB | Concedido à mão pelo admin da plataforma |
 | `ate_100` | 100 | 200 GB | Concedido à mão pelo admin da plataforma |
+| `ilimitado` | **sem limite** | **sem franquia** | **Automático** para todo e-mail em `ADMIN_ALLOWED_EMAILS` (regra 11.13) |
 
 Os preços de cada faixa estão em `EPICO-COBRANCA.md` e **não valem no v3** — aqui as faixas existem, mas não há como comprá-las. Os valores de franquia de tráfego são **assunção declarada** (24.5) e precisam de revisão do Alexandre.
 
@@ -682,9 +687,9 @@ Livre para o agente: a ilustração da home.
   | `GOOGLE_OAUTH_CLIENT_SECRET` | **sim** | Login |
   | `NEXTAUTH_SECRET` | **sim** | Assina o cookie de sessão |
   | `NEXTAUTH_URL` | não | URL do deploy |
-  | `ADMIN_ALLOWED_EMAILS` | **sim** | Admins **da plataforma** (não mais dos autores) |
+  | `ADMIN_ALLOWED_EMAILS` | **sim** | Admins **da plataforma**. As contas destes e-mails também nascem `ilimitado` (regra 11.13). No v3: `alexandre.silva.siqueira@gmail.com`, `alexandre@dablab.com.br`, `alexandre.siqueira@outlook.com` |
   | `CRON_SECRET` | **sim** | Protege a rotina da seção 13.4 |
-  | `EMAIL_CONTATO` | não | Aparece nos termos, no canal de denúncia e no botão "Falar com a gente" |
+  | `EMAIL_CONTATO` | não | `alexandre@dablab.com.br` (decisão 25.3). Aparece nos termos, na política de privacidade, no canal de denúncia e no botão "Falar com a gente" |
   | `LIVRO_EXEMPLO_HOME` | não | Qual livro a home mostra folheável |
 
   As variáveis do Stripe entram com a cobrança (seção 8 do `EPICO-COBRANCA.md`).
@@ -729,7 +734,8 @@ Com dado pessoal de terceiros, a plataforma passa a ser **controladora**. O v3 p
 
 - **Política de privacidade** em `/privacidade`, dizendo o que se coleta, por quê e por quanto tempo.
 - **Termos de uso** em `/termos`, com: o autor declara ter direito sobre o que publica; a plataforma pode despublicar conteúdo que viole os termos ou a lei; canal de denúncia com e-mail de contato.
-- **Caminho de exclusão de conta.** Não há botão no v3; é pedido de suporte. Registrado como pergunta aberta 25.2, porque o prazo e a forma são decisão do Alexandre.
+- **Caminho de exclusão de conta.** Não há botão no v3: a pessoa escreve para `alexandre@dablab.com.br` e o pedido é atendido **em até 30 dias**, apagando conta, handle, livros e arquivos. **Os links que circulavam deixam de funcionar** — e os termos dizem isso com todas as letras, para ninguém ser surpreendido (decisão 25.2).
+- **Responsável pelo tratamento:** DabLab, CNPJ 61.033.268/0001-14, contato `alexandre@dablab.com.br` (decisão 25.4).
 - **Base legal:** execução de contrato para os dados da conta.
 
 ### Segurança
@@ -767,6 +773,7 @@ Hospedar arquivo de outras pessoas traz risco que a v2.0 não tinha: violação 
 - Unicidade de handle sob concorrência: duas criações simultâneas do mesmo handle resultam em uma vitória e uma recusa.
 - Limite de plano: a rota de criação e a de sessão de upload recusam quando a conta está no limite; excluir um livro libera a vaga.
 - Baixar o plano de uma conta acima do novo limite **não** exclui nem despublica nada (regra 11.9).
+- Conta com e-mail em `ADMIN_ALLOWED_EMAILS` nasce `ilimitado`, não esbarra em limite nenhum e não dispara aviso de tráfego (regra 11.13); e uma conta comum promovida à mão continua respeitando o limite da faixa.
 
 Manual, antes de cada deploy: o fluxo da seção 9 ponta a ponta. E, ao menos uma vez por release, o leitor num **iPhone e num Android reais** — emulador não valida swipe nem Fullscreen API.
 
@@ -793,9 +800,9 @@ Manual, antes de cada deploy: o fluxo da seção 9 ponta a ponta. E, ao menos um
 2. **Handle imutável no v3** (regra 11.10), com troca por suporte. Alternativa seria permitir a troca guardando o antigo como redirecionamento, o que dobra a modelagem de handles por um caso raro.
 3. **O `autor` do livro é campo editável**, com o nome da conta como padrão — porque quem publica nem sempre é quem escreveu.
 4. **As faixas `ate_20`, `ate_50` e `ate_100` já existem no v3**, concedidas à mão. A alternativa era ter só `gratuito` e criar as outras depois, mas aí a migração das contas existentes viraria trabalho — e é justamente o trabalho que fazer agora evita.
-5. **Franquias de tráfego de 20/50/100/200 GB** (regra 11.11). São chute calibrado: 20 GB são cerca de 2.200 downloads de um PDF de 9 MB, o que cobre um post que foi bem no LinkedIn. **É a assunção que mais precisa da sua revisão**, porque é a que segura a fatura — e no v3, sem receita, ela segura sozinha.
+5. **Franquias de tráfego de 20/50/100/200 GB** (regra 11.11). São chute calibrado: 20 GB são cerca de 2.200 downloads de um PDF de 9 MB, o que cobre um post que foi bem no LinkedIn. **Revisada e aprovada por Alexandre em 09/09/2026.** Continua sendo o número que segura a fatura sozinho enquanto não houver receita — se a franquia começar a disparar aviso toda semana, ela é o primeiro lugar a reabrir.
 6. **Aviso, nunca corte**, ao passar da franquia. Cortar o livro de quem está sendo lido é o pior momento possível para intervir.
-7. **A conta do Alexandre recebe `ate_100`** pela tela de admin, logo depois do primeiro login.
+7. **Ser admin da plataforma implica ser ilimitado** (regra 11.13). São os mesmos três e-mails, numa variável só, em vez de duas listas para manter em sincronia. A consequência a olhar: se um dia você acrescentar um e-mail de suporte a `ADMIN_ALLOWED_EMAILS`, ele também ganha conta ilimitada. Se isso incomodar, a separação é uma variável nova — me avise.
 8. **A home mostra um livro de exemplo** definido por variável de ambiente, não uma lista dos livros de todo mundo — expor livro de autor na home sem ele pedir é usar o conteúdo dele como propaganda.
 9. **O `/l/<slug>` da v2.0 simplesmente deixa de existir.** Não há redirecionamento, porque não há links antigos em circulação: nada foi publicado ainda.
 10. **A home não menciona preço nem "em breve".** Prometer cobrança futura na home afasta gente sem trazer nada — quando os planos existirem, a página entra.
@@ -804,12 +811,19 @@ Manual, antes de cada deploy: o fluxo da seção 9 ponta a ponta. E, ao menos um
 
 ## 25. Perguntas abertas
 
-O agente de código deve **perguntar em vez de assumir** ao cruzar com qualquer um destes.
+**Todas respondidas por Alexandre em 09/09/2026.** Ficam registradas aqui, com a
+resposta, porque a decisão importa mais que a pergunta — e porque a seção é
+referenciada pelo prompt de implementação.
 
-1. **Projeto do Firebase:** criar um novo e dedicado, ou reaproveitar algum já existente? (Recomendação: novo, isolado.)
-2. **Exclusão de conta:** em quanto tempo depois do pedido, e o que acontece com os livros publicados e com os links que circulam?
-3. **Endereço de contato** que vai nos termos, na política de privacidade, no canal de denúncia e no botão "Falar com a gente" (`EMAIL_CONTATO`).
-4. **Nome e CNPJ** que aparecem nos termos de uso como responsável pela plataforma.
+| # | Pergunta | Resposta |
+|---|---|---|
+| 25.1 | Projeto do Firebase: novo ou reaproveitado? | **Criar um novo**, dedicado ao Virapágina |
+| 25.2 | Exclusão de conta: em quanto tempo, e o que acontece com os links? | **Em até 30 dias** do pedido. Conta, handle, livros e arquivos saem juntos, e **os links que circulam deixam de funcionar** — a exclusão é real, não um esconder |
+| 25.3 | Endereço de contato dos termos, da privacidade, da denúncia e do botão "Falar com a gente" | **alexandre@dablab.com.br** |
+| 25.4 | Nome e CNPJ do responsável pela plataforma nos termos | **DabLab**, CNPJ **61.033.268/0001-14** |
+
+Não há mais pergunta aberta. Se o agente de código encontrar uma decisão que este
+documento não toma, ela é nova: pergunte em vez de assumir, e registre aqui.
 
 ---
 
@@ -825,7 +839,7 @@ O agente de código deve **perguntar em vez de assumir** ao cruzar com qualquer 
 - [ ] Termos de uso e política de privacidade publicados, com o canal de denúncia.
 - [ ] `DOCUMENTACAO-TECNICA.md` gerado e conferido contra o sistema; `CLAUDE.md` e `README.md` em dia.
 - [ ] Leitor testado num iPhone e num Android reais.
-- [ ] Conta do Alexandre criada, promovida a `ate_100`, e o livro *Conceitos de Tecnologia* publicado como primeiro título real.
+- [ ] Conta do Alexandre criada e nascida `ilimitado` sozinha, e o livro *Conceitos de Tecnologia* publicado como primeiro título real.
 - [ ] Heyzine cancelado.
 - [ ] **Nada do `EPICO-COBRANCA.md` implementado** — nem "só a estrutura", nem um campo "para depois".
 
@@ -834,12 +848,12 @@ O agente de código deve **perguntar em vez de assumir** ao cruzar com qualquer 
 ## 27. Próximos passos operacionais
 
 1. Alexandre revisa as seções 24 (Assunções) e 25 (Perguntas abertas). **A 24.5 é a que mais importa.**
-2. Criar o projeto no Firebase, ativar Firestore e Storage, subir para o plano Blaze e configurar o alerta de orçamento.
+2. Criar um projeto **novo** no Firebase (decisão 25.1), ativar Firestore e Storage, subir para o plano Blaze e configurar o alerta de orçamento.
 3. Criar a conta de serviço do Firebase e guardar a chave.
 4. Configurar as variáveis da seção 18 na Vercel e apontar `virapagina.app.br`.
 5. Implementar na ordem da seção 8.
 6. Semear os handles reservados.
-7. Criar a conta do Alexandre, promover a `ate_100`, publicar o primeiro livro.
+7. Entrar com o próprio e-mail — a conta nasce `ilimitado` — e publicar o primeiro livro.
 8. Trocar o link do Heyzine pelo do Virapágina e cancelar a assinatura.
 9. Esperar. Quando alguém esbarrar no limite de 5 e pedir mais, abrir o `EPICO-COBRANCA.md`.
 

@@ -20,13 +20,15 @@
 // Enums (seção 7)
 // ---------------------------------------------------------------------------
 
-// Define o limite de livros da conta (regra 11.8). No v3 só o admin da
-// plataforma altera; as faixas acima de gratuito são concedidas à mão.
+// Define o limite de livros da conta (regra 11.8). No v3 as faixas intermediárias
+// são concedidas à mão pelo admin; `ilimitado` é automático para todo e-mail em
+// ADMIN_ALLOWED_EMAILS (regra 11.13) — sem limite, sem franquia, fora de cobrança.
 enum plano {
   gratuito
   ate_20
   ate_50
   ate_100
+  ilimitado
 }
 
 enum acao_admin {

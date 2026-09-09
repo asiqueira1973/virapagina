@@ -30,6 +30,7 @@ Desenho, não implementação. A seção 3 do `spec.md` mantém a cobrança **fo
 | Plano | Limite de livros | Preço mensal | Franquia de tráfego |
 |---|---|---|---|
 | `gratuito` | 5 | R$ 0 | 20 GB |
+| `ilimitado` | sem limite | — (contas do dono) | sem franquia |
 | `ate_20` | 20 | R$ 20,00 | 50 GB |
 | `ate_50` | 50 | R$ 40,00 | 100 GB |
 | `ate_100` | 100 | R$ 80,00 | 200 GB |
@@ -143,7 +144,7 @@ Leva ao **Portal do Cliente do Stripe**. A plataforma não implementa tela de ca
 
 O admin da plataforma marca `cortesia = true`. A conta passa a valer como `ate_100` e **toda rotina de cobrança passa direto por ela**: sem cliente no Stripe, sem assinatura, sem rebaixamento. Fica registrado em `acoes_admin`.
 
-É assim que a conta do próprio dono funciona, para ele não pagar a si mesmo nem sujar a receita.
+A cortesia é para conceder conta paga a **outras pessoas**. As contas do próprio dono já resolvem isso sozinhas por outro caminho: elas nascem com `plano = ilimitado` por estarem em `ADMIN_ALLOWED_EMAILS` (regra 11.13 do spec), e nenhuma rotina de cobrança as toca — sem precisar de coluna, de clique nem de cliente no Stripe.
 
 ---
 
