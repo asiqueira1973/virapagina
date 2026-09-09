@@ -1,5 +1,12 @@
 # Documentação técnica — Virapágina
 
+> **Atenção — este documento descreve a v2.0, que é o código que está no repositório.**
+> O `spec.md` já está na **v3.0** (produto multi-tenant com Firestore e Firebase
+> Storage), que **ainda não foi implementada**. Enquanto a v3.0 não for construída,
+> o que vale aqui como descrição do sistema é a v2.0: Google Sheets, Google Drive e
+> um único administrador por allowlist. O desenho da cobrança está em
+> `EPICO-COBRANCA.md` e também não foi implementado.
+
 Escrito a partir do que está implementado, não do que foi planejado. Cobre os
 seis itens exigidos pela seção 19 do `spec.md`. Se alguma coisa aqui não bater
 com o código, o código está certo e este documento está velho — corrija-o no

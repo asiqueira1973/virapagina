@@ -1,5 +1,12 @@
 # Virapágina
 
+> **Atenção — este documento descreve a v2.0, que é o código que está no repositório.**
+> O `spec.md` já está na **v3.0** (produto multi-tenant com Firestore e Firebase
+> Storage), que **ainda não foi implementada**. Enquanto a v3.0 não for construída,
+> o que vale aqui como descrição do sistema é a v2.0: Google Sheets, Google Drive e
+> um único administrador por allowlist. O desenho da cobrança está em
+> `EPICO-COBRANCA.md` e também não foi implementado.
+
 Plataforma própria de flipbooks: PDFs que qualquer pessoa folheia no navegador,
 com uma URL por publicação e um painel para subir títulos novos. Substitui o
 Heyzine nas publicações do Alexandre.

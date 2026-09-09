@@ -1,36 +1,125 @@
-// Modelo de dados — Virapágina
+// Modelo de dados — Virapágina v3.0
 // Gerado a partir da seção 7 do spec.md — colar direto no dbdiagram.io
+//
+// ATENÇÃO: o Virapágina usa Cloud Firestore, que é documental, não relacional.
+// Este arquivo existe para visualizar as entidades e os relacionamentos, que são
+// reais mesmo sem chave estrangeira no banco. Duas consequências que o diagrama
+// não consegue mostrar sozinhas:
+//   1. O Firestore NÃO impõe unicidade nem integridade referencial. Toda garantia
+//      marcada como [unique] ou [ref] aqui é responsabilidade do código, nas
+//      rotas da seção 13.
+//   2. Não existe trigger. O campo atualizado_em é reescrito pela aplicação em
+//      toda gravação (seção 7).
+//
+// FORA DESTE MODELO: os campos de cobrança em `usuarios` (cortesia,
+// stripe_cliente_id, assinatura_id, assinatura_status, periodo_fim, tomador_*),
+// a coleção `eventos_stripe` e os enums `status_assinatura` e `tipo_tomador`.
+// Estão especificados na seção 2 do EPICO-COBRANCA.md e NÃO fazem parte do v3.
 
-Table administradores {
-  id uuid [pk, note: 'Mesmo id do auth.users (Supabase Auth) — chave estrangeira 1:1']
-  email text [not null, note: 'Espelha o e-mail do Auth, só para conferência visual no painel do Supabase']
-  criado_em timestamptz [not null, default: `now()`]
+// ---------------------------------------------------------------------------
+// Enums (seção 7)
+// ---------------------------------------------------------------------------
 
-  Note: 'Allowlist de administradores. Sem soft delete — tabela de baixíssimo volume, editada manualmente.'
+// Define o limite de livros da conta (regra 11.8). No v3 só o admin da
+// plataforma altera; as faixas acima de gratuito são concedidas à mão.
+enum plano {
+  gratuito
+  ate_20
+  ate_50
+  ate_100
 }
 
+enum acao_admin {
+  alterou_plano
+  alterou_handle
+  removeu_livro
+  consultou_conta
+}
+
+// ---------------------------------------------------------------------------
+// Coleções
+// ---------------------------------------------------------------------------
+
+// Id do documento: o `sub` do Google (estável e único).
+// Sem exclusão pela interface no v3 — apagar conta é pedido de suporte (seção 7).
+Table usuarios {
+  id text [pk, note: 'Id do documento = sub do Google. O e-mail nunca é chave']
+  email text [not null, note: 'Espelho do Google, para exibição e suporte']
+  nome text [note: 'Nulo se a conta Google não expõe o nome']
+  handle text [unique, note: 'Identificador público na URL. Nulo até o primeiro acesso concluir a escolha — único estado em que a conta existe sem URL pública. Unicidade garantida pela coleção handles, em transação']
+  plano plano [not null, default: 'gratuito']
+  trafego_mes_bytes number [not null, default: 0, note: 'Bytes servidos no mês corrente. Alimenta a válvula da regra 11.11']
+  trafego_mes_referencia text [not null, note: 'AAAA-MM. Quando não bate com o mês de hoje, o contador zera']
+  criado_em timestamp [not null]
+  atualizado_em timestamp [not null, note: 'Reescrito pela aplicação em toda gravação — não existe trigger']
+
+  Note: 'Uma conta por pessoa. Sem times, sem papéis dentro da conta (princípio 0.6). Os campos de cobrança entram com o EPICO-COBRANCA.md.'
+}
+
+// Id do documento: o próprio handle em minúsculas.
+// Existe porque o Firestore não tem índice único: sem esta coleção, dois cadastros
+// simultâneos escolhem o mesmo handle e ambos vencem. A criação é feita em
+// transação, com `create`, que falha se o documento já existir.
+// Seed: handles reservados (admin, api, app, ajuda, blog, conta, contato, entrar,
+// favicon.ico, l, login, precos, privacidade, sair, sobre, suporte, termos, www,
+// _next) gravados com usuario_id vazio.
+Table handles {
+  id text [pk, note: 'O próprio handle, em minúsculas']
+  usuario_id text [not null, note: 'Vazio nos handles reservados de seed']
+  criado_em timestamp [not null]
+
+  Note: 'Handle liberado herda o tráfego dos links antigos, o que é sequestro de audiência — por isso só sai junto com a conta (regra 11.10).'
+}
+
+// Id do documento: UUID gerado pela aplicação.
+// Hard delete: o documento é removido e SÓ DEPOIS os arquivos do Storage, nessa
+// ordem, para nunca sobrar metadado apontando para arquivo inexistente (regra 11.6).
+// Índices compostos necessários: (dono_id, criado_em desc), (dono_id, slug),
+// (publicado, criado_em desc).
 Table livros {
-  id uuid [pk, default: `gen_random_uuid()`]
-  titulo text [not null, note: 'Título de exibição']
+  id uuid [pk]
+  dono_id text [not null, note: 'Todo livro tem dono. É esta comparação, e não a URL, que define o que a pessoa alcança']
+  titulo text [not null]
   subtitulo text [note: 'Nulo quando o livro não tem subtítulo']
-  slug text [not null, unique, note: 'Identificador na URL (/l/<slug>); check: apenas minúsculas, números e hífen']
-  autor text [not null, default: `'Alexandre Siqueira'`]
-  descricao text [note: 'Nulo se o admin não preencher; usado no catálogo e em meta tag de compartilhamento']
-  arquivo_pdf_url text [not null, note: 'Caminho no bucket livros-pdfs']
-  arquivo_pdf_tamanho_bytes integer [note: 'Preenchido no upload; nulo se upload antigo não capturou']
-  capa_url text [note: 'Caminho no bucket livros-capas; nulo até ser gerada (regra 11.1)']
-  total_paginas integer [note: 'Preenchido no upload a partir da leitura do PDF; nulo se extração falhar']
-  publicado boolean [not null, default: false, note: 'Controla visibilidade pública — RLS seção 6']
-  criado_por uuid [not null]
-  criado_em timestamptz [not null, default: `now()`]
-  atualizado_em timestamptz [not null, default: `now()`, note: 'Atualizado por trigger livros_atualiza_timestamp a cada UPDATE']
+  slug text [not null, note: 'Só ^[a-z0-9-]+$. ÚNICO POR DONO, nunca globalmente — o namespace é por autor']
+  autor text [not null, note: 'Padrão: nome ou e-mail da conta. Editável, porque nem sempre o autor do livro é o dono da conta']
+  descricao text [note: 'Vitrine e meta tag de compartilhamento']
+  arquivo_pdf_caminho text [not null, note: 'livros/<dono_id>/<livro_id>/original.pdf no Storage. Nunca chega ao navegador']
+  arquivo_pdf_tamanho_bytes number [note: 'Nulo só se a leitura falhar; não bloqueia publicar']
+  capa_caminho text [note: 'livros/<dono_id>/<livro_id>/capa.png. Nulo até a capa ser gerada (regra 11.1)']
+  total_paginas number [note: 'Nulo só se a extração falhar']
+  publicado boolean [not null, default: false, note: 'Regra 11.4. Firestore tem boolean nativo — some a string sim/nao que a planilha da v2.0 exigia']
+  removido_por_denuncia boolean [not null, default: false, note: 'Despublicado por admin da plataforma. O dono vê o motivo e não consegue republicar (regra 11.12)']
+  criado_em timestamp [not null, note: 'Ordena a vitrine, do mais recente ao mais antigo']
+  atualizado_em timestamp [not null, note: 'Reescrito pela aplicação em toda gravação']
 
-  indexes {
-    slug [unique]
-    publicado
-  }
-
-  Note: 'Hard delete — exclusão remove a linha e os arquivos correspondentes nos buckets (regra 11.6).'
+  Note: 'O limite do plano conta TODOS os livros da conta, rascunho e publicado, porque o custo é o arquivo guardado (regra 11.8 e assunção 24.1).'
 }
 
-Ref: livros.criado_por > administradores.id
+// Vale para o dono da plataforma também: auditoria com exceção para o dono não é
+// auditoria. Toda ação de admin, inclusive consulta a uma conta, grava aqui.
+Table acoes_admin {
+  id uuid [pk]
+  admin_email text [not null, note: 'Quem fez']
+  acao acao_admin [not null]
+  conta_alvo text [note: 'Sobre qual conta']
+  livro_alvo uuid [note: 'Sobre qual livro, quando aplicável']
+  detalhe json [note: 'Map do Firestore com o antes e o depois']
+  feito_em timestamp [not null]
+}
+
+// ---------------------------------------------------------------------------
+// Relacionamentos (seção 7)
+// ---------------------------------------------------------------------------
+
+// Um autor tem muitos livros; um livro pertence a exatamente um autor.
+Ref: livros.dono_id > usuarios.id
+
+// Um autor tem exatamente um handle; um handle pertence a um autor.
+Ref: handles.usuario_id - usuarios.id
+
+// Uma conta pode ser alvo de muitas ações de admin.
+Ref: acoes_admin.conta_alvo > usuarios.id
+
+// Um livro pode ser alvo de muitas ações de admin.
+Ref: acoes_admin.livro_alvo > livros.id

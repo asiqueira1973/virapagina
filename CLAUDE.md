@@ -1,5 +1,12 @@
 # CLAUDE.md — Virapágina
 
+> **Atenção — este documento descreve a v2.0, que é o código que está no repositório.**
+> O `spec.md` já está na **v3.0** (produto multi-tenant com Firestore e Firebase
+> Storage), que **ainda não foi implementada**. Enquanto a v3.0 não for construída,
+> o que vale aqui como descrição do sistema é a v2.0: Google Sheets, Google Drive e
+> um único administrador por allowlist. O desenho da cobrança está em
+> `EPICO-COBRANCA.md` e também não foi implementado.
+
 Instruções para quem for mexer neste repositório, humano ou agente.
 
 Leia o `spec.md` antes de mudar comportamento e o `prompt-design-virapagina.md`

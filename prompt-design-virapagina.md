@@ -1,72 +1,139 @@
-Crie as telas do produto **Virapágina**, uma plataforma de flipbooks (livros digitais em PDF com efeito de virar página). Siga a especificação abaixo — não invente telas fora desta lista nem copy final além da listada.
+Crie as telas do produto **Virapágina**, uma plataforma onde qualquer pessoa sobe PDFs e recebe um link público para que sejam lidos em flipbook (efeito de virar página). Siga a especificação abaixo — não invente telas fora desta lista nem copy final além da listada.
+
+Toda a copy marcada entre aspas é **texto final**, não placeholder: use literalmente.
+
+---
 
 ## Direção visual
 
-Sem marca própria definida — proponha uma direção visual coerente com o produto, seguindo estas restrições:
-- Paleta neutra (tons de cinza/branco/preto), com um único tom de destaque para botões primários e estado ativo (pode usar um azul, à sua escolha).
-- Tipografia: sans-serif simples e legível (ex. Inter) — sem estilo manuscrito/hand-drawn (esse estilo pertence ao conteúdo dos livros, não à casca do produto).
-- Cantos arredondados suaves, espaçamento generoso, hairlines em vez de bordas pesadas.
+Já definida, mantenha:
 
-## Padrão de navegação do admin — menu lateral estilo App Store Connect
+- **Paleta neutra** — cinza, branco e quase-preto — com **um único tom de destaque**: azul `#1C5FD8` (hover `#12439B`), sobre fundo claro `#F5F5F6` e superfícies brancas.
+- **Cor semântica separada da cor de marca.** Vermelho `#A32020` (fundo `#FDF2F2`, borda `#F3D2D2`) só para perigo e alerta. Verde `#1A7F4B` (fundo `#EAF6EF`) só para o selo "Publicado". Nunca use azul para status.
+- **Tipografia:** Instrument Sans na interface; Instrument Serif nos títulos grandes das páginas públicas (home, vitrine).
+- **Forma:** cantos arredondados suaves (8–16px), **hairlines** de 1px em vez de bordas pesadas, espaçamento generoso.
+- Texto em pt-BR. Sem modo escuro, exceto o leitor, que é sempre escuro.
 
-As telas em `/admin/*` usam navegação lateral persistente:
-- Grupo em negrito escuro (ex. "Livros"), sem MAIÚSCULAS decorativas.
-- Itens indentados sob o grupo, sem marcador/bolinha.
-- Hairline fina separando grupos.
-- Um item ativo por vez, marcado com a cor de destaque (texto na cor + leve pílula clara de fundo).
-- Rodapé com e-mail do admin logado + botão "Sair".
+## Padrão de navegação — menu lateral estilo App Store Connect
 
-As telas públicas (catálogo e leitor) **não** usam essa navegação lateral — são páginas simples, sem menu.
+As telas em `/conta/*` e `/admin/*` usam navegação lateral persistente:
+
+- **Grupo** com título em negrito escuro, caixa normal — nunca MAIÚSCULAS decorativas.
+- **Itens** indentados sob o grupo, **sem marcador nem bolinha**.
+- **Hairline** fina separando os grupos.
+- **Um item ativo por vez**, marcado com o azul de destaque: texto na cor + pílula clara da mesma cor ao fundo.
+- **Rodapé** com o e-mail de quem está logado e o botão "Sair".
+
+No painel do autor há um grupo: **"Livros"** (item: "Meus livros").
+No painel da plataforma há um grupo: **"Plataforma"** (item: "Contas").
+
+As telas públicas — home, termos, privacidade, login, vitrine e leitor — **não** usam navegação lateral. São páginas consumer, com cabeçalho simples.
+
+---
 
 ## Fluxo principal entre telas
 
-Cadastro de um livro novo, do início ao fim:
-`/admin/livros` (lista) → botão "Novo livro" → `/admin/livros/novo` (formulário + upload) → salva como rascunho → `/admin/livros/[id]` (edição, com prévia) → botão "Publicar" → livro passa a aparecer em `/` (catálogo) e responde em `/l/[slug]` (leitor público).
+Da chegada ao primeiro livro publicado:
+
+`/` (home) → "Começar de graça" → `/entrar` → login Google → `/conta/handle` (escolher endereço, **não pulável**) → `/conta/livros` → "Novo livro" → `/conta/livros/novo` (formulário + upload) → salva como rascunho → `/conta/livros/[id]` (edição, com prévia) → "Publicar" → o livro passa a aparecer em `/<handle>` (vitrine) e a responder em `/<handle>/<slug>` (leitor).
+
+Do limite ao pedido de mais espaço:
+
+`/conta/livros` com 5 de 5 livros → botão "Novo livro" desabilitado + aviso do limite → "Falar com a gente" → abre um e-mail. **Não há tela de planos nem de pagamento no v1** — quem libera mais livros é o dono da plataforma, pela tela de admin.
+
+---
 
 ## Telas
 
-### [Admin] Login — `/admin/login`
-Mostra: campo e-mail, campo senha, botão "Entrar", link "Esqueci minha senha".
-Estados: erro de credencial ("E-mail ou senha incorretos."), confirmação de recuperação de senha ("Se esse e-mail existir, enviamos um link."), carregando durante o submit.
-Sem navegação lateral (usuário ainda não autenticado).
+### [Todos] Home — `/`
 
-### [Admin] Lista de livros — `/admin/livros`
-Mostra: tabela ou grade de todos os livros (publicados e rascunho), com miniatura da capa, título, badge de status ("Publicado" em verde / "Rascunho" em cinza), data de atualização, e ação "Ver página pública" (só quando publicado). Botão "Novo livro" em destaque no topo.
-Estados: vazio ("Nenhum livro ainda." + botão "Novo livro" centralizado), carregando (skeleton de linhas/cards).
-Ações: apenas leitura + navegação para criar/editar — nada é editado direto nesta tela.
+Mostra: o que o produto faz em uma frase grande em Instrument Serif, um exemplo de livro real folheável embutido na página, e o botão primário "Começar de graça". Abaixo, três blocos curtos com os diferenciais: sem marca d'água, nada do que você publica sai do ar, e o leitor não precisa de conta.
+Cabeçalho simples com o nome do produto e o link "Entrar". **Sem menção a preço ou plano pago — eles não existem nesta versão.**
+Sem navegação lateral.
+
+### [Todos] Termos e Privacidade — `/termos` e `/privacidade`
+
+Mostra: documento de texto longo, coluna estreita e legível, com índice lateral em telas largas. A página de termos termina com um bloco de **canal de denúncia** de conteúdo, com e-mail de contato em destaque.
+Sem navegação lateral.
+
+### [Visitante] Entrar — `/entrar`
+
+Mostra: cartão centralizado com o nome do produto, título "Entrar" e um botão único **"Entrar com Google"** com a marca do Google. Uma linha explicando que a conta é criada automaticamente no primeiro acesso.
+Estados: carregando durante o redirecionamento; erro genérico.
+Sem navegação lateral (a pessoa ainda não está autenticada).
+
+### [Autor sem handle] Escolher endereço — `/conta/handle`
+
+Mostra: tela de passo único, sem navegação lateral, ocupando a página inteira — é o único momento em que o autor não tem para onde ir. Título explicando que este será o endereço público dele. Campo com prefixo fixo `virapagina.app.br/` e sugestão preenchida a partir do nome ou e-mail do Google, editável. Botão "Continuar".
+Estados: verificando disponibilidade (indicador discreto no campo); disponível (marca de confirmação); formato inválido ("Use de 3 a 30 letras minúsculas, números ou hífen."); indisponível ("Esse endereço já está em uso, escolha outro." com um botão sugerindo uma alternativa livre).
+Deixe visível o aviso de que o endereço **não pode ser alterado depois** — a troca é feita pelo suporte.
+
+### [Todos] Vitrine do autor — `/<handle>`
+
+Mostra: cabeçalho com o nome do autor em Instrument Serif e o endereço dele. Abaixo, grade de capas dos livros **publicados** daquele autor, cada card com capa, título, subtítulo e autor. Sem menu lateral.
+Estados: vazio (mensagem simples, sem tom de erro: "Nenhum livro publicado ainda."); carregando (esqueleto de cards); autor inexistente (página 404 com "Esse endereço não existe." e link para a home).
+**Rascunho não aparece aqui — nem para o próprio dono.** Não exiba o e-mail do autor.
+
+### [Todos] Leitor — `/<handle>/<slug>`
+
+Já implementado; desenhe apenas para referência visual. Fundo escuro ocupando a tela inteira. Cabeçalho com botão de voltar, título do livro e nome do autor. Visualizador central em flipbook: **página dupla em telas ≥1024px, página única abaixo**. Barra de ferramentas flutuante na base, em pílula escura translúcida, com: página anterior, indicador "12 de 44", próxima página, separador, diminuir zoom, percentual, aumentar zoom, separador, tela cheia, baixar, imprimir, compartilhar.
+Estados: carregando (silhueta de página pulsando, nunca tela em branco); 404 ("Esse livro não está disponível." + link para a home); confirmação de cópia ("Link copiado.") em balão sobre a barra.
+Interações a representar: clique e arrasto nas bordas da página, além dos botões de anterior/próxima sempre visíveis — nem todo leitor descobre o gesto sozinho.
+O botão de tela cheia **some** onde o navegador não suporta; não desenhe estado desabilitado para ele.
+Prévia do dono: quando o livro está em rascunho e quem vê é o dono, o subtítulo do cabeçalho ganha " · prévia de rascunho".
+
+### [Autor] Meus livros — `/conta/livros`
+
+Mostra: título "Livros", uma linha com o uso contra o limite ("3 de 5 livros"), e o botão "Novo livro" em destaque. Lista em cartão único com hairlines entre as linhas; cada linha traz miniatura da capa, título, o endereço `/<handle>/<slug>`, selo de status ("Publicado" em verde / "Rascunho" em cinza), data de atualização e a ação "Ver página pública" (só quando publicado).
+Estados: vazio ("Nenhum livro ainda." com "Novo livro" centralizado em destaque); carregando (esqueleto de linhas); **limite atingido** (botão "Novo livro" desabilitado e um aviso: "Você chegou ao limite de {n} livros." com o botão "Falar com a gente", que abre um e-mail); livro removido por denúncia (linha com aviso em vermelho: "Este livro foi despublicado por violar os termos de uso. Fale com o suporte.").
+Ações: só leitura e navegação — nada é editado nesta tela.
+Navegação lateral: grupo "Livros", item "Meus livros" ativo.
+
+### [Autor] Novo livro — `/conta/livros/novo`
+
+Mostra: formulário com título, subtítulo (opcional), endereço do livro (campo com prefixo `/<handle>/` e slug sugerido do título, editável), autor (opcional, com o nome da conta como padrão), descrição (opcional), e área de upload de PDF por arrastar-e-soltar ou seleção, com barra de progresso.
+Estados: validação inline do endereço ("Esse link já está em uso, escolha outro." com botão "Usar {sugestão}"); arquivo inválido ("Envie um arquivo PDF."); arquivo grande demais ("Arquivo muito grande (máximo 100 MB)."); progresso real em três etapas nomeadas (lendo o PDF e gerando a capa, enviando o arquivo, salvando o livro); erro de envio ("Não foi possível concluir o envio. Tente novamente.") **mantendo todos os campos preenchidos**.
 Navegação lateral: grupo "Livros" ativo.
 
-### [Admin] Novo livro — `/admin/livros/novo`
-Mostra: formulário com título, subtítulo (opcional), slug (sugerido automaticamente, editável), descrição (opcional), campo de upload de PDF (arrastar-e-soltar ou selecionar arquivo) com barra de progresso.
-Estados: validação inline (slug duplicado, arquivo não-PDF, arquivo acima de 100 MB), progresso de upload real, erro de envio ("Não foi possível concluir o envio. Tente novamente." — mantendo os campos preenchidos).
+### [Autor dono] Editar livro — `/conta/livros/[id]`
+
+Mostra: o mesmo formulário, preenchido, em duas colunas. À esquerda, os metadados com o botão "Salvar alterações", e abaixo, separadas por hairline, duas seções próprias: **"Substituir PDF"** (com sua própria área de upload e botão) e **"Excluir livro"** (em vermelho, com texto explicando que remove o arquivo e não há como desfazer). À direita, um painel com o selo de status, o botão "Publicar"/"Despublicar" que alterna conforme o estado, o botão "Ver como ficaria" (que abre o leitor mesmo em rascunho) e uma lista com páginas, tamanho, criado em e atualizado em.
+Estados: confirmação nomeada ao excluir, em diálogo modal ("Excluir "{título}"? Essa ação não pode ser desfeita." com botões "Cancelar" e "Excluir" em vermelho); aviso ao trocar o endereço de um livro já publicado, também em modal ("Isso muda o link público. Quem tinha o link antigo vai receber página não encontrada. Continuar?"); sucesso discreto após salvar; livro removido por denúncia (botão "Publicar" desabilitado, com o aviso).
 Navegação lateral: grupo "Livros" ativo.
 
-### [Admin] Editar livro — `/admin/livros/[id]`
-Mostra: mesmo formulário da criação, preenchido, mais: prévia do livro (abre o leitor mesmo se despublicado), botão "Publicar"/"Despublicar" (alterna conforme o estado atual), botão "Substituir PDF" (ação separada do formulário de metadados), botão "Excluir" (perigo, cor de alerta).
-Estados: confirmação nomeada ao excluir ("Excluir "{título}"? Essa ação não pode ser desfeita."), aviso ao trocar slug de livro já publicado ("Isso muda o link público... Continuar?").
-Navegação lateral: grupo "Livros" ativo.
+### [Admin da plataforma] Contas — `/admin`
 
-### [Visitante/Admin] Catálogo — `/`
-Mostra: grade de capas dos livros publicados, cada card com capa, título, subtítulo, autor. Sem navegação lateral — cabeçalho simples (logo/nome do produto, se houver).
-Estados: vazio (mensagem simples, sem tom de erro), carregando (skeleton de cards).
-Permissões: mesma tela para visitante e admin — não há diferença de conteúdo (o catálogo só lista livros publicados para todo mundo, inclusive admin logado).
+Mostra: tabela densa de contas com e-mail, handle, plano, quantidade de livros contra o limite do plano, e tráfego do mês contra a franquia. Campo de busca por e-mail ou handle no topo.
+Estados: carregando (esqueleto de linhas); vazio; conta acima de 80% da franquia de tráfego destacada em alerta.
+**Não mostre rascunho de ninguém.**
+Navegação lateral: grupo "Plataforma", item "Contas" ativo.
 
-### [Visitante/Admin] Leitor — `/l/[slug]`
-Mostra: cabeçalho com título e autor do livro; visualizador central em efeito flipbook (página dupla em telas ≥1024px, página única abaixo disso); barra de ferramentas com: zoom (-/+), tela cheia, baixar, imprimir, compartilhar; indicador de página atual/total.
-Estados: carregando (enquanto o PDF renderiza a primeira página), 404 ("Esse livro não está disponível." + link para o catálogo) quando o slug não existe ou o livro está despublicado para um visitante.
-Permissões: idêntico para visitante e admin, exceto que o admin também acessa esta URL para livros despublicados (usado como prévia a partir da tela de edição) — visitante recebe 404 nesse caso.
-Interações a desenhar: clique/arrasto nas bordas da página, botões de navegação anterior/próxima como fallback visível (nem todo visitante vai descobrir o gesto de arrastar sozinho).
+### [Admin da plataforma] Detalhe da conta — `/admin/contas/[id]`
+
+Mostra: dados da conta, uso de livros contra o limite, tráfego do mês, e as ações: alterar o plano da conta, alterar handle, e a lista dos **livros publicados** daquela conta com a ação "Remover" em cada um. Abaixo, o registro das ações de admin já feitas sobre essa conta.
+Estados: confirmação em modal para cada ação; a remoção pede um motivo curto.
+Navegação lateral: grupo "Plataforma", item "Contas" ativo.
+
+---
 
 ## Resumo de permissões por tela
 
-| Tela | Visitante | Admin |
-|---|---|---|
-| `/` Catálogo | ✅ | ✅ |
-| `/l/[slug]` Leitor (publicado) | ✅ | ✅ |
-| `/l/[slug]` Leitor (rascunho) | ❌ (404) | ✅ (prévia) |
-| `/admin/login` | ❌ (não se aplica) | ✅ |
-| `/admin/livros` | ❌ | ✅ |
-| `/admin/livros/novo` | ❌ | ✅ |
-| `/admin/livros/[id]` | ❌ | ✅ |
+| Tela | Visitante | Autor | Admin da plataforma |
+|---|---|---|---|
+| `/` Home, `/termos`, `/privacidade` | ✅ | ✅ | ✅ |
+| `/entrar` | ✅ | (redireciona para `/conta/livros`) | ✅ |
+| `/conta/handle` | ❌ | ✅ **obrigatória enquanto não tiver handle** | ✅ |
+| `/<handle>` Vitrine | ✅ | ✅ | ✅ |
+| `/<handle>/<slug>` Leitor, livro publicado | ✅ | ✅ | ✅ |
+| `/<handle>/<slug>` Leitor, rascunho | ❌ (404) | ✅ **só o próprio** | ❌ (404) |
+| `/conta/livros`, `/novo` | ❌ | ✅ **só os próprios** | ❌ |
+| `/conta/livros/[id]` de outra pessoa | ❌ | ❌ (404) | ❌ |
+| `/admin/*` | ❌ (404) | ❌ (404) | ✅ |
 
-Toda rota `/admin/*` sem sessão válida redireciona para `/admin/login` — represente esse redirecionamento no protótipo em vez de desenhar um estado de "acesso negado".
+Toda rota `/conta/*` sem sessão redireciona para `/entrar`; represente esse redirecionamento no protótipo em vez de desenhar uma tela de "acesso negado". As rotas `/admin/*` devolvem **404** para quem não é admin da plataforma — nunca uma tela de acesso negado, que confirmaria que a rota existe.
+
+---
+
+## O que NÃO desenhar
+
+Nada de cobrança. Não existe página de preços, tela de plano, formulário de dados fiscais, checkout, cartão de crédito nem tela de cancelamento nesta versão — e não é para deixar "preparado" ou "só a estrutura". O desenho dessas telas já está pronto no `EPICO-COBRANCA.md` e entra numa versão futura.
