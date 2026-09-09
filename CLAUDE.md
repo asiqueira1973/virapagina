@@ -1,52 +1,52 @@
 # CLAUDE.md — Virapágina
 
-> **Atenção — este documento descreve a v2.0, que é o código que está no repositório.**
-> O `spec.md` já está na **v3.0** (produto multi-tenant com Firestore e Firebase
-> Storage), que **ainda não foi implementada**. Enquanto a v3.0 não for construída,
-> o que vale aqui como descrição do sistema é a v2.0: Google Sheets, Google Drive e
-> um único administrador por allowlist. O desenho da cobrança está em
-> `EPICO-COBRANCA.md` e também não foi implementado.
-
 Instruções para quem for mexer neste repositório, humano ou agente.
 
 Leia o `spec.md` antes de mudar comportamento e o `prompt-design-virapagina.md`
 antes de mudar interface. Este arquivo não os substitui — ele diz como o
 repositório está montado e o que quebra se você não souber.
 
-O `DOCUMENTACAO-TECNICA.md` descreve o que **está** implementado, incluindo a
-lista de divergências em relação ao spec. Se for mudar schema, rota ou lógica de
-tela, atualize-o **no mesmo commit**.
+O `DOCUMENTACAO-TECNICA.md` descreve o que **está** implementado, incluindo as
+divergências em relação ao spec. Mudou schema, guarda, rota ou lógica de tela?
+Atualize-o **no mesmo commit**.
 
 ---
 
 ## O que é
 
-Plataforma própria de flipbooks: PDFs que o leitor folheia no navegador, com URL
-por publicação (`/l/<slug>`) e um painel para o Alexandre subir títulos novos.
-Substitui o Heyzine.
+Plataforma multi-tenant de flipbooks. Qualquer pessoa entra com o Google, escolhe
+um endereço público e sobe PDFs; quem recebe o link folheia no navegador, sem
+conta. Grátis até 5 livros.
 
-**Não há banco de dados.** Os metadados vivem numa planilha do Google Sheets e os
-arquivos numa pasta do Google Drive, ambos na conta do Alexandre.
+**Sem banco relacional:** Cloud Firestore para os dados, Cloud Storage para os
+arquivos, tudo pelo Admin SDK no servidor.
+
+**Sem cobrança.** O desenho inteiro está em `EPICO-COBRANCA.md` e **não deve ser
+implementado** — nem "só a estrutura", nem um campo "para depois".
 
 ---
 
-## As três pegadinhas que não podem ser quebradas
+## As quatro pegadinhas que não podem ser quebradas
 
-1. **A renderização do PDF é sempre no navegador** (princípio 0.1). O servidor
-   nunca converte o PDF em imagem. O PDF enviado é a fonte única — o que a pessoa
-   lê é literalmente o mesmo arquivo que ela baixa. Não introduza um pipeline de
-   conversão no servidor sem antes mudar a seção 4 do spec.
+1. **Toda rota `/api/conta/*` chama `requireAutor()` na primeira linha, e toda
+   rota que toca um livro chama `requireDonoDoLivro()`.** Sem banco relacional
+   não existe RLS como segunda camada: essa linha é a única coisa entre um
+   estranho e o conteúdo de todo mundo. Há teste que falha se uma rota tocar o
+   Firestore ou o Storage antes de autorizar — **não desative esse teste**.
 
-2. **Nenhuma chamada ao Sheets ou ao Drive acontece no navegador** (princípio 0.3
-   e seção 6). Sempre em rota de servidor ou componente de servidor. A credencial
-   da conta de serviço é o segredo mais sensível do projeto: dá escrita na
-   planilha e na pasta inteira.
+2. **Livro de outra conta devolve 404, nunca 403.** Responder "existe, mas não é
+   seu" confirma a existência de um rascunho alheio. Livro inexistente e livro
+   alheio devolvem exatamente a mesma resposta, e há teste comparando as duas.
 
-3. **Toda rota sob `/api/admin/*` chama `requireAdmin()` como primeira linha**,
-   antes de qualquer leitura ou escrita no Google. Sem banco relacional não existe
-   RLS como segunda camada: essa linha é a única coisa entre um estranho e os
-   rascunhos. Há teste automatizado que falha se qualquer rota admin tocar no
-   Sheets ou no Drive antes de autorizar — **não desative esse teste**.
+3. **Nenhuma chamada ao Firestore ou ao Storage acontece no navegador.** Sempre em
+   rota de servidor ou componente de servidor. As regras de segurança negam todo
+   acesso do cliente — elas não são a autorização, são a garantia de que não
+   existe segunda porta.
+
+4. **A renderização do PDF é sempre no navegador.** O servidor nunca converte PDF
+   em imagem. O arquivo enviado é a fonte única — o que a pessoa lê é literalmente
+   o que ela baixa. Não introduza um pipeline de conversão no servidor sem antes
+   mudar a seção 4 do spec.
 
 ---
 
@@ -54,16 +54,23 @@ arquivos numa pasta do Google Drive, ambos na conta do Alexandre.
 
 ```bash
 npm run dev        # servidor local (copia o worker do PDF.js antes)
+npm run emu        # emulador do Firebase (Firestore + Storage)
 npm run build      # build de produção
 npm run typecheck  # tsc --noEmit
 npm run lint       # eslint
-npm test           # vitest — 44 testes, o portão de qualidade do repositório
+npm test           # 80 testes, sem dependência externa
+npm run test:emu   # 19 testes de integração — exige `npm run emu` no ar
+```
+
+Para ver algo em tela local, suba o emulador e semeie uma conta com um livro:
+
+```bash
+node scripts/seed-emulador.mjs caminho/do/arquivo.pdf
 ```
 
 Build sem warning nosso é critério de aceite. Há um aviso conhecido vindo de
 `node_modules/jose` (dependência do Auth.js) sobre `CompressionStream` no Edge
-Runtime: é falso positivo da análise do Next, não vem de código nosso, e está
-registrado nas divergências do `DOCUMENTACAO-TECNICA.md`.
+Runtime: falso positivo da análise do Next, registrado nas divergências.
 
 ---
 
@@ -71,89 +78,97 @@ registrado nas divergências do `DOCUMENTACAO-TECNICA.md`.
 
 ```
 app/
-  (public)/page.tsx            → catálogo
-  (public)/l/[slug]/           → leitor público (+ not-found.tsx)
-  admin/login/                 → login com Google
-  admin/livros/                → lista, novo, [id] (layout com menu lateral)
-  api/livros/…                 → rotas públicas: lista, metadados, proxy de PDF e capa
-  api/admin/livros/…           → rotas de escrita, todas com requireAdmin()
-  api/auth/[...nextauth]/      → callbacks do Auth.js
+  (public)/page.tsx                 → home
+  (public)/termos, /privacidade     → documentos legais
+  (public)/[handle]/                → vitrine do autor
+  (public)/[handle]/[slug]/         → leitor
+  entrar/                           → login com Google
+  conta/                            → painel do autor (menu lateral)
+  admin/                            → painel da plataforma (menu lateral)
+  api/autores/, api/livros/         → rotas públicas
+  api/conta/                        → do autor, todas com requireAutor()
+  api/admin/                        → da plataforma
+  api/rotinas/                      → cron
 components/
-  reader/                      → BookReader, FlipbookToolbar, PdfPage, ZoomControls
-  admin/                       → formulários, lista, diálogos
-hooks/useBookUpload.ts         → upload do PDF com progresso real
+  reader/    BookReader, PdfPage, FlipbookToolbar, ZoomControls, BookCover
+  account/   Sidebar, formulários, diálogos
+  platform/  ações do admin sobre uma conta
+  marketing/ cabeçalho, rodapé e casca dos documentos
 lib/
-  google/config.ts             → variáveis de ambiente e a allowlist
-  google/sheets.ts             → ÚNICO arquivo que conhece o formato da planilha
-  google/drive.ts              → upload, download e exclusão de arquivo
-  google/auth.ts               → Auth.js + requireAdmin() + isAdminRequest()
-  pdf/render.ts                → PDF.js: desenhar página e gerar capa
-  copy.ts                      → toda a copy da interface (seção 14–15 do spec)
-  books.ts, slug.ts, format.ts → regras puras e formatação
-types/livro.ts                 → espelho da planilha, campos em português
-tests/                         → seção 22: guarda de admin e visibilidade de rascunho
+  firebase/  admin.ts, firestore.ts (ÚNICO que conhece as coleções), storage.ts
+  auth.ts    configuração do Auth.js — SEM Firebase, para o Edge
+  guards.ts  requireAutor, requireDonoDoLivro, requireAdminPlataforma
+  admins.ts  a allowlist, sem imports, para não criar ciclo
+  planos.ts  limites e franquias — os números vivem só aqui
+  pdf/render.ts, copy.ts, slug.ts, books.ts, format.ts
 ```
 
-**Se um dia a planilha virar um banco de verdade** (roadmap, seção 28), é
-`lib/google/sheets.ts` que muda. Nenhum outro arquivo sabe que existe planilha —
-mantenha assim.
+**Se um dia isso virar Postgres**, é `lib/firebase/firestore.ts` que muda.
+Nenhum outro arquivo sabe que existe Firestore — mantenha assim.
 
 ---
 
 ## Idioma e comentários
 
-- **Dados em português, `snake_case`:** colunas da planilha e os tipos TypeScript
-  que as espelham (`titulo`, `publicado`, `criado_em`). É o que o Alexandre vê na
-  planilha.
-- **Código em inglês:** componentes, hooks, funções e nomes de arquivo
-  (`BookReader.tsx`, `useBookUpload.ts`).
+- **Dados em português, `snake_case`:** coleções e campos do Firestore e os tipos
+  TypeScript que os espelham (`titulo`, `publicado`, `criado_em`).
+- **Código em inglês:** componentes, hooks, funções e nomes de arquivo.
 - **Interface e comentários em português.**
-- **Zero string literal de interface nos componentes** — a copy vive em
-  `lib/copy.ts`, com os textos exatos da seção 14–15 do spec.
-- **Toda função, hook e rota de servidor leva cabeçalho em português** dizendo o
-  que faz e **qual regra do spec implementa, com o número** — por exemplo
+- **Zero string de interface literal em componente** — a copy vive em
+  `lib/copy.ts`, com os textos exatos da seção 15 do spec.
+- **Toda função, hook, rota, guarda e rotina leva cabeçalho em português** dizendo
+  o que faz e **qual regra do spec implementa, com o número** — por exemplo
   `// Gera o slug a partir do título — regra 11.3`. Comentário que repete a
   sintaxe é ruído; o que nomeia a regra é o que salva o projeto daqui a seis
   meses.
 
 ---
 
-## Cinco coisas que quebram em silêncio
+## Sete coisas que quebram em silêncio
 
-Cada uma destas já mordeu durante a implementação. Nenhuma dá erro de compilação.
+Cada uma destas já mordeu. Nenhuma dá erro de compilação.
 
-1. **A planilha é posicional.** Uma célula a mais ou a menos numa gravação
-   desloca todos os campos da linha e ninguém percebe. `livroToRow` confere a
-   contagem contra a lista de colunas e lança erro — não remova essa checagem.
+1. **O Firestore não tem índice único.** A unicidade do handle é garantida por uma
+   transação sobre a coleção `handles`, e a do slug por leitura antes da escrita.
+   Simplificar isso faz dois cadastros simultâneos vencerem os dois.
 
-2. **`atualizado_em` não tem trigger.** Não existe banco, logo não existe trigger.
-   É a rota de API que reescreve o campo. Uma escrita nova que esqueça disso deixa
-   a data velha para sempre.
+2. **`settings()` do Firestore só pode ser chamado uma vez, antes de qualquer uso
+   da instância** — e no Next cada rota tem seu grafo de módulos, então nenhuma
+   sabe se foi a primeira. Não o chame: as escritas limpam `undefined` na origem,
+   com `semUndefined()`.
 
-3. **O PDF.js recusa dois desenhos no mesmo canvas** e só o libera quando o
+3. **`lib/auth.ts` não pode importar o Firebase.** O middleware roda no Edge, e o
+   Admin SDK é de Node. Guarda nova vai em `lib/guards.ts`.
+
+4. **`atualizado_em` não tem trigger.** É a aplicação que reescreve o campo em
+   toda gravação. Uma escrita nova que esqueça disso deixa a data velha para
+   sempre.
+
+5. **O PDF.js recusa dois desenhos no mesmo canvas** e só o libera quando o
    anterior termina — cancelar não basta, é preciso esperar. `PdfPage` enfileira
-   os desenhos por página. Simplificar isso deixa páginas em branco quando o zoom
-   muda rápido.
+   os desenhos por página. Simplificar deixa páginas em branco no zoom rápido.
 
-4. **Medir o container só na montagem não funciona.** Numa aba aberta em segundo
-   plano o Chrome zera o layout, e o leitor ficaria em branco para sempre — cenário
-   comum quando o link chega pelo LinkedIn e a pessoa abre em nova aba. Por isso o
-   `BookReader` usa `ResizeObserver`.
+6. **Medir o container só na montagem não funciona.** Numa aba aberta em segundo
+   plano o Chrome zera o layout, e o leitor ficaria em branco para sempre —
+   cenário comum quando o link chega pelo LinkedIn e a pessoa abre em nova aba.
+   Por isso o `BookReader` usa `ResizeObserver`.
 
-5. **A Sheets API não apaga "a linha do id X".** É preciso localizar o índice e
-   pedir um `deleteDimension` por posição. Ver `deleteBookRow`.
+7. **Excluir é documento primeiro, arquivos depois.** Ao contrário, sobra
+   metadado apontando para arquivo que não existe mais. Há teste da ordem.
 
 ---
 
 ## O que NÃO implementar
 
-Está no roadmap (spec seção 28) e ficou de fora do v1 de propósito. Nem "só a
-estrutura", nem "deixando preparado", nem um campo "para depois":
+Está no roadmap (spec seção 28) ou no `EPICO-COBRANCA.md`, e ficou de fora de
+propósito. Nem "só a estrutura", nem "deixando preparado":
 
-múltiplos administradores com tela de gestão · analytics de leitura · multi-tenant
-/ white-label · migração para banco relacional · grade de miniaturas de página ·
-capa customizável à mão · atalhos fixos de WhatsApp/LinkedIn/X · som de virar
-página.
+cobrança, Stripe, tela de preços, dados fiscais e nota · analytics de leitura ·
+domínio próprio do autor · contas de time · grade de miniaturas de página · capa
+customizável à mão · atalhos fixos de WhatsApp/LinkedIn/X · som de virar página.
 
-Se algo do roadmap parecer necessário para o v1 funcionar, isso é uma pergunta
+O campo `plano` e o limite da regra 11.8 **fazem parte** do MVP e estão
+implementados; o que não entra é o caminho de pagar por eles.
+
+Se algo do roadmap parecer necessário para o v3 funcionar, isso é uma pergunta
 para o Alexandre, não uma decisão de implementação.

@@ -1,156 +1,178 @@
 # Virapágina
 
-> **Atenção — este documento descreve a v2.0, que é o código que está no repositório.**
-> O `spec.md` já está na **v3.0** (produto multi-tenant com Firestore e Firebase
-> Storage), que **ainda não foi implementada**. Enquanto a v3.0 não for construída,
-> o que vale aqui como descrição do sistema é a v2.0: Google Sheets, Google Drive e
-> um único administrador por allowlist. O desenho da cobrança está em
-> `EPICO-COBRANCA.md` e também não foi implementado.
+Plataforma de flipbooks: qualquer pessoa cria conta, sobe PDFs e recebe um link
+onde as pessoas folheiam o livro no navegador — sem instalar nada e sem criar
+conta para ler.
 
-Plataforma própria de flipbooks: PDFs que qualquer pessoa folheia no navegador,
-com uma URL por publicação e um painel para subir títulos novos. Substitui o
-Heyzine nas publicações do Alexandre.
+- **Home:** `virapagina.app.br`
+- **Vitrine de um autor:** `virapagina.app.br/<endereço>`
+- **Leitor:** `virapagina.app.br/<endereço>/<livro>`
+- **Painel do autor:** `/conta/livros`
+- **Painel da plataforma:** `/admin` (só para os e-mails em `ADMIN_ALLOWED_EMAILS`)
 
-- **Leitor público:** `virapagina.app.br/l/<slug>` — vira página com clique,
-  arrasto, swipe e teclado; zoom, tela cheia, baixar, imprimir e compartilhar.
-- **Catálogo:** `virapagina.app.br` — os livros publicados.
-- **Painel:** `virapagina.app.br/admin` — login com Google, restrito por lista de
-  e-mails.
+Grátis até 5 livros. **Não há cobrança nesta versão** — o desenho está pronto em
+`EPICO-COBRANCA.md`, para o dia em que alguém pedir mais espaço.
 
-Sem banco de dados: os metadados ficam numa planilha do Google Sheets e os
-arquivos numa pasta do Google Drive, ambos na conta do Alexandre.
-
-**Documentos do projeto:** `spec.md` é a fonte de verdade do produto.
-`CLAUDE.md` traz as convenções e as armadilhas do repositório.
-`DOCUMENTACAO-TECNICA.md` descreve o que está implementado, com as divergências.
+**Documentos:** `spec.md` é a fonte de verdade do produto. `CLAUDE.md` traz as
+convenções e as armadilhas. `DOCUMENTACAO-TECNICA.md` descreve o que está
+implementado, com as divergências.
 
 ---
 
 ## Rodar localmente
 
+Não precisa de credencial nenhuma do Google: o desenvolvimento roda contra o
+**emulador do Firebase**.
+
 ```bash
 npm install
-cp .env.example .env.local   # preencha conforme a seção abaixo
-npm run dev
+cp .env.example .env.local
 ```
 
-Abre em `http://localhost:3000`.
+Em um terminal, o emulador:
 
 ```bash
-npm test        # 44 testes
+npm run emu
+```
+
+Em outro, o servidor e uma conta de exemplo com um livro publicado:
+
+```bash
+npm run dev
+node scripts/seed-emulador.mjs caminho/do/arquivo.pdf
+```
+
+Abre em `http://localhost:3000`; o livro semeado fica em `/alexandre`.
+O emulador exige **Java** instalado (`java -version`).
+
+```bash
+npm test        # 80 testes, sem dependência externa
+npm run test:emu # 19 testes de integração — exige o emulador no ar
 npm run lint
 npm run typecheck
 npm run build
 ```
 
+O login com Google não funciona contra o emulador sem um OAuth Client ID real;
+para exercitar o painel, preencha `GOOGLE_OAUTH_CLIENT_ID` e
+`GOOGLE_OAUTH_CLIENT_SECRET` no `.env.local` com as credenciais de teste do passo
+3 abaixo.
+
 ---
 
-## Configuração do Google Cloud (fazer uma vez)
+## Configurar o Firebase (fazer uma vez)
 
-Sem estes passos o site sobe, mas toda tela mostra
-"Algo deu errado. Tente novamente em instantes." — é o sintoma de a aplicação não
-conseguir falar com o Sheets ou o Drive.
+Sem estes passos o site sobe, mas toda tela mostra "Algo deu errado. Tente
+novamente em instantes." — é o sintoma de não conseguir falar com o Google.
 
-### 1. Projeto e APIs
+### 1. Projeto, Firestore e Storage
 
-1. No [Google Cloud Console](https://console.cloud.google.com), crie um projeto
-   (ou reaproveite um existente).
-2. Em **APIs e serviços → Biblioteca**, ative as duas:
-   - **Google Sheets API**
-   - **Google Drive API**
+1. No [console do Firebase](https://console.firebase.google.com), crie um projeto
+   **novo e dedicado** ao Virapágina.
+2. Ative o **Cloud Firestore** (modo de produção — as regras deste repositório
+   negam todo acesso do cliente de qualquer jeito).
+3. Ative o **Storage**. Ele exige o plano **Blaze** desde fevereiro de 2026; a
+   franquia permanente (5 GB armazenados e 100 GB de saída por mês) mantém a
+   fatura em zero no volume inicial.
+4. **Configure um alerta de orçamento** em Google Cloud → Faturamento → Orçamentos
+   e alertas. O Blaze **não tem teto de gasto**, e sem receita não há nada para
+   absorver uma surpresa. Este passo não é opcional.
 
-### 2. Conta de serviço (é ela que lê e escreve os dados)
+### 2. Conta de serviço
 
-1. **APIs e serviços → Credenciais → Criar credenciais → Conta de serviço**.
-2. Dê um nome (ex. `virapagina`) e crie. Anote o e-mail gerado, algo como
-   `virapagina@<projeto>.iam.gserviceaccount.com`.
-3. Na conta de serviço criada, aba **Chaves → Adicionar chave → Criar nova chave
-   → JSON**. O arquivo baixa uma vez só; guarde-o em lugar seguro.
-4. Do JSON, use `client_email` em `GOOGLE_SERVICE_ACCOUNT_EMAIL` e `private_key`
-   em `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` (mantenha as quebras de linha como
-   `\n`, entre aspas).
+1. Configurações do projeto → **Contas de serviço** → **Gerar nova chave privada**.
+   O arquivo JSON baixa uma vez só; guarde-o em lugar seguro.
+2. Do JSON, use `project_id`, `client_email` e `private_key` nas variáveis
+   correspondentes (mantenha as quebras de linha como `\n`, entre aspas).
 
-### 3. OAuth para o login do admin (separado da conta de serviço)
+### 3. Login com Google
 
-1. **APIs e serviços → Tela de consentimento OAuth**: tipo **Externo**, preencha o
-   básico e adicione o seu e-mail como usuário de teste (ou publique o app).
-2. **Credenciais → Criar credenciais → ID do cliente OAuth**, tipo
+1. No [Google Cloud Console](https://console.cloud.google.com), no **mesmo
+   projeto**: APIs e serviços → Tela de consentimento OAuth, tipo **Externo**.
+2. Credenciais → **Criar credenciais** → **ID do cliente OAuth**, tipo
    **Aplicativo da Web**.
 3. Em **URIs de redirecionamento autorizados**, adicione as duas:
    - `http://localhost:3000/api/auth/callback/google`
    - `https://virapagina.app.br/api/auth/callback/google`
-4. Use o ID e o segredo em `GOOGLE_OAUTH_CLIENT_ID` e
-   `GOOGLE_OAUTH_CLIENT_SECRET`.
 
-### 4. A planilha e a pasta
+### 4. CORS do bucket — o passo que mais é esquecido
 
-Já existem no Drive do Alexandre, dentro da pasta **Virapágina**:
+O navegador envia os bytes do PDF direto para o Storage. Sem CORS no bucket, todo
+upload falha no navegador e o servidor não tem como saber que falhou.
 
-| O quê | Onde | Variável |
-|---|---|---|
-| Planilha `livros` | [abrir](https://docs.google.com/spreadsheets/d/1Q8jikDTBJyYv9AjoSzhlYEd5Yvmz2Ycm5d-fXtCv_kk/edit) | `GOOGLE_SHEET_ID=1Q8jikDTBJyYv9AjoSzhlYEd5Yvmz2Ycm5d-fXtCv_kk` |
-| Pasta `Arquivos` | [abrir](https://drive.google.com/drive/folders/1c0TbP8RDUZsWYECLIiy0O5Xjq1DVMK-C) | `GOOGLE_DRIVE_FOLDER_ID=1c0TbP8RDUZsWYECLIiy0O5Xjq1DVMK-C` |
+```bash
+gcloud storage buckets update gs://<seu-bucket> --cors-file=cors.json
+```
 
-**Dois passos obrigatórios:**
+O `cors.json` está na raiz do repositório, já com as origens de produção e de
+desenvolvimento.
 
-1. **Confirme que a aba da planilha se chama `livros`** (minúsculo). O código
-   procura por esse nome exato. O cabeçalho da linha 1 já está gravado, nesta
-   ordem:
+### 5. Regras e índices
 
-   ```
-   id · titulo · subtitulo · slug · autor · descricao · arquivo_pdf_drive_id ·
-   arquivo_pdf_tamanho_bytes · capa_drive_id · total_paginas · publicado ·
-   criado_por · criado_em · atualizado_em
-   ```
+```bash
+npx firebase deploy --only firestore:rules,firestore:indexes,storage --project <seu-projeto>
+```
 
-2. **Compartilhe a planilha e a pasta com o e-mail da conta de serviço**, com
-   permissão de **Editor**. Sem isso a aplicação não lê nem escreve nada. É o erro
-   mais comum na primeira configuração.
+As regras negam todo acesso do cliente ao Firestore e ao Storage. Isso é
+intencional: a aplicação fala com os dois pelo Admin SDK, no servidor.
 
-### 5. Quem entra no painel
+### 6. Quem entra no painel da plataforma
 
-`ADMIN_ALLOWED_EMAILS` é a lista, separada por vírgula, dos e-mails Google que
-podem acessar `/admin`. Não existe tela de cadastro nem convite: adicionar um
-admin é editar essa variável. Quem não está na lista consegue logar no Google,
-mas recebe "Esse e-mail não tem acesso ao painel." e nenhuma sessão é criada.
+`ADMIN_ALLOWED_EMAILS` é a lista, separada por vírgula, dos e-mails Google com
+acesso a `/admin`. **As contas desses e-mails também nascem com plano
+ilimitado**, sem limite de livros e sem franquia de tráfego — e se corrigem
+sozinhas a cada login, mesmo que alguém as altere no console.
+
+Quem não está na lista recebe **404** em `/admin`, não uma tela de acesso negado.
 
 ---
 
 ## Variáveis de ambiente
 
-| Variável | O que é |
-|---|---|
-| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | E-mail da conta de serviço |
-| `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` | Chave privada do JSON. **O segredo mais sensível do projeto** — dá escrita na planilha e na pasta inteira. Nunca commitar. |
-| `GOOGLE_SHEET_ID` | Id da planilha com a aba `livros` |
-| `GOOGLE_DRIVE_FOLDER_ID` | Id da pasta onde ficam os PDFs e as capas |
-| `GOOGLE_OAUTH_CLIENT_ID` | Login do admin |
-| `GOOGLE_OAUTH_CLIENT_SECRET` | Login do admin |
-| `NEXTAUTH_SECRET` | Assina o cookie de sessão. Gere com `openssl rand -base64 32` |
-| `NEXTAUTH_URL` | URL do deploy (`http://localhost:3000` no desenvolvimento) |
-| `ADMIN_ALLOWED_EMAILS` | Lista de e-mails com acesso ao painel |
+| Variável | Segreda? | Para quê |
+|---|---|---|
+| `FIREBASE_PROJECT_ID` | não | Projeto do Firebase |
+| `FIREBASE_CLIENT_EMAIL` | não | Conta de serviço do Admin SDK |
+| `FIREBASE_PRIVATE_KEY` | **sim** | Chave da conta de serviço. **A credencial mais sensível do projeto** — dá acesso total aos dados e aos arquivos |
+| `FIREBASE_STORAGE_BUCKET` | não | Bucket dos arquivos |
+| `GOOGLE_OAUTH_CLIENT_ID` | não | Login |
+| `GOOGLE_OAUTH_CLIENT_SECRET` | **sim** | Login |
+| `NEXTAUTH_SECRET` | **sim** | Assina o cookie de sessão. Gere com `openssl rand -base64 32` |
+| `NEXTAUTH_URL` | não | URL do deploy |
+| `ADMIN_ALLOWED_EMAILS` | **sim** | Admins da plataforma; estas contas também nascem ilimitadas |
+| `CRON_SECRET` | **sim** | Protege a rotina diária de aviso de tráfego |
+| `EMAIL_CONTATO` | não | Aparece nos termos, na privacidade, no canal de denúncia e no botão "Falar com a gente" |
+
+Em desenvolvimento, no lugar das credenciais: `FIRESTORE_EMULATOR_HOST`,
+`FIREBASE_STORAGE_EMULATOR_HOST` e `STORAGE_EMULATOR_HOST`, como no
+`.env.example`.
 
 ---
 
 ## Deploy na Vercel
 
 1. Conecte o repositório; `main` é produção.
-2. Configure as nove variáveis acima em **Settings → Environment Variables**.
+2. Configure as variáveis acima em **Settings → Environment Variables**.
    `NEXTAUTH_URL` recebe `https://virapagina.app.br`.
-3. Aponte o domínio `virapagina.app.br` para a Vercel em **Settings → Domains**.
+3. Aponte o domínio em **Settings → Domains**.
 4. Confirme que a URI de redirecionamento de produção está cadastrada no OAuth
-   Client (passo 3 acima) — é o que falha primeiro quando o login funciona local e
-   quebra em produção.
+   Client (passo 3 acima) — é o que falha primeiro quando o login funciona local
+   e quebra em produção.
+5. Agende a rotina diária em **Settings → Cron Jobs**:
+   `POST /api/rotinas/avisar-trafego`, com o cabeçalho
+   `Authorization: Bearer <CRON_SECRET>`.
 
 ---
 
 ## Publicar um livro
 
-1. Entre em `/admin/livros` e clique **Novo livro**.
-2. Preencha o título; o link é sugerido automaticamente e pode ser editado.
-3. Escolha o PDF (até 100 MB). O total de páginas e a capa saem da primeira
+1. Entre em `/entrar` com o Google. Na primeira vez, escolha seu endereço público
+   — ele **não pode ser trocado depois**.
+2. Em `/conta/livros`, clique **Novo livro**.
+3. Preencha o título; o link é sugerido automaticamente e pode ser editado.
+4. Escolha o PDF (até 100 MB). O total de páginas e a capa saem da primeira
    página, sozinhos.
-4. O livro é salvo como **rascunho**. Use **Ver como ficaria** para conferir a
+5. O livro é salvo como **rascunho**. Use **Ver como ficaria** para conferir a
    leitura antes de qualquer pessoa ver.
-5. Clique **Publicar**. O livro entra no catálogo e a URL passa a responder para
-   todo mundo.
+6. Clique **Publicar**. O livro entra na sua vitrine e o link passa a responder
+   para todo mundo.
