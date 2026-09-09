@@ -49,3 +49,7 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 .firebase/
+
+# Canvas de design gerado a partir dos .dc.html — é artefato de build, não fonte
+design-v3/*.html
+!design-v3/*.dc.html
