@@ -105,17 +105,27 @@ O navegador envia os bytes do PDF direto para o Storage. Sem CORS no bucket, tod
 upload falha no navegador e o servidor não tem como saber que falhou.
 
 ```bash
-gcloud storage buckets update gs://<seu-bucket> --cors-file=cors.json
+gcloud storage buckets update gs://vira-pagina.firebasestorage.app --cors-file=cors.json
 ```
 
 O `cors.json` está na raiz do repositório, já com as origens de produção e de
 desenvolvimento.
 
+> **Enquanto o domínio não propagar**, a Vercel serve em `*.vercel.app`, que
+> **não** está no `cors.json`. Subir um PDF por essa URL falha por CORS **sem
+> deixar rastro no log do servidor** — a recusa acontece entre o navegador e o
+> Google. As outras telas funcionam normalmente. Ou espere o domínio, ou
+> acrescente a origem `.vercel.app` ao `cors.json` e reaplique o comando acima.
+
 ### 5. Regras e índices
 
 ```bash
-npx firebase deploy --only firestore:rules,firestore:indexes,storage --project <seu-projeto>
+npx firebase deploy --only firestore:rules,firestore:indexes,storage
 ```
+
+O projeto de destino está fixado no `.firebaserc` (`vira-pagina`), para não haver
+risco de publicar as regras no projeto errado. O emulador continua usando o
+projeto local, porque o `npm run emu` passa `--project` explicitamente.
 
 As regras negam todo acesso do cliente ao Firestore e ao Storage. Isso é
 intencional: a aplicação fala com os dois pelo Admin SDK, no servidor.
@@ -135,10 +145,10 @@ Quem não está na lista recebe **404** em `/admin`, não uma tela de acesso neg
 
 | Variável | Segreda? | Para quê |
 |---|---|---|
-| `FIREBASE_PROJECT_ID` | não | Projeto do Firebase |
+| `FIREBASE_PROJECT_ID` | não | Projeto do Firebase — `vira-pagina` |
 | `FIREBASE_CLIENT_EMAIL` | não | Conta de serviço do Admin SDK |
 | `FIREBASE_PRIVATE_KEY` | **sim** | Chave da conta de serviço. **A credencial mais sensível do projeto** — dá acesso total aos dados e aos arquivos |
-| `FIREBASE_STORAGE_BUCKET` | não | Bucket dos arquivos |
+| `FIREBASE_STORAGE_BUCKET` | não | Bucket dos arquivos — `vira-pagina.firebasestorage.app` |
 | `GOOGLE_OAUTH_CLIENT_ID` | não | Login |
 | `GOOGLE_OAUTH_CLIENT_SECRET` | **sim** | Login |
 | `NEXTAUTH_SECRET` | **sim** | Assina o cookie de sessão. Gere com `openssl rand -base64 32` |
