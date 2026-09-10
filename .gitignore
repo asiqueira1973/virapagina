@@ -55,3 +55,12 @@ ui-debug.log
 # Canvas de design gerado a partir dos .dc.html — é artefato de build, não fonte
 design-v3/*.html
 !design-v3/*.dc.html
+
+# Credenciais baixadas do Google — NUNCA versionar.
+# A chave da conta de serviço dá acesso total ao Firestore e ao Storage; o
+# client_secret do OAuth permite se passar pela aplicação no login. Os dois
+# chegam como .json na pasta de Downloads e acabam arrastados para cá.
+*-firebase-adminsdk-*.json
+client_secret_*.json
+*service-account*.json
+*serviceAccountKey*.json
