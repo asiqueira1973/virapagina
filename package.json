@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "emu": "npx --yes -p firebase-tools@14 firebase emulators:start --project virapagina-local --only firestore,storage",
     "test:emu": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_STORAGE_EMULATOR_HOST=127.0.0.1:9199 STORAGE_EMULATOR_HOST=http://127.0.0.1:9199 FIREBASE_PROJECT_ID=virapagina-local FIREBASE_STORAGE_BUCKET=virapagina-local.firebasestorage.app vitest run tests/firestore-emulador.test.ts",
-    "cors": "node scripts/aplicar-cors.mjs"
+    "cors": "node scripts/aplicar-cors.mjs",
+    "diagnostico": "node scripts/diagnostico.mjs"
   },
   "dependencies": {
     "firebase-admin": "^13.10.0",

@@ -61,6 +61,7 @@ npm run typecheck  # tsc --noEmit
 npm run lint       # eslint
 npm test           # 85 testes, sem dependência externa
 npm run test:emu   # 24 testes de integração — exige `npm run emu` no ar
+npm run diagnostico -- ./<chave>.json   # roda as consultas reais contra o Firestore de produção
 ```
 
 Para ver algo em tela local, suba o emulador e semeie uma conta com um livro:
@@ -126,7 +127,7 @@ Nenhum outro arquivo sabe que existe Firestore — mantenha assim.
 
 ---
 
-## Oito coisas que quebram em silêncio
+## Nove coisas que quebram em silêncio
 
 Cada uma destas já mordeu. Nenhuma dá erro de compilação.
 
@@ -162,7 +163,14 @@ Cada uma destas já mordeu. Nenhuma dá erro de compilação.
    cenário comum quando o link chega pelo LinkedIn e a pessoa abre em nova aba.
    Por isso o `BookReader` usa `ResizeObserver`.
 
-8. **Excluir é documento primeiro, arquivos depois.** Ao contrário, sobra
+8. **Consulta nova com `where` + `orderBy` exige índice composto**, e o Firestore
+   só reclama em tempo de execução — nunca no build, nunca no teste com mock. O
+   emulador também não reclama: ele não impõe índice. Toda consulta nova entra em
+   `firestore.indexes.json` e é publicada, senão a tela quebra só em produção,
+   com "Application error" e nada no lugar onde se procura. `npm run diagnostico`
+   mostra quais faltam.
+
+9. **Excluir é documento primeiro, arquivos depois.** Ao contrário, sobra
    metadado apontando para arquivo que não existe mais. Há teste da ordem.
 
 ---

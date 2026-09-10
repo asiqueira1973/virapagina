@@ -138,8 +138,24 @@ desenvolvimento.
 ### 5. Regras e índices
 
 ```bash
-npx --yes -p firebase-tools@14 firebase deploy --only firestore:rules,firestore:indexes,storage
+GOOGLE_APPLICATION_CREDENTIALS=./<a-chave>.json \
+  npx --yes -p firebase-tools@14 firebase deploy --only firestore:rules,firestore:indexes,storage
 ```
+
+**Este passo não é opcional e não avisa quando falta.** Sem os índices compostos,
+o painel do autor levanta uma exceção de servidor assim que a conta entra —
+`FAILED_PRECONDITION: The query requires an index` —, e a tela mostra só
+"Application error". Depois de publicar, os índices ainda levam **alguns minutos
+construindo**; enquanto isso o erro continua, agora dizendo "currently building".
+
+Para saber em que pé está, sem adivinhar:
+
+```bash
+node scripts/diagnostico.mjs ./<a-chave>.json
+```
+
+Ele roda contra o Firestore de verdade as mesmas consultas que as telas fazem, e
+imprime o link de criação do índice quando algum falta. Só lê — não escreve nada.
 
 O projeto de destino está fixado no `.firebaserc` (`vira-pagina`), para não haver
 risco de publicar as regras no projeto errado. O emulador continua usando o
