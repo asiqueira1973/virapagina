@@ -1,7 +1,13 @@
 [
   {
-    "_comentario": "CORS do bucket, necessário para o navegador enviar os bytes do PDF direto ao Storage pela sessão de upload assinada (spec seção 4). Sem isto, todo upload falha no navegador com erro de CORS, e o servidor não tem como saber. Aplicar com: gcloud storage buckets update gs://<bucket> --cors-file=cors.json",
-    "origin": ["https://virapagina.app.br", "http://localhost:3000"],
+    "_comentario": "CORS do bucket, necessário para o navegador enviar os bytes do PDF direto ao Storage pela sessão de upload assinada (spec seção 4). Sem isto, todo upload falha NO NAVEGADOR, sem deixar rastro no log do servidor. Aplicar com: gcloud storage buckets update gs://vira-pagina.firebasestorage.app --cors-file=cors.json",
+    "_sobre_as_origens": "A origem que conta é a da página onde o JavaScript roda, não a do destino. Por isso estão aqui todos os endereços por onde o painel pode ser aberto: o domínio canônico, o www (mesmo redirecionando, para o caso de alguém chegar por ele antes do redirecionamento), a URL da Vercel (deployments de preview) e o desenvolvimento local.",
+    "origin": [
+      "https://virapagina.app.br",
+      "https://www.virapagina.app.br",
+      "https://virapagina-kappa.vercel.app",
+      "http://localhost:3000"
+    ],
     "method": ["GET", "PUT", "POST", "HEAD"],
     "responseHeader": ["Content-Type", "Content-Range", "Range", "x-goog-resumable"],
     "maxAgeSeconds": 3600
