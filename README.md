@@ -115,9 +115,16 @@ novamente em instantes." — é o sintoma de não conseguir falar com o Google.
 O navegador envia os bytes do PDF direto para o Storage. Sem CORS no bucket, todo
 upload falha no navegador e o servidor não tem como saber que falhou.
 
+Com a chave de conta de serviço em mãos (a mesma do passo 2), a partir da raiz
+do repositório:
+
 ```bash
-gcloud storage buckets update gs://vira-pagina.firebasestorage.app --cors-file=cors.json
+node scripts/aplicar-cors.mjs ~/Downloads/vira-pagina-adminsdk.json
 ```
+
+Usa o `firebase-admin` que já é dependência do projeto — não exige instalar o
+`gcloud`. Se você tiver o SDK do Google Cloud, o equivalente é
+`gcloud storage buckets update gs://vira-pagina.firebasestorage.app --cors-file=cors.json`.
 
 O `cors.json` está na raiz do repositório, já com as origens de produção e de
 desenvolvimento.
