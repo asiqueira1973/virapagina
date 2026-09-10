@@ -1,5 +1,8 @@
 # Virapágina
 
+**No ar em [virapagina.app.br](https://virapagina.app.br)** desde 10 de setembro
+de 2026.
+
 Plataforma de flipbooks: qualquer pessoa cria conta, sobe PDFs e recebe um link
 onde as pessoas folheiam o livro no navegador — sem instalar nada e sem criar
 conta para ler.

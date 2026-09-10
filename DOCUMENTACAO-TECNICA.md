@@ -426,17 +426,41 @@ são pulados — `npm test` continua funcionando em qualquer máquina.
 
 ---
 
+## Estado: no ar desde 10 de setembro de 2026
+
+O Virapágina está em produção em **virapagina.app.br**, no projeto Firebase
+`vira-pagina` e no deploy da Vercel a partir de `asiqueira1973/virapagina`.
+
+O fluxo da seção 9 foi percorrido ponta a ponta com conteúdo real: conta criada
+pelo login com Google, endereço público escolhido, PDF de 44 páginas e 9,2 MB
+enviado, capa gerada da primeira página, livro publicado, lido no computador e
+**num celular real**, e baixado com o título como nome do arquivo. Rascunho de
+terceiro devolve 404 e nenhuma URL do Storage chega ao navegador.
+
+O que foi feito na infraestrutura, e que a documentação anterior listava como
+pendente: projeto Firebase criado no plano Blaze, CORS aplicado ao bucket,
+OAuth Client criado, e regras e índices do Firestore e do Storage publicados.
+
+### Três defeitos que só apareceram em produção
+
+Ficam registrados porque nenhum deles aparecia em build, teste ou emulador — e
+os três estão cobertos agora.
+
+| Defeito | Por que passou | O que o impede de voltar |
+|---|---|---|
+| Variável de ambiente **vazia** derrubava o build (`new URL('')`) | `?? padrão` não protege de `''`, e importar um `.env.example` no painel de deploy cria exatamente variáveis vazias | `lib/env.ts` trata vazio como ausente; teste de regressão nas quatro leituras |
+| **Laço de redirecionamento no primeiro login**: `/conta/handle` herdava o layout que mandava para `/conta/handle` | Só acontecia em conta sem handle — o caminho que exige OAuth real, impossível de exercitar localmente | A página vive num grupo de rota, fora de `app/conta/`; teste estrutural guarda o invariante |
+| **Índices compostos ausentes** derrubavam o painel do autor | O Firestore só reclama em tempo de execução: o build passa, o teste com mock passa, e o emulador nem impõe índice | `scripts/diagnostico.mjs` roda as consultas reais contra o Firestore; o passo de publicar índices está em destaque no README |
+
+---
+
 ## O que ainda depende do Alexandre
 
-- **Criar o projeto no Firebase** (novo e dedicado, decisão 25.1), ativar
-  Firestore e Storage, subir para o plano **Blaze** e **configurar o alerta de
-  orçamento** — o Blaze não tem teto de gasto, e no v3 não há receita nenhuma
-  para absorver surpresa.
-- **Configurar o CORS do bucket** com o `cors.json` da raiz. Sem isso, todo
-  upload falha no navegador e o servidor não tem como saber.
-- **Criar o OAuth Client ID** do Google para o login.
-- **Publicar as regras** do Firestore e do Storage (`firebase deploy --only
-  firestore:rules,storage`) e os índices compostos.
-- **Escolher um provedor de e-mail**, se quiser os avisos da divergência 6.5.
-- **Testar o leitor num iPhone e num Android reais** — emulador não valida swipe
-  nem Fullscreen API.
+- **Agendar a rotina diária de tráfego** em Vercel → Settings → Cron Jobs:
+  `POST /api/rotinas/avisar-trafego`, com `Authorization: Bearer <CRON_SECRET>`.
+  É a válvula da regra 11.11 — sem ela, ninguém avisa antes de a fatura doer.
+- **Conferir o alerta de orçamento** no Google Cloud. O Blaze não tem teto de
+  gasto, e no v3 não há receita nenhuma para absorver surpresa.
+- **Escolher um provedor de e-mail**, se quiser que os avisos de tráfego cheguem
+  ao autor em vez de ficarem só no log e na tela de admin (divergência 6.5).
+- **Cancelar o Heyzine** — era o teste original do produto inteiro.

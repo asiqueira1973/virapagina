@@ -840,19 +840,24 @@ documento não toma, ela é nova: pergunte em vez de assumir, e registre aqui.
 
 ## 26. Definition of Done
 
-- [ ] Épicos 8.1, 8.2, 8.5, 8.6 e 8.7 implementados e validados contra seus critérios.
-- [ ] Épicos 8.3 e 8.4 migrados para a nova URL e para o Storage, com os critérios da v2.0 ainda passando.
-- [ ] Coleções e campos em português `snake_case`, sem nada fora do padrão.
-- [ ] Todas as guardas, rotas e a rotina comentadas em português, com o número da regra que implementam.
-- [ ] Regras do Firestore e do Storage publicadas negando todo acesso do cliente.
-- [ ] Testes da seção 22 implementados e passando, **em especial os de isolamento entre contas**.
+> **Estado em 10/09/2026:** tudo marcado, menos três itens — o cron de tráfego,
+> o alerta de orçamento e o cancelamento do Heyzine. O produto está no ar em
+> `virapagina.app.br` com o primeiro livro real publicado e lido em celular.
+
+
+- [x] Épicos 8.1, 8.2, 8.5, 8.6 e 8.7 implementados e validados contra seus critérios.
+- [x] Épicos 8.3 e 8.4 migrados para a nova URL e para o Storage, com os critérios da v2.0 ainda passando.
+- [x] Coleções e campos em português `snake_case`, sem nada fora do padrão.
+- [x] Todas as guardas, rotas e a rotina comentadas em português, com o número da regra que implementam.
+- [x] Regras do Firestore e do Storage publicadas negando todo acesso do cliente.
+- [x] Testes da seção 22 implementados e passando, **em especial os de isolamento entre contas**.
 - [ ] Alerta de orçamento configurado no Google Cloud (premissa 4.3).
-- [ ] Termos de uso e política de privacidade publicados, com o canal de denúncia.
-- [ ] `DOCUMENTACAO-TECNICA.md` gerado e conferido contra o sistema; `CLAUDE.md` e `README.md` em dia.
-- [ ] Leitor testado num iPhone e num Android reais.
-- [ ] Conta do Alexandre criada e nascida `ilimitado` sozinha, e o livro *Conceitos de Tecnologia* publicado como primeiro título real.
+- [x] Termos de uso e política de privacidade publicados, com o canal de denúncia.
+- [x] `DOCUMENTACAO-TECNICA.md` gerado e conferido contra o sistema; `CLAUDE.md` e `README.md` em dia.
+- [x] Leitor testado num iPhone e num Android reais.
+- [x] Conta do Alexandre criada e nascida `ilimitado` sozinha, e o livro *Conceitos de Tecnologia* publicado como primeiro título real.
 - [ ] Heyzine cancelado.
-- [ ] **Nada do `EPICO-COBRANCA.md` implementado** — nem "só a estrutura", nem um campo "para depois".
+- [x] **Nada do `EPICO-COBRANCA.md` implementado** — nem "só a estrutura", nem um campo "para depois".
 
 ---
 
