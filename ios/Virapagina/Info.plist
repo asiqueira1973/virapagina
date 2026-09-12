@@ -10,8 +10,10 @@
   <string>$(EXECUTABLE_NAME)</string>
   <key>CFBundleIdentifier</key>
   <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+  <!-- ASCII, igual ao PRODUCT_NAME. O nome com acento é o CFBundleDisplayName,
+       logo acima — ver o comentário no project.yml. -->
   <key>CFBundleName</key>
-  <string>Virapágina</string>
+  <string>$(PRODUCT_NAME)</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
