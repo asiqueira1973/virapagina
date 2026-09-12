@@ -269,22 +269,27 @@ Aba Conta > Excluir conta. A confirmação pede que o usuário digite o próprio
 3. SAIR (LOGOUT)
 Aba Conta > Sair.
 
-4. TROCAR SENHA
-Não se aplica: o app não tem senha própria. A autenticação é só com a conta Google, e a senha é gerenciada pelo Google.
+4. LOGIN COM APPLE
+O app oferece Iniciar Sessão com a Apple e login com Google, com a opção da Apple em primeiro lugar na tela de entrada.
+Cada provedor cria uma conta separada, e a tela de entrada avisa isso antes da escolha ("Apple e Google criam contas separadas — entre sempre pelo mesmo"). Não há vínculo automático entre as duas: quem usa "Ocultar meu e-mail" chega com um endereço de relay diferente do Google, e unir as contas por e-mail seria aceitar como prova de identidade um dado que não prova nada.
+Para revisar o app já com conteúdo, use a conta de teste informada acima, que é uma conta Google.
 
-5. PERMISSÕES DO SISTEMA
+5. TROCAR SENHA
+Não se aplica: o app não tem senha própria. A autenticação é pelo provedor escolhido — Apple ou Google —, e a senha é gerenciada por eles.
+
+6. PERMISSÕES DO SISTEMA
 O app não usa câmera, microfone, localização, contatos, calendário nem notificações. O único acesso a arquivos é pelo seletor de documentos do próprio iOS, quando o usuário escolhe um PDF — não há acesso à galeria nem leitura de arquivos sem essa escolha explícita.
 
-6. COMO TESTAR A ASSINATURA
+7. COMO TESTAR A ASSINATURA
 A conta de teste já vem com livros publicados. O app dá 5 livros gratuitos; ao tentar criar o sexto, o paywall aparece (também acessível a qualquer momento em Conta > Assinar livros ilimitados).
 Para chegar ao paywall sem precisar subir 5 arquivos, use a conta de teste informada acima: ela já está no limite.
 Com um Sandbox Apple ID, a compra conclui normalmente e a conta passa a ter livros ilimitados na mesma sessão. O botão "Restaurar compras" está na mesma tela.
 Importante: cancelar a assinatura NÃO tira do ar os livros já publicados. Isso é intencional e está escrito na tela de assinatura.
 
-7. O QUE O APP FAZ COM O PDF
+8. O QUE O APP FAZ COM O PDF
 Nada além de guardar e mostrar. O arquivo não é convertido, recomprimido nem alterado — quem lê o link público está vendo o PDF original que o autor enviou. A capa é a primeira página, gerada no próprio aparelho.
 
-8. CONTEÚDO
+9. CONTEÚDO
 Cada pessoa só vê os próprios livros dentro do app. Não há feed, catálogo de terceiros, chat nem qualquer conteúdo de outros usuários visível no app. Livros publicados ficam acessíveis por link no navegador, e há canal de denúncia com e-mail de contato na página de termos.
 
 Support website: https://suportedablab.carrd.co/
