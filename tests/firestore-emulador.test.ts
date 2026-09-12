@@ -187,7 +187,7 @@ descreve('camada de dados no emulador', () => {
 
     const assinatura = (sobrescritas: Record<string, unknown> = {}) => ({
       loja: 'app_store' as const,
-      produto_id: 'app.br.virapagina.assinatura.mensal',
+      produto_id: 'app.br.virapagina.ilimitado.mensal',
       transacao_original_id: `${marca}-transacao`,
       status: 'ativa' as const,
       expira_em: '2027-01-01T00:00:00.000Z',

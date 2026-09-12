@@ -160,7 +160,7 @@ describe('guarda pelo bearer — critérios A.2 e A.3', () => {
 describe('assinatura da App Store — spec-ios seção 5', () => {
   const transacao = {
     bundleId: 'app.br.virapagina.ios',
-    productId: 'app.br.virapagina.assinatura.mensal',
+    productId: 'app.br.virapagina.ilimitado.mensal',
     originalTransactionId: 'abc-123',
     expiresDate: Date.parse('2026-10-12T00:00:00Z'),
     environment: 'Production',

@@ -188,7 +188,7 @@ O objeto `assinatura`:
 | Campo | Tipo | Para quê |
 |---|---|---|
 | `loja` | `'app_store'` | Já nasce preparado para não mentir se um dia houver outra |
-| `produto_id` | string | `app.br.virapagina.assinatura.mensal` |
+| `produto_id` | string | `app.br.virapagina.ilimitado.mensal` |
 | `transacao_original_id` | string | A chave da assinatura na Apple. É por ela que a notificação encontra a conta |
 | `status` | `'ativa' \| 'expirada' \| 'em_atraso' \| 'cancelada'` | O que o servidor concluiu |
 | `expira_em` | string ISO | Fim do período pago corrente |
@@ -202,7 +202,7 @@ O objeto `assinatura`:
 ### O produto
 
 Um único produto: assinatura auto-renovável mensal, **R$ 9,90**, id
-`app.br.virapagina.assinatura.mensal`, grupo `virapagina.ilimitado`. Sem período
+`app.br.virapagina.ilimitado.mensal`, grupo `virapagina.ilimitado`. Sem período
 de teste gratuito, sem plano anual, sem nível intermediário — os cinco livros
 gratuitos **são** o teste.
 

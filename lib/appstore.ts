@@ -49,7 +49,13 @@ at+qIxUCMG1mihDK1A3UT82NQz60imOlM27jbdoXt2QfyFMm+YhidDkLF1vLUagM
 
 // O produto único da seção 5 do spec-ios. Um JWS de outro produto — de outro app
 // do mesmo desenvolvedor, por exemplo — não promove ninguém aqui.
-export const PRODUTO_ASSINATURA = 'app.br.virapagina.assinatura.mensal'
+//
+// Já foi `app.br.virapagina.assinatura.mensal`, e aquele id **não volta**: a
+// Apple reserva Product ID para sempre, mesmo depois de o produto ser apagado.
+// Ele foi queimado ao ser criado por engano como compra não-renovável. Pense
+// duas vezes antes de criar um produto na App Store Connect: o nome é de mão
+// única.
+export const PRODUTO_ASSINATURA = 'app.br.virapagina.ilimitado.mensal'
 
 // O bundle id do app. JWS com outro bundle é de outro aplicativo.
 export function bundleIdEsperado(): string {

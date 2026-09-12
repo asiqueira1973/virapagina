@@ -27,7 +27,7 @@
               "locale" : "pt_BR"
             }
           ],
-          "productID" : "app.br.virapagina.assinatura.mensal",
+          "productID" : "app.br.virapagina.ilimitado.mensal",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Assinatura mensal",
           "subscriptionGroupID" : "21000001",

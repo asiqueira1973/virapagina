@@ -187,7 +187,7 @@ pontos, que é o que a revisão procura:
 |---|---|
 | **Tipo** | Auto-Renewable Subscription |
 | **Grupo de assinatura** | `virapagina.ilimitado` (nome de referência: Virapágina Ilimitado) |
-| **Product ID** | `app.br.virapagina.assinatura.mensal` |
+| **Product ID** | `app.br.virapagina.ilimitado.mensal` |
 | **Nome de referência** (interno) | Assinatura mensal |
 | **Duração** | 1 mês |
 | **Preço** | R$ 9,90 (Brasil) — deixe a Apple converter para os demais países |

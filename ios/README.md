@@ -59,7 +59,7 @@ propósito — a validação exige a cadeia da Apple (regra iOS 10.5). Para ver 
 caminho inteiro é preciso um sandbox tester e um build de TestFlight.
 
 Na App Store Connect, o produto precisa nascer com o id
-`app.br.virapagina.assinatura.mensal`, no grupo `virapagina.ilimitado`,
+`app.br.virapagina.ilimitado.mensal`, no grupo `virapagina.ilimitado`,
 mensal, R$ 9,90.
 
 E a URL de notificações do servidor da Apple (V2, produção e sandbox):

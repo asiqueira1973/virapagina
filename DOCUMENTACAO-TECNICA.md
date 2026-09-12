@@ -585,7 +585,7 @@ Do app de iPhone, e nesta ordem:
   `ios/Configuracao.xcconfig` e `GOOGLE_OAUTH_IOS_CLIENT_ID` na Vercel. Sem isso
   o login do app devolve 401, corretamente.
 - **Criar a assinatura na App Store Connect** com o id
-  `app.br.virapagina.assinatura.mensal`, grupo `virapagina.ilimitado`, mensal,
+  `app.br.virapagina.ilimitado.mensal`, grupo `virapagina.ilimitado`, mensal,
   R$ 9,90.
 - **Apontar as App Store Server Notifications V2** (produção e sandbox) para
   `https://virapagina.app.br/api/app/assinatura/notificacoes`. Sem elas,
