@@ -22,10 +22,42 @@
 export type Plano =
   | 'gratuito'
   | 'early_adopter'
+  | 'assinante'
   | 'ate_20'
   | 'ate_50'
   | 'ate_100'
   | 'ilimitado'
+
+// Por onde a conta nasceu (spec-ios regra iOS 10.1).
+//
+// Existe por um motivo só, e é de negócio: a chave de early adopter vale para
+// quem chega pelo site e não vale para quem chega pelo app, que existe
+// justamente para cobrar. Sem registrar a origem, a promessa de "ilimitado para
+// sempre" atravessaria a App Store e esvaziaria a assinatura antes da primeira
+// compra.
+export type OrigemDaConta = 'web' | 'app'
+
+// Estado da assinatura da App Store, do ponto de vista do nosso servidor
+// (spec-ios seções 4 e 5).
+//
+// `em_atraso` é o "billing grace period" da Apple: a cobrança falhou, a Apple
+// ainda está tentando, e a pessoa continua com acesso. Tratá-lo como expirado
+// rebaixaria quem só trocou de cartão.
+export type StatusDaAssinatura = 'ativa' | 'em_atraso' | 'expirada' | 'cancelada'
+
+export interface Assinatura {
+  // Já nasce nomeada para não mentir se um dia houver outra loja.
+  loja: 'app_store'
+  produto_id: string
+  // A chave da assinatura na Apple: é por ela que a notificação do servidor da
+  // Apple encontra a conta, meses depois, com o app desinstalado.
+  transacao_original_id: string
+  status: StatusDaAssinatura
+  // Fim do período pago corrente. ISO 8601, como todas as datas que saem daqui.
+  expira_em: string | null
+  ambiente: 'producao' | 'sandbox'
+  atualizado_em: string
+}
 
 // O que o admin da plataforma pode fazer, registrado em `acoes_admin` (seção 7).
 export type AcaoAdmin =
@@ -44,6 +76,13 @@ export interface Usuario {
   // conta existe sem URL pública (seção 7).
   handle: string | null
   plano: Plano
+  // De onde veio a conta (regra iOS 10.1). Documento antigo não tem o campo e é
+  // lido como 'web', que é a verdade: todos nasceram no site.
+  origem: OrigemDaConta
+  // Ausente enquanto a conta nunca assinou. Assinatura que caduca continua aqui,
+  // com status expirada — é o histórico que permite entender uma conta pelo
+  // console sem abrir o painel da Apple.
+  assinatura: Assinatura | null
   // Bytes servidos no mês corrente, para a válvula da regra 11.11.
   trafego_mes_bytes: number
   // `AAAA-MM`. Quando não bate com o mês de hoje, o contador zera.

@@ -14,9 +14,9 @@ import { randomUUID } from 'node:crypto'
 import { FieldValue, Timestamp, type DocumentData } from 'firebase-admin/firestore'
 import { isAdminEmail } from '@/lib/admins'
 import { earlyAdopterAberto } from '@/lib/flags'
-import { PLANO_DO_DONO, PLANO_EARLY_ADOPTER, PLANO_PADRAO, planoValido } from '@/lib/planos'
+import { PLANO_ASSINANTE, PLANO_DO_DONO, PLANO_EARLY_ADOPTER, PLANO_PADRAO, planoValido } from '@/lib/planos'
 import { proximoSlugLivre } from '@/lib/slug'
-import type { AcaoAdmin, Livro, Plano, Usuario } from '@/types/livro'
+import type { AcaoAdmin, Assinatura, Livro, OrigemDaConta, Plano, Usuario } from '@/types/livro'
 import { COLECOES, db } from './admin'
 
 // Nomes que não podem virar handle porque colidem com rotas do produto (seção 7).
@@ -88,6 +88,10 @@ function paraUsuario(id: string, dados: DocumentData): Usuario {
     // Plano desconhecido — de uma escrita manual no console, por exemplo — é
     // lido como gratuito: erra para menos, nunca para mais.
     plano: planoValido(dados.plano) ? dados.plano : PLANO_PADRAO,
+    // Conta gravada antes do app não tem o campo, e a ausência é a verdade:
+    // ela nasceu no site (regra iOS 10.1).
+    origem: dados.origem === 'app' ? 'app' : 'web',
+    assinatura: paraAssinatura(dados.assinatura),
     trafego_mes_bytes: typeof dados.trafego_mes_bytes === 'number' ? dados.trafego_mes_bytes : 0,
     trafego_mes_referencia: dados.trafego_mes_referencia ?? mesCorrente(),
     criado_em: paraIso(dados.criado_em),
@@ -95,14 +99,41 @@ function paraUsuario(id: string, dados: DocumentData): Usuario {
   }
 }
 
-// Decide o plano de uma conta que está nascendo (regras 11.13 e 11.14).
+// Lê o objeto de assinatura gravado pelo servidor (spec-ios seção 4). Documento
+// sem o campo — toda conta que nunca assinou — devolve null.
+function paraAssinatura(dados: unknown): Assinatura | null {
+  if (!dados || typeof dados !== 'object') return null
+  const bruto = dados as DocumentData
+  if (typeof bruto.transacao_original_id !== 'string') return null
+  return {
+    loja: 'app_store',
+    produto_id: bruto.produto_id ?? '',
+    transacao_original_id: bruto.transacao_original_id,
+    status: bruto.status ?? 'expirada',
+    expira_em: bruto.expira_em ? paraIso(bruto.expira_em) : null,
+    ambiente: bruto.ambiente === 'sandbox' ? 'sandbox' : 'producao',
+    atualizado_em: paraIso(bruto.atualizado_em),
+  }
+}
+
+// Decide o plano de uma conta que está nascendo (regras 11.13, 11.14 e iOS 10.1).
 //
 // A ordem importa: a regra do dono vence a do early adopter. Um e-mail da
 // plataforma nasce `ilimitado`, não `early_adopter` — senão a conta do dono
 // ficaria com franquia de tráfego e apareceria como early adopter na tela de
 // admin.
-function planoDeContaNova(email: string) {
+//
+// A origem entra aqui e em nenhum outro lugar: conta criada **pelo app** nunca
+// nasce early adopter, mesmo com a chave ligada (regra iOS 10.1). A promessa de
+// livros ilimitados para sempre foi feita a quem chegou pelo site sem nada a
+// pagar; estendê-la a quem chega por um app que existe para cobrar esvaziaria a
+// assinatura antes da primeira compra.
+//
+// A regra do dono continua vencendo as duas: e-mail da plataforma é ilimitado
+// venha de onde vier.
+function planoDeContaNova(email: string, origem: OrigemDaConta) {
   if (isAdminEmail(email)) return PLANO_DO_DONO
+  if (origem === 'app') return PLANO_PADRAO
   if (earlyAdopterAberto()) return PLANO_EARLY_ADOPTER
   return PLANO_PADRAO
 }
@@ -121,10 +152,18 @@ function planoDeContaNova(email: string) {
 //     chave não rebaixa quem já entrou, e religá-la não promove quem entrou
 //     depois. Reaplicar esta regra no login seria o bug mais fácil de escrever
 //     aqui, e o mais difícil de perceber.
+//   - A origem (regra iOS 10.1) é gravada **só na criação** e nunca corrigida.
+//     Quem criou a conta no site e depois baixou o app continua com origem 'web'
+//     e com o plano que tem — inclusive early adopter ilimitado, sem paywall
+//     (regra iOS 10.2). O plano é propriedade da conta, não do aparelho.
+//   - O nome é **opcional**, e ausente não é o mesmo que nulo. A guarda do app
+//     conhece o id e o e-mail de quem está pedindo, mas não o nome: ele só vem
+//     no login. Passar `null` ali apagaria o nome da conta a cada requisição.
 export async function garantirUsuario(params: {
   id: string
   email: string
-  nome: string | null
+  nome?: string | null
+  origem?: OrigemDaConta
 }): Promise<Usuario> {
   const referencia = db().collection(COLECOES.usuarios).doc(params.id)
   const documento = await referencia.get()
@@ -134,9 +173,11 @@ export async function garantirUsuario(params: {
   if (!documento.exists) {
     const novo = {
       email: params.email,
-      nome: params.nome,
+      nome: params.nome ?? null,
       handle: null,
-      plano: planoDeContaNova(params.email),
+      plano: planoDeContaNova(params.email, params.origem ?? 'web'),
+      origem: params.origem ?? 'web',
+      assinatura: null,
       trafego_mes_bytes: 0,
       trafego_mes_referencia: mesCorrente(),
       criado_em: agora,
@@ -154,7 +195,7 @@ export async function garantirUsuario(params: {
   // já existe só muda por ação do admin — ou pela regra do dono, logo abaixo.
   const correcoes: Record<string, unknown> = {}
   if (atual.email !== params.email) correcoes.email = params.email
-  if (atual.nome !== params.nome) correcoes.nome = params.nome
+  if (params.nome !== undefined && atual.nome !== params.nome) correcoes.nome = params.nome
   if (ehDono && atual.plano !== PLANO_DO_DONO) correcoes.plano = PLANO_DO_DONO
 
   if (Object.keys(correcoes).length === 0) return atual
@@ -287,6 +328,102 @@ export async function alterarPlano(usuarioId: string, plano: Plano): Promise<voi
     .collection(COLECOES.usuarios)
     .doc(usuarioId)
     .update({ plano, atualizado_em: Timestamp.now() })
+}
+
+// ---------------------------------------------------------------------------
+// Assinatura da App Store (spec-ios seções 4 e 5)
+// ---------------------------------------------------------------------------
+
+// Grava o estado da assinatura e o plano que ele implica, numa escrita só
+// (regra iOS 10.5).
+//
+// Plano e assinatura andam juntos de propósito: gravá-los em duas escritas cria
+// a janela em que a conta é `assinante` sem assinatura, ou o contrário — e é
+// exatamente nessa janela que uma notificação de cancelamento chega.
+//
+// A conta volta para `gratuito` quando a assinatura deixa de valer, e **nenhum
+// livro é tocado** (regra iOS 10.4): rebaixar não tira nada do ar.
+//
+// A regra do dono continua acima de tudo: e-mail da plataforma que assinar
+// continua `ilimitado`, porque rebaixá-lo no fim da assinatura trancaria o dono
+// para fora da própria plataforma.
+export async function definirAssinatura(
+  usuarioId: string,
+  assinatura: Assinatura,
+): Promise<Usuario | null> {
+  const referencia = db().collection(COLECOES.usuarios).doc(usuarioId)
+  const documento = await referencia.get()
+  if (!documento.exists) return null
+
+  const atual = paraUsuario(usuarioId, documento.data() as DocumentData)
+  const vale = assinatura.status === 'ativa' || assinatura.status === 'em_atraso'
+  const agora = Timestamp.now()
+
+  const plano: Plano = isAdminEmail(atual.email)
+    ? PLANO_DO_DONO
+    : vale
+      ? PLANO_ASSINANTE
+      // Sem assinatura válida a conta volta à faixa que ela teria sem o app.
+      // Quem é early adopter volta a ser early adopter — a promessa da regra
+      // 11.14 não é gasta por ter assinado.
+      : atual.plano === PLANO_ASSINANTE
+        ? PLANO_PADRAO
+        : atual.plano
+
+  await referencia.update(
+    semUndefined({
+      plano,
+      assinatura: {
+        ...assinatura,
+        expira_em: assinatura.expira_em ? Timestamp.fromDate(new Date(assinatura.expira_em)) : null,
+        atualizado_em: agora,
+      },
+      atualizado_em: agora,
+    }),
+  )
+
+  const atualizado = await referencia.get()
+  return paraUsuario(usuarioId, atualizado.data() as DocumentData)
+}
+
+// Encontra a conta dona de uma assinatura pelo id original da transação.
+//
+// É o caminho de volta das notificações do servidor da Apple: elas chegam meses
+// depois, sem sessão, sem app aberto, e a única coisa que identificam é a
+// assinatura. O `originalTransactionId` é a chave estável dela — o id de cada
+// renovação muda, este não.
+//
+// Consulta de igualdade num campo só: o Firestore indexa subcampo de mapa
+// automaticamente, então esta não precisa entrar em `firestore.indexes.json`
+// (pegadinha 8 do CLAUDE.md — a que precisa é `where` + `orderBy`).
+export async function buscarUsuarioPorTransacaoOriginal(
+  transacaoOriginalId: string,
+): Promise<Usuario | null> {
+  const consulta = await db()
+    .collection(COLECOES.usuarios)
+    .where('assinatura.transacao_original_id', '==', transacaoOriginalId)
+    .limit(1)
+    .get()
+  if (consulta.empty) return null
+  const documento = consulta.docs[0]
+  return paraUsuario(documento.id, documento.data())
+}
+
+// Apaga a conta: o handle reservado e o documento (spec-ios seção 13).
+//
+// Os livros e os arquivos são apagados **antes**, por quem chama, um a um, pelo
+// mesmo caminho da exclusão avulsa — assim a ordem da regra 11.6 (documento
+// primeiro, arquivos depois) vale para cada livro e não é reinventada aqui.
+//
+// Liberar o handle é deliberado: a pessoa apagou a conta, e segurar o endereço
+// dela para sempre seria guardar um dado de quem pediu para sumir.
+export async function excluirUsuario(usuarioId: string): Promise<void> {
+  const referencia = db().collection(COLECOES.usuarios).doc(usuarioId)
+  const documento = await referencia.get()
+  if (!documento.exists) return
+  const handle = documento.data()?.handle as string | null | undefined
+  if (handle) await db().collection(COLECOES.handles).doc(handle).delete()
+  await referencia.delete()
 }
 
 // ---------------------------------------------------------------------------

@@ -27,6 +27,11 @@ export const PLANOS: Record<Plano, DefinicaoDePlano> = {
   // uma categoria que pode crescer para centenas de contas ficaria sem nenhum
   // alarme contra a fatura do Blaze, que não tem teto (assunção 24.8).
   early_adopter: { limiteLivros: null, franquiaTrafegoBytes: 200 * GB, rotulo: 'Early adopter' },
+  // Quem paga a assinatura mensal do app de iPhone (spec-ios regra iOS 10.3).
+  // Livros ilimitados enquanto a assinatura valer, com a mesma franquia de
+  // tráfego do early adopter: a válvula da regra 11.11 precisa existir para toda
+  // conta que pode crescer sem teto de livros.
+  assinante: { limiteLivros: null, franquiaTrafegoBytes: 200 * GB, rotulo: 'Assinante' },
   ate_20: { limiteLivros: 20, franquiaTrafegoBytes: 50 * GB, rotulo: 'Até 20 livros' },
   ate_50: { limiteLivros: 50, franquiaTrafegoBytes: 100 * GB, rotulo: 'Até 50 livros' },
   ate_100: { limiteLivros: 100, franquiaTrafegoBytes: 200 * GB, rotulo: 'Até 100 livros' },
@@ -43,6 +48,11 @@ export const PLANO_DO_DONO: Plano = 'ilimitado'
 // Plano de quem entra enquanto a plataforma está aberta (regra 11.14).
 export const PLANO_EARLY_ADOPTER: Plano = 'early_adopter'
 
+// Plano de quem tem assinatura ativa na App Store (regra iOS 10.3). Quem concede
+// e quem retira é o servidor, conferindo a assinatura com a Apple — nunca o app,
+// nunca o admin (regra iOS 10.5).
+export const PLANO_ASSINANTE: Plano = 'assinante'
+
 // Planos que o admin da plataforma pode conceder à mão, na ordem em que
 // aparecem na tela. `ilimitado` fica de fora de propósito: ele é automático para
 // os e-mails da plataforma (regra 11.13) e dá conta sem franquia de tráfego —
@@ -50,6 +60,11 @@ export const PLANO_EARLY_ADOPTER: Plano = 'early_adopter'
 //
 // `early_adopter` está na lista porque conceder é um caso real de suporte:
 // alguém que criou a conta minutos depois de a chave ser desligada.
+//
+// `assinante` fica de fora pelo motivo oposto: ele é o espelho de um contrato
+// com a Apple. Concedê-lo à mão criaria uma conta ilimitada que nenhuma
+// notificação de cancelamento sabe rebaixar — para dar cortesia, use
+// `early_adopter`, que é vitalício de propósito.
 export const PLANOS_CONCEDIVEIS: Plano[] = [
   'gratuito',
   'early_adopter',

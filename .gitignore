@@ -64,3 +64,11 @@ design-v3/*.html
 client_secret_*.json
 *service-account*.json
 *serviceAccountKey*.json
+
+# Imagens da App Store: derivadas do app e dos scripts de ios/Ferramentas.
+# Pesam megabytes e se refazem em um comando — não vão para o histórico.
+loja/
+
+# Credenciais da conta de teste do App Review. O e-mail pode ser versionado; a
+# senha, não — senha em histórico de Git não sai mais de lá.
+*.local.md

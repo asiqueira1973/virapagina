@@ -1,3 +1,4 @@
+// GET  /api/conta/livros — lista os livros da conta (spec-ios critério A.4).
 // POST /api/conta/livros — cria um livro, sempre como rascunho
 // (spec seção 13.2, épico 8.2, fluxo da seção 9).
 //
@@ -5,11 +6,37 @@
 // upload: o corpo traz o caminho, não os bytes. Nenhum documento é escrito antes
 // de o upload terminar com sucesso (fluxo de exceção da seção 9).
 import { NextResponse } from 'next/server'
-import { contarLivrosDoDono, criarLivro, slugEmUsoNaConta, sugerirSlugLivreNaConta } from '@/lib/firebase/firestore'
+import { toLivroDoAutor } from '@/lib/books'
+import { contarLivrosDoDono, criarLivro, listarLivrosDoDono, slugEmUsoNaConta, sugerirSlugLivreNaConta } from '@/lib/firebase/firestore'
 import { apagarPastaDoLivro, caminhoDaCapa, caminhoDoPdf, enviarCapaPng } from '@/lib/firebase/storage'
 import { requireAutor } from '@/lib/guards'
 import { limiteDeLivros, temVagaParaNovoLivro } from '@/lib/planos'
 import { slugValido, slugify } from '@/lib/slug'
+
+// A lista que o painel da web monta em componente de servidor, agora também como
+// rota — o app não renderiza React no servidor, e precisa dos mesmos dados.
+//
+// Vem junto o uso contra o limite porque a tela mostra "3 de 5 livros" no
+// cabeçalho: pedir isso em duas requisições faria o número piscar depois da lista.
+export async function GET() {
+  const guarda = await requireAutor()
+  if (!guarda.autorizado) return guarda.resposta
+
+  try {
+    const livros = await listarLivrosDoDono(guarda.usuario.id)
+    const handle = guarda.usuario.handle ?? ''
+    return NextResponse.json({
+      livros: livros.map((livro) => toLivroDoAutor(livro, handle)),
+      uso: { livros: livros.length, limite: limiteDeLivros(guarda.usuario.plano) },
+    })
+  } catch (erro) {
+    console.error('Falha ao listar livros da conta:', erro)
+    return NextResponse.json(
+      { erro: 'Algo deu errado. Tente novamente em instantes.' },
+      { status: 500 },
+    )
+  }
+}
 
 export async function POST(request: Request) {
   const guarda = await requireAutor()

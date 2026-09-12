@@ -1,0 +1,40 @@
+{
+  "identifier" : "virapagina-loja-local",
+  "nonRenewingSubscriptions" : [],
+  "products" : [],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_storeKitErrors" : []
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21000001",
+      "localizations" : [],
+      "name" : "virapagina.ilimitado",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "9.90",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "21000002",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Publique quantos livros quiser",
+              "displayName" : "Virapágina Ilimitado",
+              "locale" : "pt_BR"
+            }
+          ],
+          "productID" : "app.br.virapagina.assinatura.mensal",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Assinatura mensal",
+          "subscriptionGroupID" : "21000001",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : { "major" : 3, "minor" : 0 }
+}

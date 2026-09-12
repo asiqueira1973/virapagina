@@ -5,10 +5,15 @@ seis itens exigidos pela seção 19 do `spec.md`. Se alguma coisa aqui não bate
 com o código, o código está certo e este documento está velho — corrija-o no
 mesmo commit.
 
-**Versão implementada: 3.1** — produto multi-tenant sobre Firestore e Cloud
-Storage, **sem cobrança**. O desenho da cobrança está pronto em
-`EPICO-COBRANCA.md` e não foi implementado: não há Stripe, tela de preços, campo
-de assinatura nem coleta de dado fiscal em lugar nenhum do código.
+**Versão implementada: 3.1**, mais o **app de iPhone** descrito em `spec-ios.md`
+— produto multi-tenant sobre Firestore e Cloud Storage, com o mesmo backend
+servindo o site e o app.
+
+**Sobre cobrança, são duas coisas diferentes e só uma existe.** A do
+`EPICO-COBRANCA.md` — Stripe, tela de preços, dado fiscal, nota — continua **não
+implementada**, e nenhum campo dela foi criado. O que existe é a **assinatura da
+App Store**, mensal, só dentro do app: ela vive em `lib/appstore.ts`, em
+`/api/app/assinatura*` e no campo `assinatura` da conta.
 
 ---
 
@@ -28,7 +33,9 @@ conta Google pode mudar.
 | `email` | Espelho do Google, para exibição e suporte |
 | `nome` | Nome do Google. Nulo quando a conta não expõe |
 | `handle` | O endereço público que forma a URL (`virapagina.app.br/<handle>`). **Nulo até o primeiro acesso concluir a escolha** — é o único estado em que a conta existe sem URL pública, e o painel inteiro redireciona para a escolha enquanto ele for nulo |
-| `plano` | A faixa de limite de livros. Um de: `gratuito`, `early_adopter`, `ate_20`, `ate_50`, `ate_100`, `ilimitado` |
+| `plano` | A faixa de limite de livros. Um de: `gratuito`, `early_adopter`, `assinante`, `ate_20`, `ate_50`, `ate_100`, `ilimitado` |
+| `origem` | Por onde a conta nasceu: `web` ou `app`. Gravado **só na criação** e nunca corrigido. É o que faz conta criada pelo app não herdar o early adopter (regra iOS 10.1). Documento sem o campo é lido como `web`, que é a verdade — todos nasceram no site |
+| `assinatura` | O estado da assinatura da App Store, ou ausente. Guarda produto, `transacao_original_id`, status, vencimento e ambiente. Quem escreve é o servidor, depois de conferir o JWS com a cadeia de certificados da Apple |
 | `trafego_mes_bytes` | Quantos bytes de PDF e capa foram servidos para os livros desta conta no mês corrente |
 | `trafego_mes_referencia` | O mês do contador, em `AAAA-MM`. Quando não bate com o mês de hoje, o contador recomeça do zero |
 | `criado_em`, `atualizado_em` | Datas. `atualizado_em` é reescrito pela aplicação em toda gravação — **não existe trigger** |
@@ -38,7 +45,8 @@ conta Google pode mudar.
 | Plano | Limite de livros | Franquia de tráfego | Como se chega nele |
 |---|---|---|---|
 | `gratuito` | 5 | 20 GB/mês | Padrão quando a plataforma **não** está mais aberta |
-| `early_adopter` | **sem limite** | 200 GB/mês | **Automático** para toda conta criada enquanto `EARLY_ADOPTER_ABERTO` for verdadeiro. É vitalício |
+| `early_adopter` | **sem limite** | 200 GB/mês | **Automático** para toda conta criada **pelo site** enquanto `EARLY_ADOPTER_ABERTO` for verdadeiro. É vitalício. Conta criada pelo app nunca cai aqui |
+| `assinante` | **sem limite** | 200 GB/mês | Assinatura mensal ativa na App Store. Some quando a assinatura caduca — e **nenhum livro sai do ar** quando isso acontece |
 | `ate_20` | 20 | 50 GB/mês | Concedido à mão na tela de admin |
 | `ate_50` | 50 | 100 GB/mês | Concedido à mão na tela de admin |
 | `ate_100` | 100 | 200 GB/mês | Concedido à mão na tela de admin |
@@ -450,9 +458,63 @@ custaria mais do que o problema.
 
 ---
 
+## 7. O app de iPhone
+
+Implementado a partir do `spec-ios.md`. O app é **cliente do mesmo backend**:
+nenhuma regra de negócio foi reescrita em Swift, e o Firestore continua fora do
+alcance do aparelho.
+
+### O que mudou no servidor
+
+| Onde | O que |
+|---|---|
+| `lib/app-auth.ts` | Emite e confere o token do app (JWT HS256, 30 dias, mesmo `NEXTAUTH_SECRET` da web) e valida o `id_token` do Google contra o JWKS, o emissor, o prazo e o `aud` do client **iOS**. Sem biblioteca: `node:crypto` faz as duas assinaturas |
+| `lib/guards.ts` | `requireAutor()` e `sessaoAtual()` passam a aceitar `Authorization: Bearer` além do cookie, lendo o cabeçalho por `headers()`. **Nenhuma rota existente mudou de assinatura** — as de `/api/conta/*` atendem os dois clientes como estavam |
+| `lib/appstore.ts` | Verifica os JWS da Apple: cadeia de três certificados, validade, e a raiz comparada **byte a byte** com a Apple Root CA - G3 embutida no arquivo. É o que separa uma assinatura de verdade de um JSON inventado |
+| `lib/app-conta.ts` | A visão da conta que o app recebe nas três rotas que a devolvem |
+| `lib/books.ts` | `toLivroDoAutor()` monta as URLs pública, de PDF e de capa **já com `?v=`** — a regra do cache mora num lugar só, e não no Swift |
+| `firestore.ts` | `origem` na criação da conta, `definirAssinatura()`, `buscarUsuarioPorTransacaoOriginal()` e `excluirUsuario()` |
+
+### Rotas novas
+
+| Rota | O que faz |
+|---|---|
+| `POST /api/app/sessao` | Troca o `id_token` do Google pelo token do app. É a única rota que autentica do zero — o que faz o papel da guarda é a verificação do token |
+| `GET /api/app/conta` | Conta, plano, uso contra o limite e assinatura. Roda com `exigeHandle: false`, porque precisa responder justamente para quem ainda não escolheu endereço |
+| `POST /api/app/assinatura` | Recebe o JWS da compra, confere com a Apple, grava o plano. Recusa assinatura já vinculada a outra conta |
+| `POST /api/app/assinatura/notificacoes` | As App Store Server Notifications V2. **Sem guarda de sessão, e corretamente**: quem chama é a Apple, e a autenticação é a assinatura do JWS |
+| `GET /api/conta/livros` e `GET /api/conta/livros/[id]` | O que a web monta em componente de servidor, agora também como rota |
+| `DELETE /api/conta` | Apaga conta, livros, arquivos e handle. Exigência da App Review, e o site ainda não tem equivalente |
+
+### As duas regras de negócio próprias do app
+
+- **Conta criada pelo app nasce `gratuito`**, com 5 livros, mesmo com
+  `EARLY_ADOPTER_ABERTO` ligada (regra iOS 10.1). Quem já existe **não muda de
+  plano** ao entrar pelo app: early adopter que baixa o app continua ilimitado e
+  não vê paywall (regra iOS 10.2).
+- **Perder a assinatura não tira nada do ar** (regra iOS 10.4). A conta volta
+  para `gratuito` e perde só o direito de criar o próximo livro. O paywall diz
+  isso antes da compra, com todas as letras.
+
+### O app
+
+SwiftUI, iOS 17+, **zero dependências**: o login usa `ASWebAuthenticationSession`
+com PKCE (que é o que o SDK do Google faz por dentro), a rede usa `URLSession`, o
+PDF usa `PDFKit` e a assinatura usa StoreKit 2. O projeto é gerado por XcodeGen a
+partir de `ios/project.yml`; o `.xcodeproj` não está no Git.
+
+O leitor do app **não** é o flipbook do site: lá é `react-pageflip` com PDF.js,
+aqui é o PDFKit, página a página na horizontal. A diferença está declarada na
+seção 14 do `spec-ios.md`. O que não muda é a regra que importa — o PDF original
+é a fonte, renderizado no cliente, e o servidor nunca converte PDF em imagem. A
+capa continua sendo a primeira página, agora desenhada pelo PDFKit no aparelho,
+nas mesmas medidas da web.
+
+---
+
 ## Testes
 
-`npm test` roda **85 testes** que não precisam de nada externo:
+`npm test` roda **122 testes** que não precisam de nada externo:
 
 | Arquivo | O que garante |
 |---|---|
@@ -460,14 +522,17 @@ custaria mais do que o problema.
 | `tests/isolamento-entre-contas.test.ts` | A conta A não lê, edita, publica nem exclui livro da conta B por rota nenhuma; livro inexistente e livro alheio dão a mesma resposta; o limite do plano é aplicado; a exclusão apaga o documento antes dos arquivos |
 | `tests/visibilidade-publica.test.ts` | Rascunho devolve 404 para visitante, para outro autor e para o admin da plataforma; publicado é servido a qualquer um; o que sai do servidor não contém caminho do Storage, dono nem e-mail |
 | `tests/regras-de-negocio.test.ts` | Slug, limites de plano, franquias, visibilidade e a chave do early adopter, como funções puras |
+| `tests/app-ios.test.ts` | O token do app não pode ser forjado, adulterado, declarado sem assinatura nem sobreviver ao prazo; o bearer passa pela guarda com o mesmo rigor do cookie e **não cai na sessão da web quando é inválido**; livro alheio continua devolvendo 404 pelo bearer; e um JWS assinado por uma **cadeia de certificados forjada de verdade** — guardada em `tests/fixtures/` — é recusado |
 
-`npm run test:emu` roda **24 testes de integração contra o emulador do Firebase**
+`npm run test:emu` roda **31 testes de integração contra o emulador do Firebase**
 (`npm run emu` primeiro). São eles que verificam o que mock nenhum verifica: que
 a transação de handle realmente impede dois donos para o mesmo nome, que a
 contagem por dono usa o índice certo, que apagar o livro apaga os arquivos, que a
 conta do dono nasce e permanece ilimitada, e — o que prova o "vitalício" da regra
 11.14 — que **desligar a chave não rebaixa quem já entrou e religá-la não promove
-quem entrou depois**. Sem o emulador no ar, esses testes
+quem entrou depois**. Entraram aí as duas regras do app: conta criada pelo app
+nasce gratuita com a chave ligada, conta que já existe não muda de plano ao entrar
+pelo app, e assinatura expirada rebaixa o plano **sem despublicar o livro**. Sem o emulador no ar, esses testes
 são pulados — `npm test` continua funcionando em qualquer máquina.
 
 ---
@@ -513,3 +578,17 @@ os seis estão cobertos agora.
 - **Escolher um provedor de e-mail**, se quiser que os avisos de tráfego cheguem
   ao autor em vez de ficarem só no log e na tela de admin (divergência 6.5).
 - **Cancelar o Heyzine** — era o teste original do produto inteiro.
+
+Do app de iPhone, e nesta ordem:
+
+- **Criar o client OAuth do tipo iOS** no Google Cloud e preencher os dois lados:
+  `ios/Configuracao.xcconfig` e `GOOGLE_OAUTH_IOS_CLIENT_ID` na Vercel. Sem isso
+  o login do app devolve 401, corretamente.
+- **Criar a assinatura na App Store Connect** com o id
+  `app.br.virapagina.assinatura.mensal`, grupo `virapagina.ilimitado`, mensal,
+  R$ 9,90.
+- **Apontar as App Store Server Notifications V2** (produção e sandbox) para
+  `https://virapagina.app.br/api/app/assinatura/notificacoes`. Sem elas,
+  cancelamento e reembolso só seriam percebidos quando a pessoa abrisse o app.
+- **Decidir o que fazer se a App Review exigir Login com Apple** (pergunta aberta
+  15.2 do `spec-ios.md`).

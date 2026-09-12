@@ -5,6 +5,7 @@
 // requisição não autorizada. Sem isso, uma rota poderia devolver 404 depois de
 // já ter lido — ou escrito — dado de outra conta.
 import { vi } from 'vitest'
+import { assinarTokenDoApp } from '@/lib/app-auth'
 import type { Livro, Usuario } from '@/types/livro'
 
 // Sessão corrente que o mock de `auth()` devolve. Cada teste ajusta este valor.
@@ -41,6 +42,9 @@ export function mockFirebase() {
     reservarHandle: vi.fn(),
     trocarHandle: vi.fn(),
     alterarPlano: vi.fn(),
+    definirAssinatura: vi.fn(),
+    buscarUsuarioPorTransacaoOriginal: vi.fn(),
+    excluirUsuario: vi.fn(),
     somarTrafego: vi.fn(),
     listarLivrosDoDono: vi.fn(),
     contarLivrosDoDono: vi.fn(),
@@ -71,14 +75,43 @@ export function mockFirebase() {
   }))
 }
 
+// Cabeçalhos que o mock de `headers()` devolve. É por aqui que os testes fazem
+// uma requisição chegar como se viesse do app, com `Authorization: Bearer`
+// (spec-ios critério A.2).
+export const cabecalhosDoTeste: { valor: Record<string, string> } = { valor: {} }
+
+// Substitui `next/headers`, que só existe dentro de uma requisição do Next.
+export function mockNextHeaders() {
+  vi.mock('next/headers', () => ({
+    headers: async () => ({
+      get: (nome: string) => cabecalhosDoTeste.valor[nome.toLowerCase()] ?? null,
+    }),
+  }))
+}
+
 // --- Estados de sessão ---
 
 export function semSessao() {
   sessaoAtualDoTeste.valor = null
+  cabecalhosDoTeste.valor = {}
 }
 
 export function sessaoDe(id: string, email: string) {
   sessaoAtualDoTeste.valor = { user: { id, email, name: null } }
+  cabecalhosDoTeste.valor = {}
+}
+
+// A mesma coisa, pelo caminho do app: sem cookie nenhum, só o bearer.
+export function sessaoDoAppDe(id: string, email: string) {
+  sessaoAtualDoTeste.valor = null
+  const { token } = assinarTokenDoApp({ id, email })
+  cabecalhosDoTeste.valor = { authorization: `Bearer ${token}` }
+}
+
+// Bearer que não é token nosso — token forjado, vencido ou de outro produto.
+export function bearerInvalido() {
+  sessaoAtualDoTeste.valor = null
+  cabecalhosDoTeste.valor = { authorization: 'Bearer nao.e.um.token' }
 }
 
 export const CONTA_A = { id: 'conta-a', email: 'ana@exemplo.com' }
@@ -94,6 +127,8 @@ export function usuarioFalso(sobrescritas: Partial<Usuario> = {}): Usuario {
     nome: 'Ana',
     handle: 'ana',
     plano: 'gratuito',
+    origem: 'web',
+    assinatura: null,
     trafego_mes_bytes: 0,
     trafego_mes_referencia: new Date().toISOString().slice(0, 7),
     criado_em: '2026-01-01T00:00:00.000Z',

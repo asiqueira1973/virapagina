@@ -199,6 +199,8 @@ describe('requireAutor() — seção 6', () => {
       nome: null,
       handle: null,
       plano: 'gratuito',
+      origem: 'web',
+      assinatura: null,
       trafego_mes_bytes: 0,
       trafego_mes_referencia: '2026-09',
       criado_em: '',

@@ -3,8 +3,10 @@
 Instruções para quem for mexer neste repositório, humano ou agente.
 
 Leia o `spec.md` antes de mudar comportamento e o `prompt-design-virapagina.md`
-antes de mudar interface. Este arquivo não os substitui — ele diz como o
-repositório está montado e o que quebra se você não souber.
+antes de mudar interface. Para o app de iPhone, leia o `spec-ios.md`: ele é o
+delta do `spec.md`, e onde os dois divergirem é ele que vale **para o app**. Este
+arquivo não os substitui — ele diz como o repositório está montado e o que quebra
+se você não souber.
 
 O `DOCUMENTACAO-TECNICA.md` descreve o que **está** implementado, incluindo as
 divergências em relação ao spec. Mudou schema, guarda, rota ou lógica de tela?
@@ -22,8 +24,13 @@ ilimitados, para sempre. Desligada a chave, conta nova nasce com 5 livros.
 **Sem banco relacional:** Cloud Firestore para os dados, Cloud Storage para os
 arquivos, tudo pelo Admin SDK no servidor.
 
-**Sem cobrança.** O desenho inteiro está em `EPICO-COBRANCA.md` e **não deve ser
-implementado** — nem "só a estrutura", nem um campo "para depois".
+**Sem cobrança no site.** O desenho inteiro está em `EPICO-COBRANCA.md` e **não
+deve ser implementado** — nem "só a estrutura", nem um campo "para depois".
+
+**Com cobrança no app de iPhone**, e só lá: assinatura mensal da App Store, que
+dá livros ilimitados enquanto valer. É outra esteira, não a do `EPICO-COBRANCA.md`
+— nenhum campo daquele documento existe. Quem chega pelo app nasce com 5 livros;
+quem já era early adopter continua ilimitado e nunca vê paywall.
 
 ---
 
@@ -62,6 +69,15 @@ npm run lint       # eslint
 npm test           # 85 testes, sem dependência externa
 npm run test:emu   # 24 testes de integração — exige `npm run emu` no ar
 npm run diagnostico -- ./<chave>.json   # roda as consultas reais contra o Firestore de produção
+swift scripts/gerar-icones.swift        # refaz os ícones do site e do app
+```
+
+O app de iPhone (veja `ios/README.md`):
+
+```bash
+cd ios && xcodegen generate   # o .xcodeproj é derivado do project.yml, não versionado
+xcodebuild -project ios/Virapagina.xcodeproj -scheme Virapagina \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 
 Para ver algo em tela local, suba o emulador e semeie uma conta com um livro:
@@ -91,6 +107,7 @@ app/
   api/conta/                        → do autor, todas com requireAutor()
   api/admin/                        → da plataforma
   api/rotinas/                      → cron
+  api/app/                          → do app de iPhone: sessão e assinatura
 components/
   reader/    BookReader, PdfPage, FlipbookToolbar, ZoomControls, BookCover
   account/   Sidebar, formulários, diálogos
@@ -104,7 +121,14 @@ lib/
   planos.ts  limites e franquias — os números vivem só aqui
   flags.ts   a chave EARLY_ADOPTER_ABERTO, sem imports, para não criar ciclo
   cache.ts   versão das URLs de PDF e capa — sem imports, o leitor é cliente
+  app-auth.ts   token do app e verificação do id_token do Google
+  app-conta.ts  a visão da conta que o app recebe
+  appstore.ts   verificação dos JWS da Apple, com a raiz embutida
   pdf/render.ts, copy.ts, slug.ts, books.ts, format.ts
+ios/
+  project.yml           o projeto; o .xcodeproj é gerado e não versionado
+  Configuracao.xcconfig servidor e client do Google
+  Virapagina/           App, Design, Rede, Loja, Pdf, Telas
 ```
 
 **Se um dia isso virar Postgres**, é `lib/firebase/firestore.ts` que muda.
@@ -128,7 +152,7 @@ Nenhum outro arquivo sabe que existe Firestore — mantenha assim.
 
 ---
 
-## Onze coisas que quebram em silêncio
+## Treze coisas que quebram em silêncio
 
 Cada uma destas já mordeu. Nenhuma dá erro de compilação.
 
@@ -189,6 +213,18 @@ Cada uma destas já mordeu. Nenhuma dá erro de compilação.
     acabou de atualizar. Isso não aparece em teste nem em desenvolvimento — só
     em produção, e só para quem já tinha aberto o livro.
 
+12. **`garantirUsuario()` roda em toda requisição, e dois parâmetros dela só
+    valem na criação.** `origem` decide se a conta nasce early adopter (regra iOS
+    10.1) — passá-la no lugar errado promoveria ou rebaixaria quem já existe. E
+    `nome` é **opcional, não anulável**: a guarda do bearer não conhece o nome, e
+    mandar `null` apagaria o nome da conta a cada tela que o app abrisse.
+
+13. **Um bearer apresentado e recusado não pode cair no cookie.** A guarda
+    identifica o pedido por uma credencial só: se veio `Authorization: Bearer` e
+    ele não vale, a resposta é 401 — e não a sessão do navegador que porventura
+    exista. Deixar cair faria um token vencido do app virar sessão de outra conta
+    aberta no mesmo Safari. Há teste.
+
 ---
 
 ## O que NÃO implementar
@@ -196,12 +232,16 @@ Cada uma destas já mordeu. Nenhuma dá erro de compilação.
 Está no roadmap (spec seção 28) ou no `EPICO-COBRANCA.md`, e ficou de fora de
 propósito. Nem "só a estrutura", nem "deixando preparado":
 
-cobrança, Stripe, tela de preços, dados fiscais e nota · analytics de leitura ·
+Stripe, tela de preços no site, dados fiscais e nota · analytics de leitura ·
 domínio próprio do autor · contas de time · grade de miniaturas de página · capa
 customizável à mão · atalhos fixos de WhatsApp/LinkedIn/X · som de virar página.
 
+E do app (`spec-ios.md` seção 13): Login com Apple, iPad, push, leitura offline,
+vitrine dentro do app, plano anual e cupom.
+
 O campo `plano` e o limite da regra 11.8 **fazem parte** do MVP e estão
-implementados; o que não entra é o caminho de pagar por eles.
+implementados; o que não entra é o caminho de pagar por eles **no site**. No app,
+o caminho existe e é o da App Store.
 
 Se algo do roadmap parecer necessário para o v3 funcionar, isso é uma pergunta
 para o Alexandre, não uma decisão de implementação.

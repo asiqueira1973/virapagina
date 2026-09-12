@@ -7,11 +7,13 @@
 //
 // Este arquivo é de Node, não do Edge: ele toca o Firestore. O middleware usa a
 // configuração magra de `lib/auth.ts`.
+import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { isAdminEmail } from '@/lib/admins'
+import { tokenDoCabecalho, verificarTokenDoApp } from '@/lib/app-auth'
 import { auth } from '@/lib/auth'
 import { buscarLivroPorId, garantirUsuario } from '@/lib/firebase/firestore'
-import type { Livro, Usuario } from '@/types/livro'
+import type { Livro, OrigemDaConta, Usuario } from '@/types/livro'
 
 // Resultado de uma guarda: ou o que ela liberou, ou a resposta HTTP pronta que a
 // rota deve devolver sem tocar em nada.
@@ -21,6 +23,48 @@ export type Resultado<T> =
 
 function erro(status: number, mensagem: string): { autorizado: false; resposta: NextResponse } {
   return { autorizado: false, resposta: NextResponse.json({ erro: mensagem }, { status }) }
+}
+
+// Quem está do outro lado: o navegador, com cookie de sessão, ou o app de
+// iPhone, com `Authorization: Bearer` (spec-ios seção 3, critério A.2).
+//
+// Fica aqui dentro, e não numa mudança de assinatura das guardas, para que
+// **nenhuma rota existente precise ser reescrita** — a rota continua chamando
+// `requireAutor()` sem argumento e passa a atender os dois clientes.
+//
+// Ordem deliberada: o cabeçalho vem primeiro porque é a resposta barata, e um
+// pedido com bearer **nunca** cai no cookie, mesmo que o bearer seja inválido.
+// Cair seria autenticar por uma credencial que não foi a apresentada — e faria
+// um token vencido do app virar sessão de outra conta aberta no mesmo Safari.
+async function identificarPedido(): Promise<{
+  id: string
+  email: string
+  // Ausente quando quem pede é o app: o bearer não carrega nome, e `null` não
+  // serviria — apagaria o nome da conta a cada requisição.
+  nome?: string | null
+  origem: OrigemDaConta
+} | null> {
+  // `headers()` só existe dentro de uma requisição. Fora dela — num teste de
+  // unidade que chama a guarda direto — a ausência de bearer é a resposta certa.
+  let autorizacao: string | null = null
+  try {
+    autorizacao = (await headers()).get('authorization')
+  } catch {
+    autorizacao = null
+  }
+
+  const token = tokenDoCabecalho(autorizacao)
+  if (token) {
+    const dono = verificarTokenDoApp(token)
+    return dono ? { id: dono.id, email: dono.email, origem: 'app' } : null
+  }
+
+  const sessao = await auth()
+  const id = sessao?.user?.id
+  const email = sessao?.user?.email
+  if (!id || !email) return null
+  // O nome sai da sessão só no caminho do navegador; o do app não o carrega.
+  return { id, email, nome: sessao?.user?.name ?? null, origem: 'web' }
 }
 
 // Guarda de toda rota sob /api/conta/*.
@@ -36,16 +80,18 @@ function erro(status: number, mensagem: string): { autorizado: false; resposta: 
 export async function requireAutor(
   opcoes: { exigeHandle?: boolean } = {},
 ): Promise<Resultado<{ usuario: Usuario }>> {
-  const sessao = await auth()
-  const id = sessao?.user?.id
-  const email = sessao?.user?.email
+  const pedido = await identificarPedido()
+  if (!pedido) return erro(401, 'Não autenticado.')
 
-  if (!id || !email) return erro(401, 'Não autenticado.')
-
+  // Sem `origem`: esta função roda em toda requisição, e a origem só pode ser
+  // decidida na **criação** da conta (regra iOS 10.1). Quem cria conta pelo app é
+  // a rota de sessão, que passa a origem explicitamente. Um bearer que chegue
+  // aqui sem conta é token de conta apagada — recriá-la como 'web' erra dando
+  // menos, que é o lado certo de errar.
   const usuario = await garantirUsuario({
-    id,
-    email,
-    nome: sessao?.user?.name ?? null,
+    id: pedido.id,
+    email: pedido.email,
+    nome: pedido.nome,
   })
 
   if (opcoes.exigeHandle !== false && !usuario.handle) {
@@ -96,9 +142,10 @@ export async function requireAdminPlataforma(): Promise<Resultado<{ email: strin
 // ninguém. É ela que libera a prévia de rascunho ao próprio dono mantendo o 404
 // para todo o resto do mundo (seção 6).
 export async function sessaoAtual(): Promise<{ id: string; email: string } | null> {
-  const sessao = await auth()
-  const id = sessao?.user?.id
-  const email = sessao?.user?.email
-  if (!id || !email) return null
-  return { id, email }
+  // Vale para os dois clientes: é ela que libera a prévia de rascunho, e o app
+  // precisa da prévia tanto quanto o navegador (critério C.6). Sem isso, o
+  // leitor do app receberia 404 no próprio rascunho do dono.
+  const pedido = await identificarPedido()
+  if (!pedido) return null
+  return { id: pedido.id, email: pedido.email }
 }

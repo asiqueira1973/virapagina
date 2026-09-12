@@ -1,0 +1,73 @@
+# Projeto do app de iPhone, gerado pelo XcodeGen (spec-ios seção 2).
+#
+# O `.xcodeproj` NÃO vai para o Git: ele é derivado deste arquivo. `pbxproj` em
+# diff é ilegível, conflita a cada merge e esconde mudança de configuração no
+# meio de um blob — este YAML é a fonte.
+#
+#   brew install xcodegen && cd ios && xcodegen generate
+name: Virapagina
+options:
+  bundleIdPrefix: app.br.virapagina
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+  # O alvo testado é o iPhone (spec-ios seção 1).
+  defaultConfig: Debug
+
+configs:
+  Debug: debug
+  Release: release
+
+settings:
+  base:
+    # Modo de linguagem Swift 5: o app é de uma tela por vez e um autor por
+    # sessão, e a concorrência estrita do Swift 6 cobraria anotação em cada
+    # closure de UIKit sem tornar nada mais correto aqui.
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
+
+targets:
+  Virapagina:
+    type: application
+    platform: iOS
+    # Os valores que mudam por instalação — endereço do servidor e client do
+    # Google — vivem aqui, não no código (spec-ios seção 3).
+    configFiles:
+      Debug: Configuracao.xcconfig
+      Release: Configuracao.xcconfig
+    sources:
+      - path: Virapagina
+        excludes:
+          - "Virapagina.storekit"
+      # A loja de mentira entra no projeto para o esquema poder apontar para
+      # ela, mas **não** entra no bundle: um arquivo com preço fictício não tem
+      # o que fazer dentro do app que vai para a App Store.
+      - path: Virapagina/Virapagina.storekit
+        buildPhase: none
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.br.virapagina.ios
+        PRODUCT_NAME: Virapágina
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Virapagina/Info.plist
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+        # O time da conta de desenvolvedor. Sem ele, `xcodebuild archive` não
+        # sabe com qual identidade assinar e falha só no fim do build.
+        DEVELOPMENT_TEAM: XGZW6Y6K25
+
+schemes:
+  Virapagina:
+    build:
+      targets:
+        Virapagina: all
+    run:
+      config: Debug
+      # A loja de mentira para desenvolver o paywall sem App Store Connect
+      # (spec-ios seção 5). Em TestFlight e na App Store ela é ignorada.
+      storeKitConfiguration: Virapagina/Virapagina.storekit
+    archive:
+      config: Release

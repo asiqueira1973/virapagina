@@ -1,0 +1,21 @@
+// Os dois valores que mudam por instalação (spec-ios seção 3).
+//
+// O `$()` no meio do https:// existe porque `//` começa comentário em xcconfig —
+// sem ele, a URL vira "https:" e o app fala com lugar nenhum.
+
+// O servidor. Em desenvolvimento contra a máquina local, troque por
+// http:/$()/SEU-IP-NA-REDE:3000 — "localhost" no simulador funciona, no
+// aparelho não.
+API_BASE_URL = https:/$()/virapagina.app.br
+
+// O client OAuth **do tipo iOS** (Google Cloud → Credenciais → Criar → ID do
+// cliente OAuth → iOS, com o bundle app.br.virapagina.ios).
+//
+// É outro client que o da web, e é o id deste que precisa estar em
+// GOOGLE_OAUTH_IOS_CLIENT_ID no servidor — é contra ele que o `aud` do id_token
+// é conferido.
+GOOGLE_CLIENT_ID = 624796079003-41i35t20mvcs87qppej85k2vsee9usk3.apps.googleusercontent.com
+
+// O mesmo id ao contrário, sem o sufixo. É o esquema de URL que o Google usa
+// para devolver o navegador ao app, e precisa bater com o CFBundleURLTypes.
+GOOGLE_CLIENT_ID_REVERSO = com.googleusercontent.apps.624796079003-41i35t20mvcs87qppej85k2vsee9usk3

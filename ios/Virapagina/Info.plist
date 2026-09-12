@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>pt-BR</string>
+  <key>CFBundleDisplayName</key>
+  <string>Virapágina</string>
+  <key>CFBundleExecutable</key>
+  <string>$(EXECUTABLE_NAME)</string>
+  <key>CFBundleIdentifier</key>
+  <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+  <key>CFBundleName</key>
+  <string>Virapágina</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>$(MARKETING_VERSION)</string>
+  <key>CFBundleVersion</key>
+  <string>$(CURRENT_PROJECT_VERSION)</string>
+
+  <!-- Os valores que vêm do Configuracao.xcconfig (spec-ios seção 3). -->
+  <key>ApiBaseURL</key>
+  <string>$(API_BASE_URL)</string>
+  <key>GoogleClientID</key>
+  <string>$(GOOGLE_CLIENT_ID)</string>
+
+  <!-- O esquema pelo qual o Google devolve o navegador ao app depois do
+       consentimento. Sem esta entrada o login abre e nunca volta. -->
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>$(GOOGLE_CLIENT_ID_REVERSO)</string>
+      </array>
+    </dict>
+  </array>
+
+  <key>UILaunchScreen</key>
+  <dict/>
+  <key>UISupportedInterfaceOrientations</key>
+  <array>
+    <string>UIInterfaceOrientationPortrait</string>
+    <string>UIInterfaceOrientationLandscapeLeft</string>
+    <string>UIInterfaceOrientationLandscapeRight</string>
+  </array>
+  <!-- O app não usa criptografia além de HTTPS: responde à pergunta da App
+       Store sem abrir um caso de exportação. -->
+  <key>ITSAppUsesNonExemptEncryption</key>
+  <false/>
+</dict>
+</plist>

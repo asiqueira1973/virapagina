@@ -1,11 +1,28 @@
+// GET /api/conta/livros/[id] — um livro da própria conta (spec-ios critério A.4).
 // PUT /api/conta/livros/[id] — atualiza os metadados de um livro.
 // DELETE /api/conta/livros/[id] — exclui o livro em definitivo (regra 11.6).
 // Spec seção 13.2, épico 8.2.
 import { NextResponse } from 'next/server'
+import { toLivroDoAutor } from '@/lib/books'
 import { atualizarLivro, excluirLivro, slugEmUsoNaConta, sugerirSlugLivreNaConta } from '@/lib/firebase/firestore'
 import { apagarPasta, apagarPastaDoLivro, pastaDoLivroPeloPdf } from '@/lib/firebase/storage'
 import { requireDonoDoLivro } from '@/lib/guards'
 import { slugValido, slugify } from '@/lib/slug'
+
+// Livro de outra conta devolve 404 aqui como em todo lugar (seção 6): é a guarda
+// que responde, e ela não distingue inexistente de alheio.
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params
+  const guarda = await requireDonoDoLivro(id)
+  if (!guarda.autorizado) return guarda.resposta
+
+  return NextResponse.json({
+    livro: toLivroDoAutor(guarda.livro, guarda.usuario.handle ?? ''),
+  })
+}
 
 // Atualiza título, subtítulo, slug, autor e descrição. O PDF não é tocado aqui —
 // trocar de arquivo é a ação separada "Substituir PDF" (critério 8.2).

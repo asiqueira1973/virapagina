@@ -41,6 +41,9 @@ descreve('camada de dados no emulador', () => {
     for (const livro of await firestore.listarLivrosDoDono(idComum)) {
       await firestore.excluirLivro(livro.id)
     }
+    for (const livro of await firestore.listarLivrosDoDono(`${marca}-assinante`)) {
+      await firestore.excluirLivro(livro.id)
+    }
     process.env.EARLY_ADOPTER_ABERTO = 'true'
   })
 
@@ -133,6 +136,113 @@ descreve('camada de dados no emulador', () => {
     })
   })
 
+  // As duas regras que fazem o app cobrar sem quebrar a promessa do site.
+  describe('conta criada pelo app — regras iOS 10.1 e 10.2', () => {
+    const idPeloApp = `${marca}-pelo-app`
+    const idPeloSite = `${marca}-pelo-site`
+
+    it('nasce gratuita mesmo com a chave de early adopter ligada', async () => {
+      process.env.EARLY_ADOPTER_ABERTO = 'true'
+      const conta = await firestore.garantirUsuario({
+        id: idPeloApp,
+        email: 'app@exemplo.com',
+        nome: 'Pelo app',
+        origem: 'app',
+      })
+      expect(conta.plano).toBe('gratuito')
+      expect(conta.origem).toBe('app')
+    })
+
+    it('quem já existe não muda de plano ao entrar pelo app', async () => {
+      process.env.EARLY_ADOPTER_ABERTO = 'true'
+      await firestore.garantirUsuario({
+        id: idPeloSite,
+        email: 'site@exemplo.com',
+        nome: 'Pelo site',
+      })
+      // A mesma pessoa, agora entrando pelo app: continua ilimitada e continua
+      // com a origem de quando nasceu.
+      const conta = await firestore.garantirUsuario({
+        id: idPeloSite,
+        email: 'site@exemplo.com',
+        nome: 'Pelo site',
+        origem: 'app',
+      })
+      expect(conta.plano).toBe('early_adopter')
+      expect(conta.origem).toBe('web')
+    })
+
+    it('a requisição do app não apaga o nome da conta', async () => {
+      // A guarda do bearer chama esta função sem `nome`, em toda requisição.
+      const conta = await firestore.garantirUsuario({
+        id: idPeloApp,
+        email: 'app@exemplo.com',
+      })
+      expect(conta.nome).toBe('Pelo app')
+    })
+  })
+
+  describe('assinatura da App Store — regras iOS 10.3 e 10.4', () => {
+    const idAssinante = `${marca}-assinante`
+
+    const assinatura = (sobrescritas: Record<string, unknown> = {}) => ({
+      loja: 'app_store' as const,
+      produto_id: 'app.br.virapagina.assinatura.mensal',
+      transacao_original_id: `${marca}-transacao`,
+      status: 'ativa' as const,
+      expira_em: '2027-01-01T00:00:00.000Z',
+      ambiente: 'producao' as const,
+      atualizado_em: new Date().toISOString(),
+      ...sobrescritas,
+    })
+
+    it('assinatura ativa promove a conta e é encontrável pela transação', async () => {
+      await firestore.garantirUsuario({
+        id: idAssinante,
+        email: 'assinante@exemplo.com',
+        nome: 'Assinante',
+        origem: 'app',
+      })
+
+      const conta = await firestore.definirAssinatura(idAssinante, assinatura())
+      expect(conta?.plano).toBe('assinante')
+      expect(conta?.assinatura?.status).toBe('ativa')
+
+      // É por este caminho que a notificação da Apple encontra a conta meses
+      // depois, sem sessão e com o app desinstalado.
+      const achada = await firestore.buscarUsuarioPorTransacaoOriginal(`${marca}-transacao`)
+      expect(achada?.id).toBe(idAssinante)
+    })
+
+    it('assinatura expirada rebaixa para gratuito e não tira livro do ar', async () => {
+      const livro = await firestore.criarLivro(`${marca}-livro-assinante`, {
+        dono_id: idAssinante,
+        titulo: 'Publicado antes de cancelar',
+        subtitulo: null,
+        slug: 'antes-de-cancelar',
+        autor: 'Assinante',
+        descricao: null,
+        arquivo_pdf_caminho: `livros/${idAssinante}/${marca}-livro-assinante/original.pdf`,
+        arquivo_pdf_tamanho_bytes: 1000,
+        capa_caminho: null,
+        total_paginas: 2,
+      })
+      await firestore.atualizarLivro(livro.id, { publicado: true })
+
+      const conta = await firestore.definirAssinatura(idAssinante, assinatura({ status: 'expirada' }))
+      expect(conta?.plano).toBe('gratuito')
+
+      // O que importa da regra iOS 10.4: rebaixar mexe no plano e em nada mais.
+      const depois = await firestore.buscarLivroPorId(livro.id)
+      expect(depois?.publicado).toBe(true)
+    })
+
+    it('em atraso mantém o acesso — cartão vencido não é cancelamento', async () => {
+      const conta = await firestore.definirAssinatura(idAssinante, assinatura({ status: 'em_atraso' }))
+      expect(conta?.plano).toBe('assinante')
+    })
+  })
+
   describe('handles — a transação da seção 7', () => {
     it('reserva o handle e o grava na conta', async () => {
       expect(await firestore.reservarHandle(idAdmin, handleAdmin)).toBe(true)
@@ -218,10 +328,13 @@ descreve('camada de dados no emulador', () => {
     })
 
     it('a listagem e a contagem só enxergam os livros do próprio dono', async () => {
+      // Dois: o do primeiro caso deste bloco e o do caso do id próprio. O número
+      // ficou para trás quando o segundo foi acrescentado — o que este teste
+      // afirma é o isolamento, não a quantidade.
       const doAdmin = await firestore.listarLivrosDoDono(idAdmin)
-      expect(doAdmin).toHaveLength(1)
+      expect(doAdmin).toHaveLength(2)
       expect(doAdmin.every((livro) => livro.dono_id === idAdmin)).toBe(true)
-      expect(await firestore.contarLivrosDoDono(idAdmin)).toBe(1)
+      expect(await firestore.contarLivrosDoDono(idAdmin)).toBe(2)
       expect(await firestore.contarLivrosDoDono(idComum)).toBe(1)
     })
 

@@ -4,7 +4,9 @@
 // A função que importa aqui é `resolverLivroPublico`: é ela que decide o que um
 // visitante enxerga. Sem RLS por baixo, ela é a única coisa entre o público e os
 // rascunhos de todo mundo.
+import { comVersao, versaoDosArquivos } from '@/lib/cache'
 import { buscarLivroPorDonoESlug, buscarUsuarioPorHandle } from '@/lib/firebase/firestore'
+import { urlDoSite } from '@/lib/site'
 import type { AutorPublico, Livro, LivroPublico, Usuario } from '@/types/livro'
 
 // Um livro está visível para quem pede quando está publicado, ou quando quem
@@ -67,4 +69,37 @@ export function ordenarPorCriadoEmDesc(livros: Livro[]): Livro[] {
 export function nomeArquivoDownload(titulo: string): string {
   const limpo = titulo.replace(/[\\/:*?"<>|]/g, '').trim()
   return `${limpo || 'livro'}.pdf`
+}
+
+// O que o app de iPhone enxerga de um livro **da própria conta** (spec-ios
+// critério A.4).
+//
+// É o público mais duas coisas que só o dono precisa: o aviso de remoção por
+// denúncia (regra 11.12) e as URLs já montadas.
+//
+// **As URLs saem prontas daqui, com o `?v=`**, e é isso que resolve a pegadinha
+// 11 do CLAUDE.md do lado do app (regra iOS 10.10): o endereço do PDF e o da
+// capa não mudam quando o arquivo é substituído, então sem a versão o cache do
+// `URLSession` continuaria entregando o arquivo antigo ao autor que acabou de
+// trocá-lo. Montá-las no Swift seria repetir a regra num idioma onde ninguém
+// vai lembrar dela.
+export interface LivroDoAutor extends LivroPublico {
+  removido_por_denuncia: boolean
+  url: string
+  pdf_url: string
+  capa_url: string | null
+}
+
+export function toLivroDoAutor(livro: Livro, handle: string): LivroDoAutor {
+  const base = `${urlDoSite()}/${handle}/${livro.slug}`
+  const versao = versaoDosArquivos(livro)
+  return {
+    ...toLivroPublico(livro),
+    removido_por_denuncia: livro.removido_por_denuncia,
+    url: base,
+    pdf_url: comVersao(`${urlDoSite()}/api/livros/${handle}/${livro.slug}/pdf`, versao),
+    capa_url: livro.capa_caminho
+      ? comVersao(`${urlDoSite()}/api/livros/${handle}/${livro.slug}/capa`, versao)
+      : null,
+  }
 }

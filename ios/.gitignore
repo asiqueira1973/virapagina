@@ -1,0 +1,3 @@
+# Derivado do project.yml pelo XcodeGen — nunca versionado (spec-ios seção 2).
+*.xcodeproj/
+.DS_Store
