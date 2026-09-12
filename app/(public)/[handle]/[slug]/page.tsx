@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { BookReader } from '@/components/reader/BookReader'
 import { resolverLivroPublico } from '@/lib/books'
+import { versaoDosArquivos } from '@/lib/cache'
 import { COPY } from '@/lib/copy'
 import { sessaoAtual } from '@/lib/guards'
 import type { Livro, Usuario } from '@/types/livro'
@@ -49,7 +50,11 @@ export async function generateMetadata({
       description: descricao,
       type: 'book',
       url: `/${handle}/${slug}`,
-      images: livro.capa_caminho ? [`/api/livros/${handle}/${slug}/capa`] : undefined,
+      // Com a versão: sem ela o card de compartilhamento continuaria mostrando a
+      // capa antiga depois de substituir o PDF (critério 8.2).
+      images: livro.capa_caminho
+        ? [`/api/livros/${handle}/${slug}/capa?v=${versaoDosArquivos(livro)}`]
+        : undefined,
     },
     // Rascunho em prévia não pode ser indexado por buscador.
     robots: livro.publicado ? undefined : { index: false, follow: false },
@@ -116,6 +121,7 @@ export default async function LeitorPage({
       <BookReader
         handle={dono.handle ?? handle}
         slug={livro.slug}
+        versao={versaoDosArquivos(livro)}
         totalDePaginasConhecido={livro.total_paginas}
       />
     </div>

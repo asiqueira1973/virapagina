@@ -9,6 +9,7 @@
 import HTMLFlipBook from 'react-pageflip'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api'
+import { comVersao } from '@/lib/cache'
 import { abrirPdfDeUrl } from '@/lib/pdf/render'
 import { COPY } from '@/lib/copy'
 import { FlipbookToolbar } from './FlipbookToolbar'
@@ -26,10 +27,15 @@ const JANELA_DE_RENDERIZACAO = 3
 export function BookReader({
   handle,
   slug,
+  versao,
   totalDePaginasConhecido,
 }: {
   handle: string
   slug: string
+  // Versão dos arquivos do livro (`versaoDosArquivos`). A rota do PDF tem
+  // endereço fixo; é o `?v=` que faz a troca do arquivo virar uma URL nova, em
+  // vez de um acerto no cache que ainda guarda o PDF antigo (critério 8.2).
+  versao: string
   totalDePaginasConhecido: number | null
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -55,7 +61,7 @@ export function BookReader({
     setCarregando(true)
     setFalhou(false)
 
-    abrirPdfDeUrl(`/api/livros/${handle}/${slug}/pdf`)
+    abrirPdfDeUrl(comVersao(`/api/livros/${handle}/${slug}/pdf`, versao))
       .then(async (doc) => {
         if (cancelado) return
         const primeira = await doc.getPage(1)
@@ -77,7 +83,7 @@ export function BookReader({
     return () => {
       cancelado = true
     }
-  }, [handle, slug])
+  }, [handle, slug, versao])
 
   // 2. Mede o espaço disponível. O livro é redimensionado a cada mudança de
   // tamanho para funcionar de 360px a 2560px (seção 17).
@@ -224,6 +230,7 @@ export function BookReader({
         <FlipbookToolbar
           handle={handle}
           slug={slug}
+          versao={versao}
           zoom={zoom}
           aoAfastar={() => setZoom((atual) => ajustarZoom(atual, -1))}
           aoAproximar={() => setZoom((atual) => ajustarZoom(atual, 1))}

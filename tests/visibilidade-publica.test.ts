@@ -27,18 +27,30 @@ async function pedirMetadados(handle = 'ana', slug = 'conceitos') {
   })
 }
 
-async function pedirPdf(query = '') {
+async function pedirPdf(query = '', cabecalhos: HeadersInit = {}) {
   const { GET } = await import('@/app/api/livros/[handle]/[slug]/pdf/route')
-  return GET(new Request(`http://localhost/api/livros/ana/conceitos/pdf${query}`), {
+  return GET(
+    new Request(`http://localhost/api/livros/ana/conceitos/pdf${query}`, { headers: cabecalhos }),
+    { params: Promise.resolve({ handle: 'ana', slug: 'conceitos' }) },
+  )
+}
+
+async function pedirCapa(query = '') {
+  const { GET } = await import('@/app/api/livros/[handle]/[slug]/capa/route')
+  return GET(new Request(`http://localhost/api/livros/ana/conceitos/capa${query}`), {
     params: Promise.resolve({ handle: 'ana', slug: 'conceitos' }),
   })
 }
 
-async function pedirCapa() {
-  const { GET } = await import('@/app/api/livros/[handle]/[slug]/capa/route')
-  return GET(new Request('http://localhost/api/livros/ana/conceitos/capa'), {
-    params: Promise.resolve({ handle: 'ana', slug: 'conceitos' }),
-  })
+// O arquivo que o Storage devolveria. A `versao` é a geração do objeto, que muda
+// a cada sobrescrita — é ela que vira o ETag.
+function arquivoFalso(extras: { tamanhoBytes?: number; versao?: string | null } = {}) {
+  return {
+    stream: streamFalso(),
+    tamanhoBytes: extras.tamanhoBytes ?? 4,
+    mimeType: 'application/pdf',
+    versao: extras.versao === undefined ? '1700000000000001' : extras.versao,
+  }
 }
 
 function streamFalso() {
@@ -143,11 +155,7 @@ describe('livro publicado é servido a qualquer visitante — critérios 8.3 e 8
   })
 
   it('?download=1 serve com o título do livro como nome do arquivo', async () => {
-    vi.mocked(storage.baixarArquivo).mockResolvedValue({
-      stream: streamFalso(),
-      tamanhoBytes: 4,
-      mimeType: 'application/pdf',
-    })
+    vi.mocked(storage.baixarArquivo).mockResolvedValue(arquivoFalso({ tamanhoBytes: 4 }))
     const resposta = await pedirPdf('?download=1')
     expect(resposta.status).toBe(200)
     expect(resposta.headers.get('Content-Type')).toBe('application/pdf')
@@ -157,21 +165,13 @@ describe('livro publicado é servido a qualquer visitante — critérios 8.3 e 8
   })
 
   it('sem o parâmetro, serve inline — é assim que o PDF.js lê e o "Imprimir" abre', async () => {
-    vi.mocked(storage.baixarArquivo).mockResolvedValue({
-      stream: streamFalso(),
-      tamanhoBytes: 4,
-      mimeType: 'application/pdf',
-    })
+    vi.mocked(storage.baixarArquivo).mockResolvedValue(arquivoFalso({ tamanhoBytes: 4 }))
     const resposta = await pedirPdf()
     expect(resposta.headers.get('Content-Disposition')).toBeNull()
   })
 
   it('contabiliza o tráfego na conta do dono — regra 11.11', async () => {
-    vi.mocked(storage.baixarArquivo).mockResolvedValue({
-      stream: streamFalso(),
-      tamanhoBytes: 9_000_000,
-      mimeType: 'application/pdf',
-    })
+    vi.mocked(storage.baixarArquivo).mockResolvedValue(arquivoFalso({ tamanhoBytes: 9_000_000 }))
     await pedirPdf()
     expect(firestore.somarTrafego).toHaveBeenCalledWith(CONTA_A.id, 9_000_000)
   })
@@ -179,13 +179,57 @@ describe('livro publicado é servido a qualquer visitante — critérios 8.3 e 8
   it('rascunho em prévia nunca vai para cache de CDN', async () => {
     sessaoDe(CONTA_A.id, CONTA_A.email)
     vi.mocked(firestore.buscarLivroPorDonoESlug).mockResolvedValue(livroFalso({ publicado: false }))
-    vi.mocked(storage.baixarArquivo).mockResolvedValue({
-      stream: streamFalso(),
-      tamanhoBytes: 4,
-      mimeType: 'application/pdf',
-    })
+    vi.mocked(storage.baixarArquivo).mockResolvedValue(arquivoFalso({ tamanhoBytes: 4 }))
     const resposta = await pedirPdf()
     expect(resposta.headers.get('Cache-Control')).toBe('private, no-store')
+  })
+})
+
+// O bug que estes testes travam: a rota do PDF e a da capa têm endereço fixo, e
+// serviam tudo com uma hora de cache. Quem substituía o arquivo de um livro
+// publicado continuava vendo o PDF antigo, porque a URL não mudava e o cache não
+// tinha por que perguntar de novo (critério 8.2).
+describe('PDF substituído chega a quem já leu o livro — critério 8.2', () => {
+  beforeEach(() => {
+    semSessao()
+    vi.mocked(firestore.buscarLivroPorDonoESlug).mockResolvedValue(livroFalso({ publicado: true }))
+    vi.mocked(storage.baixarArquivo).mockResolvedValue(arquivoFalso())
+  })
+
+  it('URL sem versão revalida a cada uso — é o link que já está solto por aí', async () => {
+    const resposta = await pedirPdf()
+    expect(resposta.headers.get('Cache-Control')).toBe('public, max-age=0, must-revalidate')
+  })
+
+  it('URL com ?v= pode ficar guardada para sempre: trocar o arquivo troca a URL', async () => {
+    const resposta = await pedirPdf('?v=abc123')
+    expect(resposta.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable')
+  })
+
+  it('o ETag é a geração do objeto no Storage, que muda a cada sobrescrita', async () => {
+    const resposta = await pedirPdf()
+    expect(resposta.headers.get('ETag')).toBe('"1700000000000001"')
+  })
+
+  it('mesmo arquivo devolve 304 e não conta tráfego — regra 11.11', async () => {
+    const resposta = await pedirPdf('', { 'if-none-match': '"1700000000000001"' })
+    expect(resposta.status).toBe(304)
+    expect(firestore.somarTrafego).not.toHaveBeenCalled()
+  })
+
+  it('arquivo trocado não devolve 304: a geração de quem pergunta é a antiga', async () => {
+    const resposta = await pedirPdf('', { 'if-none-match': '"1699999999999999"' })
+    expect(resposta.status).toBe(200)
+  })
+
+  it('a capa segue a mesma política — ela também é regerada na substituição', async () => {
+    const semVersao = await pedirCapa()
+    expect(semVersao.headers.get('Cache-Control')).toBe('public, max-age=0, must-revalidate')
+    expect(semVersao.headers.get('ETag')).toBe('"1700000000000001"')
+
+    vi.mocked(storage.baixarArquivo).mockResolvedValue(arquivoFalso())
+    const comVersao = await pedirCapa('?v=abc123')
+    expect(comVersao.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable')
   })
 })
 

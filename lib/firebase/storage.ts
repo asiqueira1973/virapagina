@@ -67,11 +67,17 @@ export async function enviarCapaPng(
 }
 
 // Lê um arquivo do Storage para o proxy transmitir ao navegador, junto do
-// tamanho — que a rota usa para contabilizar o tráfego da conta (regra 11.11).
+// tamanho — que a rota usa para contabilizar o tráfego da conta (regra 11.11) —
+// e da `versao`, que é a geração do objeto no Storage.
+//
+// A geração muda a cada sobrescrita, e substituir o PDF de um livro é sobrescrever
+// o arquivo no mesmo caminho (critério 8.2). É ela que vira o ETag da resposta:
+// sem isso, um link sem `?v=` não teria como saber que o arquivo é outro.
 export async function baixarArquivo(caminho: string): Promise<{
   stream: ReadableStream<Uint8Array>
   tamanhoBytes: number | null
   mimeType: string
+  versao: string | null
 } | null> {
   const arquivo = bucket().file(caminho)
   const [existe] = await arquivo.exists()
@@ -86,6 +92,7 @@ export async function baixarArquivo(caminho: string): Promise<{
     stream,
     tamanhoBytes: metadados.size ? Number(metadados.size) : null,
     mimeType: metadados.contentType ?? 'application/octet-stream',
+    versao: metadados.generation ? String(metadados.generation) : null,
   }
 }
 

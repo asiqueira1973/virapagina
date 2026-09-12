@@ -185,6 +185,32 @@ uma falha na contagem não pode impedir alguém de ler um livro. A soma zera
 sozinha quando o mês vira. É contagem aproximada de propósito — ver as
 divergências.
 
+### O cache do PDF e da capa (`lib/cache.ts`)
+
+As rotas de proxy têm endereço fixo: `/api/livros/<handle>/<slug>/pdf` é o mesmo
+antes e depois de substituir o arquivo. Quem monta essas URLs — leitor, capa da
+vitrine, capa do painel, botões de baixar e imprimir, imagem do card de
+compartilhamento — acrescenta `?v=<versão>`, e a versão vem de `atualizado_em`,
+reescrito em toda gravação. Trocar o PDF muda a URL, e URL nova não tem cache.
+
+A política sai de `cabecalhosDeCache()` e tem três casos:
+
+| Situação | `Cache-Control` | Por quê |
+|---|---|---|
+| Rascunho em prévia | `private, no-store` | Pode sair do ar a qualquer momento; cache de CDN sobreviveria ao despublicar |
+| Publicado, com `?v=` | `public, max-age=31536000, immutable` | Trocar o arquivo troca a URL, então o que está guardado nunca fica errado |
+| Publicado, sem versão | `public, max-age=0, must-revalidate` | Link antigo, scraper ou endereço digitado à mão — precisa perguntar toda vez |
+
+As duas rotas mandam também um `ETag`, que é a **geração do objeto no Storage** —
+ela muda a cada sobrescrita. Com ele, a revalidação do terceiro caso custa um 304
+de poucos bytes em vez do PDF inteiro, e o 304 sai **antes** de `somarTrafego()`:
+resposta sem corpo não consome franquia.
+
+`lib/cache.ts` não importa nada além de um tipo, de propósito. O leitor é
+componente de cliente, e um import indireto do Firestore levaria o Admin SDK para
+o pacote do navegador — o build quebra, como quebrou ao primeiro rascunho desta
+correção.
+
 ### As trancas do Firestore e do Storage
 
 `firestore.rules` e `storage.rules` negam **toda** operação vinda do cliente.
@@ -263,6 +289,10 @@ A ordem das etapas foi escolhida para não deixar lixo no Storage:
 Quatro ações separadas: salvar metadados (nunca pede o PDF de novo), publicar ou
 despublicar, substituir o PDF (recalcula páginas e tamanho e regenera a capa,
 reaproveitando a pasta do livro) e excluir (diálogo que **nomeia o livro**).
+
+Substituir o PDF reescreve `atualizado_em`, e é isso que muda o `?v=` das URLs do
+arquivo e da capa — sem esse detalhe, quem já tinha aberto o livro continuaria
+lendo o PDF antigo. Ver "O cache do PDF e da capa".
 
 Trocar o slug de um livro publicado abre um diálogo avisando que o link antigo
 vai quebrar. Livro removido por denúncia mostra o aviso e tem o botão "Publicar"
@@ -441,16 +471,17 @@ O que foi feito na infraestrutura, e que a documentação anterior listava como
 pendente: projeto Firebase criado no plano Blaze, CORS aplicado ao bucket,
 OAuth Client criado, e regras e índices do Firestore e do Storage publicados.
 
-### Três defeitos que só apareceram em produção
+### Quatro defeitos que só apareceram em produção
 
 Ficam registrados porque nenhum deles aparecia em build, teste ou emulador — e
-os três estão cobertos agora.
+os quatro estão cobertos agora.
 
 | Defeito | Por que passou | O que o impede de voltar |
 |---|---|---|
 | Variável de ambiente **vazia** derrubava o build (`new URL('')`) | `?? padrão` não protege de `''`, e importar um `.env.example` no painel de deploy cria exatamente variáveis vazias | `lib/env.ts` trata vazio como ausente; teste de regressão nas quatro leituras |
 | **Laço de redirecionamento no primeiro login**: `/conta/handle` herdava o layout que mandava para `/conta/handle` | Só acontecia em conta sem handle — o caminho que exige OAuth real, impossível de exercitar localmente | A página vive num grupo de rota, fora de `app/conta/`; teste estrutural guarda o invariante |
 | **Índices compostos ausentes** derrubavam o painel do autor | O Firestore só reclama em tempo de execução: o build passa, o teste com mock passa, e o emulador nem impõe índice | `scripts/diagnostico.mjs` roda as consultas reais contra o Firestore; o passo de publicar índices está em destaque no README |
+| **Substituir o PDF não trocava o arquivo na tela**: o livro seguia exibindo o antigo | A URL de proxy é fixa e a resposta vinha com uma hora de cache e mais um dia de `stale-while-revalidate` — navegador e CDN não tinham por que perguntar de novo. Em teste nada disso existe, e em desenvolvimento o cache do Next mascara | `?v=<atualizado_em>` em toda URL de PDF e capa, `immutable` só quando versionada, `must-revalidate` + `ETag` quando não; seis testes em `visibilidade-publica.test.ts` |
 
 ---
 

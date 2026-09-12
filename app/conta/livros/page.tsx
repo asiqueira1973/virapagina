@@ -13,6 +13,7 @@ import { redirect } from 'next/navigation'
 import { BookCover } from '@/components/reader/BookCover'
 import { StatusBadge } from '@/components/account/StatusBadge'
 import { ordenarPorCriadoEmDesc } from '@/lib/books'
+import { versaoDosArquivos } from '@/lib/cache'
 import { COPY, emailDeContato } from '@/lib/copy'
 import { formatarData } from '@/lib/format'
 import { auth } from '@/lib/auth'
@@ -122,6 +123,7 @@ export default async function MeusLivrosPage() {
                 slug={livro.slug}
                 titulo={livro.titulo}
                 temCapa={Boolean(livro.capa_caminho)}
+                versao={versaoDosArquivos(livro)}
                 className="h-[52px] w-[38px]"
               />
 

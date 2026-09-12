@@ -8,8 +8,14 @@
 // Sem parâmetro, serve inline — é assim que o PDF.js lê o arquivo e que o botão
 // "Imprimir" abre o PDF em nova aba. Com ?download=1, acrescenta o
 // Content-Disposition com o título do livro como nome (critério 8.4).
+//
+// O ?v= carrega a versão dos arquivos do livro e não muda a resposta: ele existe
+// para que substituir o PDF mude a URL, já que o endereço é fixo (critério 8.2).
+// Quem chega sem versão revalida a cada uso, e o ETag transforma isso num 304
+// quando o arquivo é o mesmo.
 import { NextResponse } from 'next/server'
 import { nomeArquivoDownload, resolverLivroPublico } from '@/lib/books'
+import { cabecalhosDeCache } from '@/lib/cache'
 import { somarTrafego } from '@/lib/firebase/firestore'
 import { baixarArquivo } from '@/lib/firebase/storage'
 import { sessaoAtual } from '@/lib/guards'
@@ -33,6 +39,23 @@ export async function GET(
       return NextResponse.json({ erro: 'Esse livro não está disponível.' }, { status: 404 })
     }
 
+    const parametros = new URL(request.url).searchParams
+    const cacheControl = cabecalhosDeCache({
+      publicado: livro.publicado,
+      versionada: parametros.has('v'),
+    })
+    const etag = arquivo.versao ? `"${arquivo.versao}"` : null
+
+    // Nada mudou desde a última vez: devolve 304 e não transmite o PDF de novo.
+    // Antes da contagem de tráfego, de propósito — 304 não serve bytes.
+    if (etag && request.headers.get('if-none-match') === etag) {
+      void arquivo.stream.cancel()
+      return new Response(null, {
+        status: 304,
+        headers: { ETag: etag, 'Cache-Control': cacheControl },
+      })
+    }
+
     // Contabilidade da válvula de tráfego (regra 11.11). Deliberadamente sem
     // await: uma falha na contagem não pode impedir alguém de ler um livro.
     void somarTrafego(livro.dono_id, arquivo.tamanhoBytes ?? 0)
@@ -40,13 +63,13 @@ export async function GET(
     const cabecalhos = new Headers({
       'Content-Type': 'application/pdf',
       // Rascunho em prévia nunca pode ficar em cache de CDN — só o publicado.
-      'Cache-Control': livro.publicado
-        ? 'public, max-age=3600, stale-while-revalidate=86400'
-        : 'private, no-store',
+      // Publicado com ?v= pode ficar para sempre; sem versão, revalida sempre.
+      'Cache-Control': cacheControl,
     })
+    if (etag) cabecalhos.set('ETag', etag)
     if (arquivo.tamanhoBytes) cabecalhos.set('Content-Length', String(arquivo.tamanhoBytes))
 
-    if (new URL(request.url).searchParams.get('download') === '1') {
+    if (parametros.get('download') === '1') {
       // O nome vem do título, que o autor digita livremente: as aspas são
       // escapadas e os caracteres perigosos, removidos.
       const nome = nomeArquivoDownload(livro.titulo)

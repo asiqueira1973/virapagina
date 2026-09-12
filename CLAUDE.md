@@ -103,6 +103,7 @@ lib/
   admins.ts  a allowlist, sem imports, para não criar ciclo
   planos.ts  limites e franquias — os números vivem só aqui
   flags.ts   a chave EARLY_ADOPTER_ABERTO, sem imports, para não criar ciclo
+  cache.ts   versão das URLs de PDF e capa — sem imports, o leitor é cliente
   pdf/render.ts, copy.ts, slug.ts, books.ts, format.ts
 ```
 
@@ -127,7 +128,7 @@ Nenhum outro arquivo sabe que existe Firestore — mantenha assim.
 
 ---
 
-## Nove coisas que quebram em silêncio
+## Dez coisas que quebram em silêncio
 
 Cada uma destas já mordeu. Nenhuma dá erro de compilação.
 
@@ -172,6 +173,14 @@ Cada uma destas já mordeu. Nenhuma dá erro de compilação.
 
 9. **Excluir é documento primeiro, arquivos depois.** Ao contrário, sobra
    metadado apontando para arquivo que não existe mais. Há teste da ordem.
+
+10. **As URLs de PDF e de capa são fixas — quem as monta precisa pôr `?v=`.** Os
+    dois arquivos vivem num caminho por livro e são sobrescritos na
+    substituição, então o endereço é o mesmo antes e depois. Sem a versão (que
+    sai de `atualizado_em`, via `lib/cache.ts`), o navegador e a CDN seguem
+    entregando o arquivo velho e o autor vê o livro antigo numa página que
+    acabou de atualizar. Isso não aparece em teste nem em desenvolvimento — só
+    em produção, e só para quem já tinha aberto o livro.
 
 ---
 

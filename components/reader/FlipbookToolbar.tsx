@@ -4,12 +4,14 @@
 // imprimir e compartilhar. Todo botão tem aria-label além do ícone, como exige o
 // último critério do 8.4 e a seção 17.
 import { useEffect, useState } from 'react'
+import { comVersao } from '@/lib/cache'
 import { COPY } from '@/lib/copy'
 import { ZOOM_MAXIMO, ZOOM_MINIMO } from './ZoomControls'
 
 export function FlipbookToolbar({
   handle,
   slug,
+  versao,
   zoom,
   aoAfastar,
   aoAproximar,
@@ -21,6 +23,9 @@ export function FlipbookToolbar({
 }: {
   handle: string
   slug: string
+  // Versão dos arquivos do livro: baixar e imprimir precisam do arquivo novo,
+  // não do que o cache guardou antes da substituição (critério 8.2).
+  versao: string
   zoom: number
   aoAfastar: () => void
   aoAproximar: () => void
@@ -127,13 +132,16 @@ export function FlipbookToolbar({
 
       {/* Baixar e imprimir passam pela rota de proxy: a URL do Drive nunca
           aparece para o leitor (seção 4, critério 8.4). */}
-      <BotaoDaBarra rotulo="Baixar o PDF" href={`/api/livros/${handle}/${slug}/pdf?download=1`}>
+      <BotaoDaBarra
+        rotulo="Baixar o PDF"
+        href={comVersao(`/api/livros/${handle}/${slug}/pdf?download=1`, versao)}
+      >
         <Icone caminho="M12 4v11M8 11l4 4 4-4M5 19h14" />
       </BotaoDaBarra>
 
       <BotaoDaBarra
         rotulo="Imprimir"
-        href={`/api/livros/${handle}/${slug}/pdf`}
+        href={comVersao(`/api/livros/${handle}/${slug}/pdf`, versao)}
         abrirEmNovaAba
       >
         <Icone caminho="M7 9V4h10v5M7 19h10v-5H7v5M5 14h14a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1Z" />
