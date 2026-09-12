@@ -1,0 +1,33 @@
+<!-- O ícone do Virapágina para o navegador (spec seção 16).
+     É a mesma marca de `scripts/gerar-icones.swift`, escrita em SVG: uma página
+     branca com a ponta virada, sobre o azul da plataforma, com uma segunda
+     folha atrás. O Next serve este arquivo como favicon por convenção de nome.
+     Mudou o desenho? Mude os dois, e rode o script para refazer os PNGs. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="fundo" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1C5FD8"/>
+      <stop offset="1" stop-color="#12439B"/>
+    </linearGradient>
+    <linearGradient id="dobra" x1="535" y1="623" x2="685" y2="773" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C3C5CB"/>
+      <stop offset="1" stop-color="#F5F5F6"/>
+    </linearGradient>
+    <filter id="sombra" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+
+  <rect width="1024" height="1024" rx="224" fill="url(#fundo)"/>
+
+  <!-- A folha de trás, inclinada: é ela que faz a marca falar de folhear. -->
+  <rect x="318" y="240" width="384" height="548" rx="26"
+        fill="#EEF3FD" opacity="0.62" transform="rotate(-9 512 512)"/>
+
+  <!-- A folha da frente, com a ponta de baixo cortada na diagonal. -->
+  <path filter="url(#sombra)" fill="#FFFFFF"
+        d="M346 232H678a26 26 0 0 1 26 26v346L516 792H346a26 26 0 0 1-26-26V258a26 26 0 0 1 26-26Z"/>
+
+  <!-- A mesma diagonal, dobrada por cima. -->
+  <path fill="url(#dobra)" d="M704 604 516 792Q640 728 704 604Z"/>
+</svg>
