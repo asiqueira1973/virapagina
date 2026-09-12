@@ -428,9 +428,14 @@ export async function sugerirSlugLivreNaConta(
 
 // Cria o livro, sempre como rascunho (máquina de estado da seção 12).
 export async function criarLivro(
+  // O id vem de fora, da sessão de upload: o arquivo já nasceu em
+  // `livros/<dono>/<id>/`, e o documento precisa ser o mesmo id para que a pasta
+  // seja encontrável a partir dele. Enquanto esta função sorteava um id próprio,
+  // documento e pasta eram dois ids diferentes — e substituir o PDF escrevia
+  // numa pasta que ninguém lia (regra 11.6, critério 8.2).
+  id: string,
   dados: Omit<Livro, 'id' | 'publicado' | 'removido_por_denuncia' | 'criado_em' | 'atualizado_em'>,
 ): Promise<Livro> {
-  const id = randomUUID()
   const agora = Timestamp.now()
   const documento = {
     ...dados,

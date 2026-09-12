@@ -3,7 +3,7 @@
 // Spec seção 13.2, épico 8.2.
 import { NextResponse } from 'next/server'
 import { atualizarLivro, excluirLivro, slugEmUsoNaConta, sugerirSlugLivreNaConta } from '@/lib/firebase/firestore'
-import { apagarPastaDoLivro } from '@/lib/firebase/storage'
+import { apagarPasta, apagarPastaDoLivro, pastaDoLivroPeloPdf } from '@/lib/firebase/storage'
 import { requireDonoDoLivro } from '@/lib/guards'
 import { slugValido, slugify } from '@/lib/slug'
 
@@ -78,8 +78,16 @@ export async function DELETE(
 
   try {
     await excluirLivro(id)
-    // apagarPastaDoLivro não lança: falha aqui vira log de arquivo órfão, e não
-    // uma exclusão pela metade.
+    // Apagar não lança: falha aqui vira log de arquivo órfão, e não uma exclusão
+    // pela metade.
+    //
+    // Duas pastas, e não uma: nos livros criados antes da correção do id, o PDF
+    // mora na pasta que `arquivo_pdf_caminho` aponta, enquanto capa e sobras
+    // podem estar na pasta derivada do id. Apagar só uma delas deixaria o PDF do
+    // autor no bucket depois de ele mandar excluir (regra 11.6) — e a página de
+    // privacidade promete o contrário.
+    const pastaDoPdf = pastaDoLivroPeloPdf(guarda.livro.arquivo_pdf_caminho)
+    await apagarPasta(`${pastaDoPdf}/`)
     await apagarPastaDoLivro(guarda.usuario.id, id)
     return NextResponse.json({ excluido: true })
   } catch (erro) {

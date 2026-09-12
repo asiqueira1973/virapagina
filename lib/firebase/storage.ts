@@ -18,6 +18,27 @@ export function caminhoDaCapa(donoId: string, livroId: string): string {
   return `livros/${donoId}/${livroId}/capa.png`
 }
 
+// A pasta de um livro é a pasta do PDF dele — **não** uma derivada do id.
+//
+// Parece a mesma coisa, e por dois dias não foi: os livros criados antes desta
+// correção têm id de documento diferente do id da pasta, porque `criarLivro()`
+// sorteava um id novo em vez de usar o da sessão de upload. Derivar caminho do
+// id, nesses livros, aponta para uma pasta vazia — foi assim que substituir o
+// PDF passou a escrever num lugar que o leitor nunca lê.
+//
+// `arquivo_pdf_caminho` é a única fonte confiável de onde o livro mora, porque é
+// o que o leitor abre. Tudo que mexe nos arquivos de um livro existente parte
+// daqui.
+export function pastaDoLivroPeloPdf(caminhoPdf: string): string {
+  const corte = caminhoPdf.lastIndexOf('/')
+  return corte === -1 ? caminhoPdf : caminhoPdf.slice(0, corte)
+}
+
+// Caminho da capa ao lado do PDF do livro, seja qual for o id da pasta.
+export function capaAoLadoDoPdf(caminhoPdf: string): string {
+  return `${pastaDoLivroPeloPdf(caminhoPdf)}/capa.png`
+}
+
 // Abre uma sessão de upload resumável e devolve a URL temporária dela, para o
 // navegador enviar os bytes direto ao Google com barra de progresso real
 // (critério 8.2).
@@ -110,9 +131,16 @@ export async function apagarArquivo(caminho: string): Promise<void> {
 // Apaga a pasta inteira de um livro — PDF, capa e qualquer sobra. Usada na
 // exclusão, sempre DEPOIS de o documento sair do Firestore (regra 11.6).
 export async function apagarPastaDoLivro(donoId: string, livroId: string): Promise<void> {
+  await apagarPasta(`livros/${donoId}/${livroId}/`)
+}
+
+// Apaga tudo sob um prefixo. Nunca lança: a exclusão do livro já removeu o
+// documento, e falhar aqui não pode desfazer aquilo — o arquivo órfão vira log
+// para limpeza manual (regra 11.6).
+export async function apagarPasta(prefixo: string): Promise<void> {
   try {
-    await bucket().deleteFiles({ prefix: `livros/${donoId}/${livroId}/`, force: true })
+    await bucket().deleteFiles({ prefix: prefixo, force: true })
   } catch (erro) {
-    console.error(`Falha ao apagar a pasta do livro ${livroId} no Storage:`, erro)
+    console.error(`Falha ao apagar ${prefixo} no Storage:`, erro)
   }
 }

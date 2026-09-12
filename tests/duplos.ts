@@ -56,10 +56,17 @@ export function mockFirebase() {
   vi.mock('@/lib/firebase/storage', () => ({
     caminhoDoPdf: (dono: string, livro: string) => `livros/${dono}/${livro}/original.pdf`,
     caminhoDaCapa: (dono: string, livro: string) => `livros/${dono}/${livro}/capa.png`,
+    // Os dois derivam do caminho do PDF, e não do id: é essa diferença que faz
+    // a substituição escrever onde o leitor lê (critério 8.2). Ficam com a
+    // implementação de verdade — um duplo aqui esconderia justamente o bug.
+    pastaDoLivroPeloPdf: (caminho: string) => caminho.slice(0, caminho.lastIndexOf('/')),
+    capaAoLadoDoPdf: (caminho: string) =>
+      `${caminho.slice(0, caminho.lastIndexOf('/'))}/capa.png`,
     criarSessaoDeUpload: vi.fn(),
     enviarCapaPng: vi.fn(),
     baixarArquivo: vi.fn(),
     apagarArquivo: vi.fn(),
+    apagarPasta: vi.fn(),
     apagarPastaDoLivro: vi.fn(),
   }))
 }

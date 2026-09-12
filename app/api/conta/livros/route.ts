@@ -68,7 +68,9 @@ export async function POST(request: Request) {
     const caminhoCapa = caminhoDaCapa(donoId, livroId)
     const temCapa = await enviarCapaPng(caminhoCapa, corpo?.capa_base64)
 
-    const livro = await criarLivro({
+    // O id do documento é o mesmo da pasta no Storage — é isso que faz
+    // `arquivo_pdf_caminho` continuar encontrável a partir do livro.
+    const livro = await criarLivro(livroId, {
       dono_id: donoId,
       titulo,
       subtitulo: String(corpo?.subtitulo ?? '').trim() || null,

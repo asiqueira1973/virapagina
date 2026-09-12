@@ -128,7 +128,7 @@ Nenhum outro arquivo sabe que existe Firestore — mantenha assim.
 
 ---
 
-## Dez coisas que quebram em silêncio
+## Onze coisas que quebram em silêncio
 
 Cada uma destas já mordeu. Nenhuma dá erro de compilação.
 
@@ -174,7 +174,14 @@ Cada uma destas já mordeu. Nenhuma dá erro de compilação.
 9. **Excluir é documento primeiro, arquivos depois.** Ao contrário, sobra
    metadado apontando para arquivo que não existe mais. Há teste da ordem.
 
-10. **As URLs de PDF e de capa são fixas — quem as monta precisa pôr `?v=`.** Os
+10. **O id do documento de um livro é o id da pasta dele no Storage, e quem mexe
+    nos arquivos parte de `arquivo_pdf_caminho`, nunca do id.** O id nasce na
+    sessão de upload e `criarLivro()` o recebe pronto. Nos livros criados antes
+    de 12/09/2026 os dois ids **divergem**, e não há migração — derivar caminho
+    do id, nesses, aponta para uma pasta vazia. Foi assim que substituir o PDF
+    passou a escrever onde ninguém lê, com a capa atualizando e o arquivo não.
+
+11. **As URLs de PDF e de capa são fixas — quem as monta precisa pôr `?v=`.** Os
     dois arquivos vivem num caminho por livro e são sobrescritos na
     substituição, então o endereço é o mesmo antes e depois. Sem a versão (que
     sai de `atualizado_em`, via `lib/cache.ts`), o navegador e a CDN seguem

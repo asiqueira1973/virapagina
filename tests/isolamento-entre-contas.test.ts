@@ -29,6 +29,7 @@ function nenhumaEscritaAconteceu() {
     storage.criarSessaoDeUpload,
     storage.enviarCapaPng,
     storage.apagarArquivo,
+    storage.apagarPasta,
     storage.apagarPastaDoLivro,
   ]
   for (const escrita of escritas) expect(escrita).not.toHaveBeenCalled()
@@ -86,6 +87,24 @@ const rotasComIdDeLivro = [
           body: JSON.stringify({ total_paginas: 1, capa_base64: 'data:image/png;base64,AAAA' }),
         }),
         { params: Promise.resolve({ id: 'livro-de-b' }) },
+      )
+    },
+  },
+  {
+    // O id do livro chega no corpo, e não na URL — mas é um id de livro igual
+    // aos outros, e abre uma sessão de escrita no Storage.
+    nome: 'POST /api/conta/livros/sessao-upload (substituição)',
+    executar: async () => {
+      const { POST } = await import('@/app/api/conta/livros/sessao-upload/route')
+      return POST(
+        new Request('http://localhost/x', {
+          method: 'POST',
+          body: JSON.stringify({
+            mimeType: 'application/pdf',
+            tamanhoBytes: 1000,
+            livro_id: 'livro-de-b',
+          }),
+        }),
       )
     },
   },
@@ -181,6 +200,9 @@ describe('o dono alcança o próprio livro', () => {
     vi.mocked(firestore.excluirLivro).mockImplementation(async () => {
       ordem.push('documento')
     })
+    vi.mocked(storage.apagarPasta).mockImplementation(async () => {
+      ordem.push('arquivos')
+    })
     vi.mocked(storage.apagarPastaDoLivro).mockImplementation(async () => {
       ordem.push('arquivos')
     })
@@ -189,7 +211,116 @@ describe('o dono alcança o próprio livro', () => {
       params: Promise.resolve({ id: 'livro-de-a' }),
     })
     expect(resposta.status).toBe(200)
-    expect(ordem).toEqual(['documento', 'arquivos'])
+    expect(ordem[0]).toBe('documento')
+  })
+
+  // Nos livros criados antes da correção do id, a pasta do PDF não é a derivada
+  // do id do documento. Apagar só a derivada deixaria o PDF no bucket depois de
+  // o autor mandar excluir — o contrário do que a página de privacidade promete.
+  it('a exclusão apaga a pasta onde o PDF realmente está — regra 11.6', async () => {
+    vi.mocked(firestore.buscarLivroPorId).mockResolvedValue(
+      livroFalso({
+        id: 'livro-de-a',
+        dono_id: CONTA_A.id,
+        arquivo_pdf_caminho: `livros/${CONTA_A.id}/pasta-antiga/original.pdf`,
+      }),
+    )
+    const { DELETE } = await import('@/app/api/conta/livros/[id]/route')
+    await DELETE(new Request('http://localhost/x', { method: 'DELETE' }), {
+      params: Promise.resolve({ id: 'livro-de-a' }),
+    })
+    expect(storage.apagarPasta).toHaveBeenCalledWith(`livros/${CONTA_A.id}/pasta-antiga/`)
+  })
+})
+
+// O defeito que estes testes travam: `criarLivro()` sorteava um id próprio em vez
+// de usar o da sessão de upload, então o id do documento e o da pasta no Storage
+// eram diferentes. Substituir o PDF derivava o caminho do id do documento e
+// escrevia numa pasta que o leitor nunca abre — o autor trocava o arquivo e
+// continuava vendo o antigo (critério 8.2).
+describe('substituir o PDF escreve onde o leitor lê — critério 8.2', () => {
+  const LIVRO_LEGADO = livroFalso({
+    id: 'doc-id-novo',
+    dono_id: CONTA_A.id,
+    // Pasta com id diferente do documento: é o estado dos livros criados antes.
+    arquivo_pdf_caminho: `livros/${CONTA_A.id}/pasta-antiga/original.pdf`,
+    capa_caminho: `livros/${CONTA_A.id}/pasta-antiga/capa.png`,
+  })
+
+  beforeEach(() => {
+    vi.mocked(firestore.buscarLivroPorId).mockResolvedValue(LIVRO_LEGADO)
+    vi.mocked(storage.criarSessaoDeUpload).mockResolvedValue('https://upload.exemplo/sessao')
+  })
+
+  it('a sessão de upload abre no caminho que o livro registra, não num derivado do id', async () => {
+    const { POST } = await import('@/app/api/conta/livros/sessao-upload/route')
+    const resposta = await POST(
+      new Request('http://localhost/x', {
+        method: 'POST',
+        body: JSON.stringify({
+          mimeType: 'application/pdf',
+          tamanhoBytes: 1000,
+          livro_id: 'doc-id-novo',
+        }),
+      }),
+    )
+    expect(resposta.status).toBe(200)
+    expect(storage.criarSessaoDeUpload).toHaveBeenCalledWith(
+      expect.objectContaining({ caminho: `livros/${CONTA_A.id}/pasta-antiga/original.pdf` }),
+    )
+  })
+
+  it('a substituição não consome vaga do plano — o livro já existe', async () => {
+    vi.mocked(firestore.contarLivrosDoDono).mockResolvedValue(5)
+    const { POST } = await import('@/app/api/conta/livros/sessao-upload/route')
+    const resposta = await POST(
+      new Request('http://localhost/x', {
+        method: 'POST',
+        body: JSON.stringify({
+          mimeType: 'application/pdf',
+          tamanhoBytes: 1000,
+          livro_id: 'doc-id-novo',
+        }),
+      }),
+    )
+    expect(resposta.status).toBe(200)
+  })
+
+  it('a capa regerada vai para a pasta do PDF, e não para uma pasta à parte', async () => {
+    vi.mocked(storage.enviarCapaPng).mockResolvedValue(true)
+    vi.mocked(firestore.atualizarLivro).mockResolvedValue(LIVRO_LEGADO)
+    const { POST } = await import('@/app/api/conta/livros/[id]/substituir-pdf/route')
+    await POST(
+      new Request('http://localhost/x', {
+        method: 'POST',
+        body: JSON.stringify({ total_paginas: 10, capa_base64: 'data:image/png;base64,AAAA' }),
+      }),
+      { params: Promise.resolve({ id: 'doc-id-novo' }) },
+    )
+    expect(storage.enviarCapaPng).toHaveBeenCalledWith(
+      `livros/${CONTA_A.id}/pasta-antiga/capa.png`,
+      expect.any(String),
+    )
+  })
+
+  it('livro criado agora nasce com documento e pasta no mesmo id', async () => {
+    vi.mocked(firestore.contarLivrosDoDono).mockResolvedValue(0)
+    vi.mocked(firestore.slugEmUsoNaConta).mockResolvedValue(false)
+    vi.mocked(storage.enviarCapaPng).mockResolvedValue(false)
+    vi.mocked(firestore.criarLivro).mockResolvedValue(livroFalso())
+    const { POST } = await import('@/app/api/conta/livros/route')
+    await POST(
+      new Request('http://localhost/x', {
+        method: 'POST',
+        body: JSON.stringify({ titulo: 'Novo', livro_id: 'id-da-sessao' }),
+      }),
+    )
+    expect(firestore.criarLivro).toHaveBeenCalledWith(
+      'id-da-sessao',
+      expect.objectContaining({
+        arquivo_pdf_caminho: `livros/${CONTA_A.id}/id-da-sessao/original.pdf`,
+      }),
+    )
   })
 })
 

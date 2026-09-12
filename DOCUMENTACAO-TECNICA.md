@@ -89,6 +89,18 @@ Vale para o dono também. Auditoria com exceção para o dono não é auditoria.
 Um livro, uma pasta: `livros/<dono_id>/<livro_id>/original.pdf` e
 `.../capa.png`. Assim apagar o livro é apagar a pasta, e não caçar arquivo solto.
 
+**O id do documento é o id da pasta.** O id nasce na sessão de upload, porque o
+arquivo precisa cair no lugar definitivo antes de existir documento, e
+`criarLivro()` recebe esse mesmo id em vez de sortear um. Enquanto sorteava — até
+12 de setembro de 2026 — documento e pasta eram dois ids diferentes, e qualquer
+caminho derivado do id do documento apontava para uma pasta vazia.
+
+Os livros criados antes disso continuam com os dois ids divergentes, e não há
+migração: quem mexe nos arquivos de um livro existente parte de
+`arquivo_pdf_caminho`, nunca do id. É a única fonte confiável de onde o livro
+mora, porque é o que o leitor abre. `pastaDoLivroPeloPdf()` e `capaAoLadoDoPdf()`
+existem para isso.
+
 ---
 
 ## 2. Relacionamento entre as coleções
@@ -290,9 +302,13 @@ Quatro ações separadas: salvar metadados (nunca pede o PDF de novo), publicar 
 despublicar, substituir o PDF (recalcula páginas e tamanho e regenera a capa,
 reaproveitando a pasta do livro) e excluir (diálogo que **nomeia o livro**).
 
-Substituir o PDF reescreve `atualizado_em`, e é isso que muda o `?v=` das URLs do
-arquivo e da capa — sem esse detalhe, quem já tinha aberto o livro continuaria
-lendo o PDF antigo. Ver "O cache do PDF e da capa".
+Substituir o PDF tem duas sutilezas, e as duas já falharam em produção. A sessão
+de upload da substituição escreve **no caminho que o livro registra**
+(`arquivo_pdf_caminho`), não num derivado do id — ver "Os arquivos no Storage". E
+a gravação reescreve `atualizado_em`, que é o que muda o `?v=` das URLs do
+arquivo e da capa — ver "O cache do PDF e da capa". Sem a primeira, o arquivo
+novo ia para uma pasta que ninguém lê; sem a segunda, ele chegava mas ficava
+escondido atrás do cache.
 
 Trocar o slug de um livro publicado abre um diálogo avisando que o link antigo
 vai quebrar. Livro removido por denúncia mostra o aviso e tem o botão "Publicar"
@@ -471,10 +487,10 @@ O que foi feito na infraestrutura, e que a documentação anterior listava como
 pendente: projeto Firebase criado no plano Blaze, CORS aplicado ao bucket,
 OAuth Client criado, e regras e índices do Firestore e do Storage publicados.
 
-### Quatro defeitos que só apareceram em produção
+### Cinco defeitos que só apareceram em produção
 
 Ficam registrados porque nenhum deles aparecia em build, teste ou emulador — e
-os quatro estão cobertos agora.
+os cinco estão cobertos agora.
 
 | Defeito | Por que passou | O que o impede de voltar |
 |---|---|---|
@@ -482,6 +498,7 @@ os quatro estão cobertos agora.
 | **Laço de redirecionamento no primeiro login**: `/conta/handle` herdava o layout que mandava para `/conta/handle` | Só acontecia em conta sem handle — o caminho que exige OAuth real, impossível de exercitar localmente | A página vive num grupo de rota, fora de `app/conta/`; teste estrutural guarda o invariante |
 | **Índices compostos ausentes** derrubavam o painel do autor | O Firestore só reclama em tempo de execução: o build passa, o teste com mock passa, e o emulador nem impõe índice | `scripts/diagnostico.mjs` roda as consultas reais contra o Firestore; o passo de publicar índices está em destaque no README |
 | **Substituir o PDF não trocava o arquivo na tela**: o livro seguia exibindo o antigo | A URL de proxy é fixa e a resposta vinha com uma hora de cache e mais um dia de `stale-while-revalidate` — navegador e CDN não tinham por que perguntar de novo. Em teste nada disso existe, e em desenvolvimento o cache do Next mascara | `?v=<atualizado_em>` em toda URL de PDF e capa, `immutable` só quando versionada, `must-revalidate` + `ETag` quando não; seis testes em `visibilidade-publica.test.ts` |
+| **Substituir o PDF escrevia numa pasta que ninguém lê** | `criarLivro()` sorteava o id do documento em vez de usar o da sessão de upload, então documento e pasta tinham ids diferentes. A substituição derivava o caminho do id do documento e acertava uma pasta vazia; a capa, gravada em `capa_caminho`, atualizava — o que fazia parecer que a troca tinha funcionado | O id vem da sessão de upload; a substituição escreve em `arquivo_pdf_caminho`, com `requireDonoDoLivro` guardando a escolha do caminho; seis testes em `isolamento-entre-contas.test.ts` |
 
 ---
 

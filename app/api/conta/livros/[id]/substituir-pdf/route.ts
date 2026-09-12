@@ -8,7 +8,7 @@
 // não está mais lá.
 import { NextResponse } from 'next/server'
 import { atualizarLivro } from '@/lib/firebase/firestore'
-import { caminhoDaCapa, enviarCapaPng } from '@/lib/firebase/storage'
+import { capaAoLadoDoPdf, enviarCapaPng } from '@/lib/firebase/storage'
 import { requireDonoDoLivro } from '@/lib/guards'
 
 export async function POST(
@@ -21,7 +21,10 @@ export async function POST(
 
   try {
     const corpo = await request.json()
-    const caminhoCapa = caminhoDaCapa(guarda.usuario.id, id)
+    // A capa vai para a pasta do PDF do livro, não para uma derivada do id: nos
+    // livros criados antes desta correção os dois ids são diferentes, e a capa
+    // acabava sozinha numa pasta à parte, longe do arquivo que ela ilustra.
+    const caminhoCapa = capaAoLadoDoPdf(guarda.livro.arquivo_pdf_caminho)
     const temCapa = await enviarCapaPng(caminhoCapa, corpo?.capa_base64)
 
     // Recalcula tamanho e total de páginas com o que o navegador leu do arquivo

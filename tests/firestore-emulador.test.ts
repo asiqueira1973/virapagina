@@ -180,22 +180,37 @@ descreve('camada de dados no emulador', () => {
     }
 
     it('livro nasce rascunho e não removido', async () => {
-      const livro = await firestore.criarLivro({
+      const livro = await firestore.criarLivro(`${marca}-livro-a`, {
         ...molde,
         dono_id: idAdmin,
         slug: 'conceitos',
-        arquivo_pdf_caminho: storage.caminhoDoPdf(idAdmin, 'temp'),
+        arquivo_pdf_caminho: storage.caminhoDoPdf(idAdmin, `${marca}-livro-a`),
       })
       expect(livro.publicado).toBe(false)
       expect(livro.removido_por_denuncia).toBe(false)
     })
 
+    // O id do documento é o mesmo da pasta no Storage. Enquanto não era, trocar o
+    // PDF escrevia numa pasta que o leitor nunca abre (critério 8.2).
+    it('o id do documento é o id que a sessão de upload usou na pasta', async () => {
+      const id = `${marca}-livro-id`
+      const livro = await firestore.criarLivro(id, {
+        ...molde,
+        dono_id: idAdmin,
+        slug: 'com-id-proprio',
+        arquivo_pdf_caminho: storage.caminhoDoPdf(idAdmin, id),
+      })
+      expect(livro.id).toBe(id)
+      expect(livro.arquivo_pdf_caminho).toContain(`/${id}/`)
+      expect((await firestore.buscarLivroPorId(id))?.slug).toBe('com-id-proprio')
+    })
+
     it('slug igual em OUTRA conta é aceito — o namespace é por autor', async () => {
-      const livro = await firestore.criarLivro({
+      const livro = await firestore.criarLivro(`${marca}-livro-b`, {
         ...molde,
         dono_id: idComum,
         slug: 'conceitos',
-        arquivo_pdf_caminho: storage.caminhoDoPdf(idComum, 'temp'),
+        arquivo_pdf_caminho: storage.caminhoDoPdf(idComum, `${marca}-livro-b`),
       })
       expect(livro.slug).toBe('conceitos')
       expect(await firestore.slugEmUsoNaConta(idAdmin, 'conceitos')).toBe(true)
