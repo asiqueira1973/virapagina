@@ -46,6 +46,10 @@ E o mesmo id do item 1 vai no servidor, em `GOOGLE_OAUTH_IOS_CLIENT_ID`: é cont
 ele que a rota `/api/app/sessao` confere o `aud` do token. Sem isso o login
 devolve 401 — corretamente.
 
+**O Login com Apple não precisa de configuração nenhuma além da capability**, que
+está em `Virapagina.entitlements` e é ligada no App ID pela assinatura
+automática. O `aud` conferido no servidor é o próprio bundle id.
+
 Para falar com o servidor local em vez da produção, troque `API_BASE_URL`. No
 simulador `localhost` funciona; num iPhone de verdade é preciso o IP da máquina
 na rede.

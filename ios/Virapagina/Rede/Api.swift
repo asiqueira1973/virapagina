@@ -145,6 +145,16 @@ final class Api {
         try await json(requisicao("api/app/sessao", metodo: "POST", corpo: ["id_token": idTokenDoGoogle]))
     }
 
+    // O nome vai no corpo porque a Apple o entrega pelo aparelho, e não dentro
+    // do token — e só na primeira autorização. Ele não identifica ninguém: quem
+    // identifica é o token assinado, que o servidor confere.
+    func abrirSessao(identityTokenDaApple: String, nome: String?) async throws -> SessaoAberta {
+        try await json(requisicao("api/app/sessao", metodo: "POST", corpo: [
+            "apple_identity_token": identityTokenDaApple,
+            "nome": nome,
+        ]))
+    }
+
     private struct RespostaDaConta: Decodable { let conta: ContaDoApp }
 
     func conta() async throws -> ContaDoApp {

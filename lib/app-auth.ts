@@ -13,7 +13,7 @@
 // motivo. O middleware não passa por aqui.
 import { createHmac, createPublicKey, createVerify, timingSafeEqual } from 'node:crypto'
 import type { JsonWebKey } from 'node:crypto'
-import { envOuNulo } from '@/lib/env'
+import { env, envOuNulo } from '@/lib/env'
 
 // Quem somos e para quem o token vale. Ficam no token para que ele não seja
 // confundido com outro JWT qualquer assinado com o mesmo segredo.
@@ -142,6 +142,9 @@ export function tokenDoCabecalho(autorizacao: string | null | undefined): string
 const JWKS_DO_GOOGLE = 'https://www.googleapis.com/oauth2/v3/certs'
 const EMISSORES_DO_GOOGLE = ['https://accounts.google.com', 'accounts.google.com']
 
+const JWKS_DA_APPLE = 'https://appleid.apple.com/auth/keys'
+const EMISSOR_DA_APPLE = 'https://appleid.apple.com'
+
 interface ChaveJwk {
   kid: string
   n: string
@@ -150,29 +153,59 @@ interface ChaveJwk {
   alg?: string
 }
 
-// Cache das chaves públicas do Google.
+// Cache das chaves públicas de quem emite os tokens, por endereço.
 //
-// Elas rodam de tempos em tempos e o Google manda o prazo no `Cache-Control`.
-// Buscar a cada login seria uma ida à rede dentro do caminho crítico do login;
-// nunca buscar quebraria o app no dia da rotação.
-let chavesEmCache: { chaves: ChaveJwk[]; valeAte: number } | null = null
+// Elas rodam de tempos em tempos, e tanto o Google quanto a Apple mandam o prazo
+// no `Cache-Control`. Buscar a cada login seria uma ida à rede dentro do caminho
+// crítico; nunca buscar quebraria o app no dia da rotação.
+const chavesEmCache = new Map<string, { chaves: ChaveJwk[]; valeAte: number }>()
 
-async function chavesDoGoogle(): Promise<ChaveJwk[]> {
-  if (chavesEmCache && chavesEmCache.valeAte > Date.now()) return chavesEmCache.chaves
+async function chavesPublicas(url: string): Promise<ChaveJwk[]> {
+  const guardado = chavesEmCache.get(url)
+  if (guardado && guardado.valeAte > Date.now()) return guardado.chaves
 
-  const resposta = await fetch(JWKS_DO_GOOGLE)
-  if (!resposta.ok) throw new Error(`JWKS do Google respondeu ${resposta.status}`)
+  const resposta = await fetch(url)
+  if (!resposta.ok) throw new Error(`JWKS ${url} respondeu ${resposta.status}`)
   const corpo = (await resposta.json()) as { keys: ChaveJwk[] }
 
-  // Respeita o prazo que o próprio Google manda, com um piso de 5 minutos para
+  // Respeita o prazo que o próprio emissor manda, com um piso de 5 minutos para
   // o caso de uma resposta sem cabeçalho.
   const controle = resposta.headers.get('cache-control') ?? ''
   const maxAge = Number(/max-age=(\d+)/.exec(controle)?.[1] ?? 0)
-  chavesEmCache = {
-    chaves: corpo.keys ?? [],
-    valeAte: Date.now() + Math.max(maxAge, 300) * 1000,
+  const chaves = corpo.keys ?? []
+  chavesEmCache.set(url, { chaves, valeAte: Date.now() + Math.max(maxAge, 300) * 1000 })
+  return chaves
+}
+
+// Confere a assinatura RS256 de um JWT contra o JWKS do emissor e devolve o
+// conteúdo. Não olha `iss`, `aud` nem prazo — isso é de quem chama, porque cada
+// emissor tem as suas regras.
+async function conteudoAssinado(
+  jwt: string,
+  jwks: string,
+): Promise<Record<string, unknown> | null> {
+  const partes = jwt.split('.')
+  if (partes.length !== 3) return null
+  const [cabecalho, corpo, assinatura] = partes
+
+  const cabecalhoLido = JSON.parse(deBase64url(cabecalho).toString()) as {
+    alg?: string
+    kid?: string
   }
-  return chavesEmCache.chaves
+  // Como sempre: o algoritmo é conferido, não obedecido.
+  if (cabecalhoLido.alg !== 'RS256' || !cabecalhoLido.kid) return null
+
+  const chave = (await chavesPublicas(jwks)).find((candidata) => candidata.kid === cabecalhoLido.kid)
+  if (!chave) return null
+
+  // O `node:crypto` monta a chave pública direto do JWK — não é preciso
+  // converter para PEM à mão.
+  const publica = createPublicKey({ key: chave as unknown as JsonWebKey, format: 'jwk' })
+  const conferidor = createVerify('RSA-SHA256')
+  conferidor.update(`${cabecalho}.${corpo}`)
+  if (!conferidor.verify(publica, deBase64url(assinatura))) return null
+
+  return JSON.parse(deBase64url(corpo).toString()) as Record<string, unknown>
 }
 
 export interface IdentidadeDoGoogle {
@@ -181,10 +214,17 @@ export interface IdentidadeDoGoogle {
   nome: string | null
 }
 
+export interface IdentidadeDaApple {
+  sub: string
+  // Nulo no login seguinte ao primeiro: a Apple só manda o e-mail de novo
+  // enquanto quiser. Quem chama usa o que já está gravado na conta.
+  email: string | null
+}
+
 // Confere o `id_token` que o app trouxe do Google e devolve quem ele identifica.
 //
 // Quatro perguntas, e nenhuma é dispensável:
-//   1. A assinatura bate com uma chave pública atual do Google?
+//   1. A assinatura bate com uma chave pública atual do emissor?
 //   2. Quem emitiu foi o Google?
 //   3. O token foi emitido **para o nosso app** (`aud`)? Sem isso, um id_token
 //      legítimo obtido por qualquer outro aplicativo entraria na conta da pessoa
@@ -198,49 +238,87 @@ export async function verificarIdTokenDoGoogle(
   const publicoEsperado = envOuNulo('GOOGLE_OAUTH_IOS_CLIENT_ID')
   if (!publicoEsperado) throw new Error('GOOGLE_OAUTH_IOS_CLIENT_ID não configurado')
 
-  const partes = idToken.split('.')
-  if (partes.length !== 3) return null
-  const [cabecalho, corpo, assinatura] = partes
-
   try {
-    const cabecalhoLido = JSON.parse(deBase64url(cabecalho).toString()) as {
-      alg?: string
-      kid?: string
-    }
-    if (cabecalhoLido.alg !== 'RS256' || !cabecalhoLido.kid) return null
+    const dados = await conteudoAssinado(idToken, JWKS_DO_GOOGLE)
+    if (!dados) return null
 
-    const chave = (await chavesDoGoogle()).find((candidata) => candidata.kid === cabecalhoLido.kid)
-    if (!chave) return null
+    const iss = dados.iss as string | undefined
+    const sub = dados.sub as string | undefined
+    const email = dados.email as string | undefined
 
-    // O `node:crypto` monta a chave pública direto do JWK — não é preciso
-    // converter para PEM à mão.
-    const publica = createPublicKey({ key: chave as unknown as JsonWebKey, format: 'jwk' })
-    const conferidor = createVerify('RSA-SHA256')
-    conferidor.update(`${cabecalho}.${corpo}`)
-    if (!conferidor.verify(publica, deBase64url(assinatura))) return null
-
-    const dados = JSON.parse(deBase64url(corpo).toString()) as {
-      iss?: string
-      aud?: string
-      sub?: string
-      email?: string
-      email_verified?: boolean | string
-      name?: string
-      exp?: number
-    }
-
-    if (!dados.iss || !EMISSORES_DO_GOOGLE.includes(dados.iss)) return null
+    if (!iss || !EMISSORES_DO_GOOGLE.includes(iss)) return null
     if (dados.aud !== publicoEsperado) return null
-    if (!dados.sub || !dados.email) return null
+    if (!sub || !email) return null
     // Conta Google com e-mail não verificado não existe na prática, mas o campo
     // vem no token e ignorá-lo seria aceitar um e-mail que ninguém provou.
     if (dados.email_verified === false || dados.email_verified === 'false') return null
+    if (!dentroDoPrazo(dados.exp)) return null
 
-    const agora = Math.floor(Date.now() / 1000)
-    if (typeof dados.exp !== 'number' || dados.exp + TOLERANCIA_SEGUNDOS < agora) return null
-
-    return { sub: dados.sub, email: dados.email, nome: dados.name ?? null }
+    return { sub, email, nome: (dados.name as string | undefined) ?? null }
   } catch {
     return null
   }
+}
+
+// Confere o `identityToken` do Login com Apple (spec-ios regra iOS 10.12).
+//
+// Mesmas quatro perguntas do Google, com um `aud` diferente: no fluxo nativo ele
+// é o **bundle id** do app, não um client OAuth.
+//
+// Duas coisas são próprias da Apple e mudam o desenho:
+//
+//   - O `sub` é estável por **time de desenvolvimento**, não por conta Apple
+//     global. Ele identifica a pessoa neste app e nos outros do mesmo time — e é
+//     por isso que serve de id de conta.
+//   - O e-mail pode ser um relay `@privaterelay.appleid.com`, e pode **não vir**
+//     em logins seguintes. Quem chama precisa aguentar a ausência: a conta já
+//     existe e o e-mail dela já está gravado.
+export async function verificarIdentityTokenDaApple(
+  identityToken: string,
+): Promise<IdentidadeDaApple | null> {
+  const publicoEsperado = env('APP_STORE_BUNDLE_ID', 'app.br.virapagina.ios')
+
+  try {
+    const dados = await conteudoAssinado(identityToken, JWKS_DA_APPLE)
+    if (!dados) return null
+
+    if (dados.iss !== EMISSOR_DA_APPLE) return null
+    if (dados.aud !== publicoEsperado) return null
+    const sub = dados.sub as string | undefined
+    if (!sub) return null
+    if (!dentroDoPrazo(dados.exp)) return null
+
+    // E-mail não verificado não vira conta: seria aceitar um endereço que
+    // ninguém provou. Ausente é outra coisa — é o login seguinte, e é previsto.
+    const verificado = dados.email_verified
+    const email =
+      verificado === false || verificado === 'false'
+        ? null
+        : ((dados.email as string | undefined) ?? null)
+
+    return { sub, email }
+  } catch {
+    return null
+  }
+}
+
+function dentroDoPrazo(exp: unknown): boolean {
+  const agora = Math.floor(Date.now() / 1000)
+  return typeof exp === 'number' && exp + TOLERANCIA_SEGUNDOS >= agora
+}
+
+// O id da conta de quem entra pela Apple (decisão 15.2 do spec-ios).
+//
+// **Prefixado, e as contas são separadas.** Quem entra com o Google e quem entra
+// com a Apple viram duas contas, mesmo sendo a mesma pessoa — porque não há como
+// provar que são. O relay privado da Apple entrega um endereço diferente do
+// Google, então casar por e-mail ou duplica a pessoa de qualquer jeito, ou
+// aceita um endereço que ninguém provou ser dela.
+//
+// O prefixo existe para que um `sub` da Apple nunca possa colidir com um `sub`
+// do Google, que é o id das contas que já existem. Hoje os formatos são
+// diferentes e a colisão seria improvável; improvável não é o mesmo que
+// impossível, e o custo de errar aqui é uma pessoa entrar na conta de outra.
+export function idDaContaApple(sub: string): string {
+  return `apple:${sub}`
 }

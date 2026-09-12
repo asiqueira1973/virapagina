@@ -30,6 +30,10 @@ enum Copy {
     // --- Do app ---
     static let entrarBotao = "Entrar com Google"
     static let entrarRodape = "Sua conta é criada automaticamente no primeiro acesso."
+    // A consequência da decisão 15.2, dita antes de acontecer. Sem esta linha, a
+    // pessoa que criou a conta com o Google e um dia toca no botão da Apple vê
+    // uma conta vazia e conclui que perdeu os livros.
+    static let entrarContasSeparadas = "Apple e Google criam contas separadas — entre sempre pelo mesmo."
     static let entrarFrase = "Seus PDFs viram livros que qualquer pessoa folheia pelo link."
     static let entrarErro = "Não foi possível entrar. Tente novamente."
     static let semRede = "Sem conexão. Verifique a internet e tente de novo."

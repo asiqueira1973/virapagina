@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- Login com Apple (spec-ios seção 3). A diretriz 4.8 o exige de quem oferece
+       login social de terceiro, e o Google é o único aqui. -->
+  <key>com.apple.developer.applesignin</key>
+  <array>
+    <string>Default</string>
+  </array>
+</dict>
+</plist>

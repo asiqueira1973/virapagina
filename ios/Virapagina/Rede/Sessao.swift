@@ -7,6 +7,7 @@
 // acontece depois de toda ação que possa mudá-la — publicar um livro, assinar,
 // excluir. Guardá-la em disco criaria um segundo lugar onde o plano pode estar
 // errado.
+import AuthenticationServices
 import Foundation
 import SwiftUI
 
@@ -99,6 +100,35 @@ final class Sessao: ObservableObject {
             aplicar(aberta.conta)
         } catch ErroDoLogin.cancelado {
             // Fechar a folha do Google é uma decisão, não um erro.
+        } catch let erroDaApi as ErroDaApi {
+            erro = erroDaApi.errorDescription
+        } catch {
+            erro = Copy.entrarErro
+        }
+    }
+
+    // A entrada pela Apple. O botão faz o trabalho de UI; aqui só se lê o que
+    // ele devolveu e se troca por uma sessão nossa.
+    //
+    // **É outra conta.** Quem entra pela Apple não cai na conta do Google, mesmo
+    // sendo a mesma pessoa — não há como provar que são, e o relay privado da
+    // Apple entrega um endereço diferente (decisão 15.2 do spec-ios). Quem
+    // quiser os livros de uma na outra usa o mesmo provedor de antes.
+    func entrarComApple(_ resultado: Result<ASAuthorization, Error>) async {
+        entrando = true
+        erro = nil
+        defer { entrando = false }
+
+        do {
+            // Desistir não é erro: `nil` sai daqui em silêncio.
+            guard let lido = try LoginApple.ler(resultado) else { return }
+            let aberta = try await api.abrirSessao(
+                identityTokenDaApple: lido.identityToken,
+                nome: lido.nome
+            )
+            Chaveiro.guardar(aberta.token)
+            api.token = aberta.token
+            aplicar(aberta.conta)
         } catch let erroDaApi as ErroDaApi {
             erro = erroDaApi.errorDescription
         } catch {

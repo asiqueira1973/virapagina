@@ -25,7 +25,7 @@ settings:
     # closure de UIKit sem tornar nada mais correto aqui.
     SWIFT_VERSION: "5.0"
     MARKETING_VERSION: "1.0"
-    CURRENT_PROJECT_VERSION: "3"
+    CURRENT_PROJECT_VERSION: "4"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
     SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
 
@@ -64,6 +64,7 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: Virapagina/Info.plist
         TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_ENTITLEMENTS: Virapagina/Virapagina.entitlements
         CODE_SIGN_STYLE: Automatic
         # O time da conta de desenvolvedor. Sem ele, `xcodebuild archive` não
         # sabe com qual identidade assinar e falha só no fim do build.

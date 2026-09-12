@@ -156,6 +156,18 @@ disso sem hospedar um navegador — e a primeira tela do app seria uma página w
    sem sincronização com iCloud) e o manda em `Authorization: Bearer` em toda
    requisição.
 
+### O segundo provedor
+
+O Login com Apple entrou depois, pela diretriz 4.8, e usa o mesmo desenho: o app
+manda o `identityToken` para a mesma rota, que confere assinatura, emissor,
+prazo e `aud` — este último sendo o **bundle id**, não um client OAuth. O campo
+antigo `id_token` continua significando Google, porque a rota virou contrato
+público no primeiro build enviado à loja.
+
+Duas particularidades da Apple mudam o código: o e-mail só vem com garantia na
+**primeira** autorização (nas seguintes, vale o que já está gravado na conta), e
+o nome não vem no token — vem do aparelho, e uma vez só.
+
 ### Consequências
 
 - `requireAutor()` passa a aceitar **cookie ou bearer**, nesta ordem, e continua
@@ -455,6 +467,15 @@ do app é a que dá a mensagem; a do servidor é a que vale.
 aparelho, como na web é gerada no navegador. O servidor continua sem converter
 PDF em imagem (princípio 0.1 e pegadinha 4 do `CLAUDE.md`).
 
+**iOS 10.11 — Uma assinatura vale por uma conta.** Antes de promover alguém, o
+servidor confere se aquele `originalTransactionId` já pertence a outra conta.
+Sem isso, um mesmo Apple ID promoveria quantas contas quisesse: bastaria entrar
+com outro Google no mesmo aparelho e restaurar a compra.
+
+**iOS 10.12 — Login com Apple cria outra conta, sempre.** Nunca há vínculo
+automático com uma conta do Google, nem por e-mail (decisão 15.2). O id é
+prefixado com `apple:`, e a tela de entrar avisa antes de a pessoa escolher.
+
 **iOS 10.10 — Toda URL de PDF e de capa leva `?v=`.** Mesma pegadinha 11 do
 `CLAUDE.md`, agora com o cache do `URLSession` no lugar do da CDN.
 
@@ -546,20 +567,31 @@ arquivos, handle e o documento da conta, nessa ordem.
 15.1 **Assumido:** a conta de desenvolvedor Apple existe e o bundle id fica
 `app.br.virapagina.ios`, no mesmo prefixo dos outros apps do Alexandre.
 
-15.2 **Pergunta aberta, e provável:** se a App Review exigir Login com Apple, a
-conta criada por ele precisa cair no mesmo documento do Google quando o e-mail
-bate?
+15.2 **Decidido em 12/09/2026: Apple e Google são contas separadas.**
 
-A probabilidade não é baixa: o Alexandre **já foi rejeitado por isso** num app
-anterior. A diretriz 4.8 cobra Login com Apple de quem usa exclusivamente login
-social de terceiro, que é exatamente o caso aqui.
+O Login com Apple entra porque a diretriz 4.8 o exige de quem oferece login
+social de terceiro — e porque o Alexandre já foi rejeitado por isso num app
+anterior. A pergunta difícil nunca foi o botão, foi a conta.
 
-A parte difícil não é o botão, é a conta. A resposta fácil — casar pelo e-mail —
-é insegura: quem usa o relay privado da Apple chega com um endereço diferente do
-Google, então ou a conta duplica, ou se aceita um e-mail que ninguém provou ser
-da mesma pessoa. As saídas conhecidas são duas: tratar cada provedor como conta
-separada (simples, e alguém vai perder o acesso aos próprios livros), ou pedir
-vínculo explícito, com a pessoa logada nos dois. Decidir **antes** de implementar.
+**Não há vínculo por e-mail, e é deliberado.** Quem usa "Ocultar meu e-mail"
+chega com um endereço `@privaterelay.appleid.com` que não é o do Google. Casar
+por e-mail duplicaria a pessoa de qualquer jeito nesse caso, e no caso em que os
+endereços batem estaria aceitando como prova de identidade um campo que ninguém
+provou. Duas contas é honesto: a pessoa entra pelo provedor que usou da primeira
+vez, e a tela de entrar avisa disso **antes**, não depois.
+
+O id da conta da Apple é prefixado com `apple:`, para que um `sub` da Apple nunca
+possa colidir com um `sub` do Google — que é o id de todas as contas que já
+existem. Hoje os formatos são diferentes e a colisão seria improvável; improvável
+não é impossível, e o custo de errar aqui é uma pessoa entrar na conta de outra.
+
+**Fica de fora, e é dívida declarada:** a Apple pede que apagar uma conta criada
+com Login com Apple também **revogue o token** dela, pelo endpoint
+`appleid.apple.com/auth/revoke`. Isso exige uma chave "Sign in with Apple" (.p8)
+no portal, guardar o refresh token de cada conta e assinar um client secret —
+nada disso existe. O botão de excluir conta funciona e apaga tudo o que é nosso;
+o que falta é avisar a Apple. Se a revisão cobrar, é meio dia de trabalho mais a
+chave.
 
 15.3 **Assumido:** R$ 9,90/mês, tier correspondente na tabela da Apple, sem teste
 gratuito.

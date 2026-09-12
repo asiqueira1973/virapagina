@@ -2,6 +2,7 @@
 //
 // Um botão só. Os links legais ficam visíveis aqui por exigência da App Review:
 // app que cria conta precisa mostrar termos e privacidade antes do cadastro.
+import AuthenticationServices
 import SwiftUI
 
 struct EntrarView: View {
@@ -38,14 +39,33 @@ struct EntrarView: View {
                         Aviso(texto: erro)
                     }
 
+                    // A Apple em cima, e com o botão dela: a diretriz 4.8 pede
+                    // que o Login com Apple apareça com pelo menos a mesma
+                    // proeminência do login social de terceiro. O componente do
+                    // sistema também resolve tradução, forma e tamanho.
+                    SignInWithAppleButton(.signIn) { pedido in
+                        // O e-mail é obrigatório para a conta existir; o nome só
+                        // vem nesta primeira vez, e depois nunca mais.
+                        pedido.requestedScopes = [.fullName, .email]
+                    } onCompletion: { resultado in
+                        Task { await sessao.entrarComApple(resultado) }
+                    }
+                    .signInWithAppleButtonStyle(.black)
+                    .frame(height: 50)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .disabled(sessao.entrando)
+
                     BotaoPrimario(titulo: Copy.entrarBotao, carregando: sessao.entrando) {
                         Task { await sessao.entrar() }
                     }
 
-                    Text(Copy.entrarRodape)
-                        .font(.footnote)
-                        .foregroundStyle(Color.tintaFraca)
-                        .multilineTextAlignment(.center)
+                    VStack(spacing: 4) {
+                        Text(Copy.entrarRodape)
+                        Text(Copy.entrarContasSeparadas)
+                    }
+                    .font(.footnote)
+                    .foregroundStyle(Color.tintaFraca)
+                    .multilineTextAlignment(.center)
 
                     LinksLegais()
                         .padding(.top, 8)
