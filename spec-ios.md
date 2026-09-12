@@ -546,10 +546,20 @@ arquivos, handle e o documento da conta, nessa ordem.
 15.1 **Assumido:** a conta de desenvolvedor Apple existe e o bundle id fica
 `app.br.virapagina.ios`, no mesmo prefixo dos outros apps do Alexandre.
 
-15.2 **Pergunta aberta:** se a App Review exigir Login com Apple, a conta criada
-por ele precisa cair no mesmo documento do Google quando o e-mail bate? A resposta
-fácil é sim, e a resposta fácil é insegura (e-mail privado relay da Apple).
-Decisão fica para quando acontecer.
+15.2 **Pergunta aberta, e provável:** se a App Review exigir Login com Apple, a
+conta criada por ele precisa cair no mesmo documento do Google quando o e-mail
+bate?
+
+A probabilidade não é baixa: o Alexandre **já foi rejeitado por isso** num app
+anterior. A diretriz 4.8 cobra Login com Apple de quem usa exclusivamente login
+social de terceiro, que é exatamente o caso aqui.
+
+A parte difícil não é o botão, é a conta. A resposta fácil — casar pelo e-mail —
+é insegura: quem usa o relay privado da Apple chega com um endereço diferente do
+Google, então ou a conta duplica, ou se aceita um e-mail que ninguém provou ser
+da mesma pessoa. As saídas conhecidas são duas: tratar cada provedor como conta
+separada (simples, e alguém vai perder o acesso aos próprios livros), ou pedir
+vínculo explícito, com a pessoa logada nos dois. Decidir **antes** de implementar.
 
 15.3 **Assumido:** R$ 9,90/mês, tier correspondente na tabela da Apple, sem teste
 gratuito.
