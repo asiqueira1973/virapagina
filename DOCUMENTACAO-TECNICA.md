@@ -579,16 +579,24 @@ os seis estão cobertos agora.
   ao autor em vez de ficarem só no log e na tela de admin (divergência 6.5).
 - **Cancelar o Heyzine** — era o teste original do produto inteiro.
 
-Do app de iPhone, e nesta ordem:
+Do app de iPhone. **O app foi submetido à App Review em 12/09/2026**, versão
+1.0 (3), junto da assinatura mensal e do grupo dela. Feitos: o client OAuth do
+tipo iOS, a variável `GOOGLE_OAUTH_IOS_CLIENT_ID` na Vercel, o produto
+`app.br.virapagina.ilimitado.mensal` e a conta de revisão
+`appsdablab@gmail.com`, com cinco livros publicados e plano gratuito — no
+limite, para o revisor alcançar o paywall pelo caminho normal.
 
-- **Criar o client OAuth do tipo iOS** no Google Cloud e preencher os dois lados:
-  `ios/Configuracao.xcconfig` e `GOOGLE_OAUTH_IOS_CLIENT_ID` na Vercel. Sem isso
-  o login do app devolve 401, corretamente.
-- **Criar a assinatura na App Store Connect** com o id
-  `app.br.virapagina.ilimitado.mensal`, grupo `virapagina.ilimitado`, mensal,
-  R$ 9,90.
-- **Apontar as App Store Server Notifications V2** (produção e sandbox) para
-  `https://virapagina.app.br/api/app/assinatura/notificacoes`. Sem elas,
-  cancelamento e reembolso só seriam percebidos quando a pessoa abrisse o app.
+O que ainda falta:
+
+- **Apontar as App Store Server Notifications V2** para
+  `https://virapagina.app.br/api/app/assinatura/notificacoes`, nos dois
+  ambientes, em App Store Connect → App Information. Isso **não** bloqueia a
+  revisão e por isso é fácil de esquecer — mas sem elas, cancelamento, reembolso
+  e falha de cobrança só seriam percebidos quando a pessoa abrisse o app, isto é,
+  nunca: quem cancelou não abre. A conta ficaria `assinante` para sempre.
+- **Recapturar as duas imagens do paywall** com o preço. Elas saíram com o botão
+  escrito só "Assinar", porque o StoreKit local não carrega pelo `simctl`. Agora
+  que o produto existe na App Store Connect, rodar pelo Xcode (⌘R) resolve. Entra
+  na 1.1.
 - **Decidir o que fazer se a App Review exigir Login com Apple** (pergunta aberta
   15.2 do `spec-ios.md`).
