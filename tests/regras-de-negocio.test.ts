@@ -3,6 +3,7 @@
 // em silêncio.
 import { afterEach, describe, expect, it } from 'vitest'
 import { livroVisivelPara, nomeArquivoDownload, ordenarPorCriadoEmDesc, toLivroPublico } from '@/lib/books'
+import { gruposDoPainel } from '@/lib/menu'
 import {
   LIMIAR_AVISO_AUTOR,
   LIMIAR_AVISO_PLATAFORMA,
@@ -294,5 +295,31 @@ describe('a home cabe na tela de um celular', () => {
     const fonte = readFileSync('app/(public)/page.tsx', 'utf8')
     expect(fonte).toContain('<div className="min-w-0">')
     expect(fonte).toContain('flex min-w-0 justify-center')
+  })
+})
+
+// O grupo "Plataforma" no menu do painel é conveniência de navegação, não
+// autorização — quem protege /admin é o layout de lá, com 404 (critério 8.7).
+// Ainda assim, mostrá-lo a quem não é admin seria oferecer um link que abre uma
+// página não encontrada, e escondê-lo do admin foi o que manteve o painel da
+// plataforma invisível para o próprio dono por dias.
+describe('grupos do menu do painel — seção 16', () => {
+  it('autor comum vê só os livros', () => {
+    const grupos = gruposDoPainel('maria@exemplo.com')
+    expect(grupos.map((grupo) => grupo.titulo)).toEqual(['Livros'])
+  })
+
+  it('admin da plataforma vê os dois grupos, com Plataforma abaixo de Livros', () => {
+    const grupos = gruposDoPainel('alexandre@dablab.com.br')
+    expect(grupos.map((grupo) => grupo.titulo)).toEqual(['Livros', 'Plataforma'])
+    expect(grupos[1].itens).toEqual([{ href: '/admin/contas', rotulo: 'Contas' }])
+  })
+
+  it('não se confunde com maiúsculas nem com espaço sobrando no e-mail', () => {
+    expect(gruposDoPainel('  Alexandre@DabLab.com.br ')).toHaveLength(2)
+  })
+
+  it('e-mail vazio nunca vê o grupo da plataforma', () => {
+    expect(gruposDoPainel('')).toHaveLength(1)
   })
 })

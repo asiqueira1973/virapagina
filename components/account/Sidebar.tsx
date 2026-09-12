@@ -4,24 +4,19 @@
 // grupo em negrito escuro, itens indentados sem marcador, hairline separando,
 // um item ativo por vez na cor de destaque, e rodapé com o e-mail e "Sair".
 //
-// Serve os dois painéis — o do autor e o da plataforma —, que têm a mesma forma
-// e mudam só o grupo e os itens.
+// Serve os dois painéis — o do autor e o da plataforma —, que têm a mesma forma.
+// Quem monta a lista de grupos é `lib/menu.ts`, no servidor: para o admin da
+// plataforma ela traz os dois, e é isso que dá caminho de ida e de volta.
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-
-export interface ItemDeMenu {
-  href: string
-  rotulo: string
-}
+import type { GrupoDeMenu } from '@/lib/menu'
 
 export function Sidebar({
-  grupo,
-  itens,
+  grupos,
   email,
   acaoSair,
 }: {
-  grupo: string
-  itens: ItemDeMenu[]
+  grupos: GrupoDeMenu[]
   email: string
   acaoSair: () => Promise<void>
 }) {
@@ -34,25 +29,37 @@ export function Sidebar({
         <span className="text-[14px] font-semibold tracking-[-0.01em] text-tinta">Virapágina</span>
       </Link>
 
-      <nav className="flex flex-col gap-0.5 px-2.5" aria-label="Seções do painel">
-        <div className="px-2 pt-2 pb-1 text-[13px] font-bold text-tinta">{grupo}</div>
-        {itens.map((item) => {
-          const ativo = caminho.startsWith(item.href)
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={ativo ? 'page' : undefined}
-              className={`rounded-lg py-[7px] pr-2.5 pl-5 text-[13px] transition-colors ${
-                ativo
-                  ? 'bg-destaque-fraco font-medium text-destaque'
-                  : 'text-tinta-suave hover:bg-preenchimento-fraco'
-              }`}
-            >
-              {item.rotulo}
-            </Link>
-          )
-        })}
+      <nav className="flex flex-col px-2.5" aria-label="Seções do painel">
+        {grupos.map((grupo, indice) => (
+          <div
+            key={grupo.titulo}
+            // Hairline separando os grupos, nunca antes do primeiro (seção 16).
+            className={
+              indice === 0
+                ? 'flex flex-col gap-0.5'
+                : 'mt-3.5 flex flex-col gap-0.5 border-t border-hairline pt-3.5'
+            }
+          >
+            <div className="px-2 pt-2 pb-1 text-[13px] font-bold text-tinta">{grupo.titulo}</div>
+            {grupo.itens.map((item) => {
+              const ativo = caminho.startsWith(item.href)
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={ativo ? 'page' : undefined}
+                  className={`rounded-lg py-[7px] pr-2.5 pl-5 text-[13px] transition-colors ${
+                    ativo
+                      ? 'bg-destaque-fraco font-medium text-destaque'
+                      : 'text-tinta-suave hover:bg-preenchimento-fraco'
+                  }`}
+                >
+                  {item.rotulo}
+                </Link>
+              )
+            })}
+          </div>
+        ))}
       </nav>
 
       <div className="flex-1" />

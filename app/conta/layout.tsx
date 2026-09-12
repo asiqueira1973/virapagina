@@ -10,9 +10,7 @@ import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/account/Sidebar'
 import { auth, signOut } from '@/lib/auth'
 import { garantirUsuario } from '@/lib/firebase/firestore'
-
-// No MVP o grupo é um só: "Livros" (seção 16).
-const ITENS = [{ href: '/conta/livros', rotulo: 'Meus livros' }]
+import { gruposDoPainel } from '@/lib/menu'
 
 export default async function ContaLayout({ children }: { children: React.ReactNode }) {
   const sessao = await auth()
@@ -41,7 +39,7 @@ export default async function ContaLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex min-h-screen bg-superficie">
-      <Sidebar grupo="Livros" itens={ITENS} email={usuario.email} acaoSair={sair} />
+      <Sidebar grupos={gruposDoPainel(usuario.email)} email={usuario.email} acaoSair={sair} />
       <main className="min-w-0 flex-1 bg-tela px-10 pt-[34px] pb-15">
         <div className="max-w-[1180px]">{children}</div>
       </main>

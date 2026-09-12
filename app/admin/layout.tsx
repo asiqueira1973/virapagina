@@ -7,8 +7,7 @@ import { notFound } from 'next/navigation'
 import { Sidebar } from '@/components/account/Sidebar'
 import { isAdminEmail } from '@/lib/admins'
 import { auth, signOut } from '@/lib/auth'
-
-const ITENS = [{ href: '/admin/contas', rotulo: 'Contas' }]
+import { gruposDoPainel } from '@/lib/menu'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const sessao = await auth()
@@ -22,7 +21,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex min-h-screen bg-superficie">
-      <Sidebar grupo="Plataforma" itens={ITENS} email={email} acaoSair={sair} />
+      <Sidebar grupos={gruposDoPainel(email)} email={email} acaoSair={sair} />
       <main className="min-w-0 flex-1 bg-tela px-10 pt-[34px] pb-15">
         <div className="max-w-[1180px]">{children}</div>
       </main>
