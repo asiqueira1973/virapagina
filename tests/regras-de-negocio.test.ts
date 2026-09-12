@@ -271,3 +271,28 @@ describe('a tela de escolha de endereço não pode herdar o layout do painel', (
     expect(existsSync('app/conta/handle/page.tsx')).toBe(false)
   })
 })
+
+// A home vazava 65px para fora da tela num iPhone 13 mini: a ilustração do hero
+// tem duas páginas de 208px, e item de grid não encolhe abaixo do próprio
+// conteúdo — os 416px esticavam a coluna e arrastavam o título junto (seção 17).
+describe('a home cabe na tela de um celular', () => {
+  it('a segunda página da ilustração só aparece onde as duas cabem', async () => {
+    const { readFileSync } = await import('node:fs')
+    const fonte = readFileSync('app/(public)/page.tsx', 'utf8')
+
+    // Duas páginas de 208px mais o respiro lateral passam de 460px.
+    const segundaPagina = fonte
+      .split('\n')
+      .find((linha) => linha.includes('relative') && linha.includes('w-[208px]'))
+    expect(segundaPagina).toBeDefined()
+    expect(segundaPagina).toContain('hidden')
+    expect(segundaPagina).toContain('min-[480px]:block')
+  })
+
+  it('os filhos do grid do hero podem encolher — senão o texto vai junto', async () => {
+    const { readFileSync } = await import('node:fs')
+    const fonte = readFileSync('app/(public)/page.tsx', 'utf8')
+    expect(fonte).toContain('<div className="min-w-0">')
+    expect(fonte).toContain('flex min-w-0 justify-center')
+  })
+})

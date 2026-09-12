@@ -18,8 +18,12 @@ export default function HomePage() {
       <CabecalhoPublico />
 
       <main className="flex-1">
+        {/* `min-w-0` nos dois filhos não é enfeite: item de grid não encolhe
+            abaixo do próprio conteúdo, então um filho largo estica a coluna e
+            arrasta o texto junto — foi assim que a home passou a vazar para fora
+            da tela no iPhone. */}
         <section className="mx-auto grid max-w-[1180px] items-center gap-10 px-6 py-14 sm:px-12 lg:grid-cols-2 lg:gap-16 lg:py-[72px]">
-          <div>
+          <div className="min-w-0">
             <h1 className="mb-5 font-display text-[38px] leading-[1.06] tracking-[-0.02em] text-pretty sm:text-[52px]">
               Seu PDF vira um livro que dá vontade de folhear
             </h1>
@@ -110,9 +114,9 @@ function Argumento({
 // assunção 24.8).
 function LivroDeExemplo() {
   return (
-    <div className="flex justify-center" aria-hidden="true">
+    <div className="flex min-w-0 justify-center" aria-hidden="true">
       <div className="flex overflow-hidden rounded-[3px] shadow-[0_18px_48px_rgba(23,24,26,0.16)]">
-        <div className="h-[288px] w-[208px] border-r border-[#e9e9eb] bg-superficie px-5 py-[22px]">
+        <div className="h-[288px] w-[208px] bg-superficie px-5 py-[22px] min-[480px]:border-r min-[480px]:border-[#e9e9eb]">
           <div className="mb-3.5 font-display text-[19px] leading-tight">
             Conceitos de Tecnologia
           </div>
@@ -124,7 +128,10 @@ function LivroDeExemplo() {
           </div>
           <div className="mt-[18px] h-[92px] rounded bg-tela" />
         </div>
-        <div className="relative h-[288px] w-[208px] bg-superficie-fraca px-5 py-[22px]">
+        {/* Duas páginas ocupam 416px, e com o respiro lateral não cabem num
+            iPhone. Abaixo de 480px a ilustração vira página única — que é o que
+            o leitor de verdade faz na mesma largura (critério 8.3). */}
+        <div className="relative hidden h-[288px] w-[208px] bg-superficie-fraca px-5 py-[22px] min-[480px]:block">
           <div className="flex flex-col gap-[7px]">
             <Linha largura="88%" />
             <Linha largura="100%" />
