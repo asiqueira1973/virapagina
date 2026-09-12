@@ -114,7 +114,14 @@ export async function POST(request: Request) {
         : null,
     })
 
-    return NextResponse.json({ livro }, { status: 201 })
+    // `toLivroDoAutor` e não o documento cru: é ele que acrescenta as URLs com
+    // `?v=` e o aviso de denúncia. Toda rota que devolve um livro para quem é
+    // dono passa por aqui — o app decodifica esse formato, e um documento cru
+    // faz a decodificação falhar com "Algo deu errado", sem dizer o porquê.
+    return NextResponse.json(
+      { livro: toLivroDoAutor(livro, guarda.usuario.handle ?? '') },
+      { status: 201 },
+    )
   } catch (erro) {
     console.error('Falha ao criar livro:', erro)
     // O arquivo já enviado viraria lixo no Storage se o documento não nasceu.

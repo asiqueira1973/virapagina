@@ -71,8 +71,11 @@ export async function PUT(
       autor: String(corpo?.autor ?? '').trim() || guarda.usuario.nome || guarda.usuario.email,
       descricao: String(corpo?.descricao ?? '').trim() || null,
     })
+    if (!atualizado) return NextResponse.json({ erro: 'Livro não encontrado.' }, { status: 404 })
 
-    return NextResponse.json({ livro: atualizado })
+    return NextResponse.json({
+      livro: toLivroDoAutor(atualizado, guarda.usuario.handle ?? ''),
+    })
   } catch (erro) {
     console.error(`Falha ao atualizar o livro ${id}:`, erro)
     return NextResponse.json(

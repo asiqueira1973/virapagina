@@ -219,3 +219,99 @@ describe('assinatura da App Store — spec-ios seção 5', () => {
     expect(verificarJwsDaApple(semCadeia)).toBeNull()
   })
 })
+
+// O formato que o app decodifica, guardado rota a rota.
+//
+// Este bloco existe por um defeito que chegou a produção: as rotas de criar,
+// editar, publicar, despublicar e substituir o PDF devolviam o **documento cru**
+// do Firestore, sem `url`, `pdf_url`, `capa_url` nem `tem_capa`. O app tentava
+// decodificar, falhava, e mostrava "Algo deu errado. Tente novamente em
+// instantes." — uma mensagem de servidor para um erro que era do cliente.
+//
+// Nem a web nem os testes de isolamento percebiam: a web só lê o corpo quando dá
+// erro, e os testes olhavam o código de resposta. É por isso que o guarda é o
+// formato, e não o status.
+describe('o formato de livro que o app decodifica — critério A.4', () => {
+  const CAMPOS = ['url', 'pdf_url', 'capa_url', 'tem_capa', 'removido_por_denuncia', 'total_paginas']
+  // O que não pode sair do servidor nem para o dono (seção 4).
+  const PROIBIDOS = ['dono_id', 'arquivo_pdf_caminho', 'capa_caminho']
+
+  beforeEach(() => {
+    sessaoDoAppDe(CONTA_A.id, CONTA_A.email)
+    vi.mocked(firestore.garantirUsuario).mockResolvedValue(usuarioFalso({ handle: 'ana' }))
+    vi.mocked(firestore.buscarLivroPorId).mockResolvedValue(livroFalso())
+    vi.mocked(firestore.atualizarLivro).mockResolvedValue(livroFalso({ publicado: true }))
+    vi.mocked(firestore.criarLivro).mockResolvedValue(livroFalso())
+    vi.mocked(firestore.listarLivrosDoDono).mockResolvedValue([livroFalso()])
+    vi.mocked(firestore.contarLivrosDoDono).mockResolvedValue(0)
+    vi.mocked(firestore.slugEmUsoNaConta).mockResolvedValue(false)
+    vi.mocked(storage.enviarCapaPng).mockResolvedValue(true)
+  })
+
+  function conferir(livro: Record<string, unknown>) {
+    for (const campo of CAMPOS) expect(livro).toHaveProperty(campo)
+    for (const campo of PROIBIDOS) expect(livro).not.toHaveProperty(campo)
+    // A URL do PDF leva a versão, senão o autor troca o arquivo e continua
+    // vendo o antigo (regra iOS 10.10).
+    expect(String(livro.pdf_url)).toContain('?v=')
+    expect(String(livro.url)).toBe('https://virapagina.app.br/ana/conceitos')
+  }
+
+  const params = { params: Promise.resolve({ id: 'livro-1' }) }
+  const corpoDeMetadados = () =>
+    new Request('https://virapagina.app.br/api/conta/livros/livro-1', {
+      method: 'PUT',
+      body: JSON.stringify({ titulo: 'Conceitos', slug: 'conceitos' }),
+    })
+
+  it('editar metadados', async () => {
+    const { PUT } = await import('@/app/api/conta/livros/[id]/route')
+    const corpo = await (await PUT(corpoDeMetadados(), params)).json()
+    conferir(corpo.livro)
+  })
+
+  it('ler um livro', async () => {
+    const { GET } = await import('@/app/api/conta/livros/[id]/route')
+    const corpo = await (await GET(corpoDeMetadados(), params)).json()
+    conferir(corpo.livro)
+  })
+
+  it('publicar', async () => {
+    const { POST } = await import('@/app/api/conta/livros/[id]/publicar/route')
+    const corpo = await (await POST(corpoDeMetadados(), params)).json()
+    conferir(corpo.livro)
+  })
+
+  it('despublicar', async () => {
+    const { POST } = await import('@/app/api/conta/livros/[id]/despublicar/route')
+    const corpo = await (await POST(corpoDeMetadados(), params)).json()
+    conferir(corpo.livro)
+  })
+
+  it('substituir o PDF', async () => {
+    const { POST } = await import('@/app/api/conta/livros/[id]/substituir-pdf/route')
+    const pedido = new Request('https://virapagina.app.br/x', {
+      method: 'POST',
+      body: JSON.stringify({ total_paginas: 10, arquivo_pdf_tamanho_bytes: 100 }),
+    })
+    const corpo = await (await POST(pedido, params)).json()
+    conferir(corpo.livro)
+  })
+
+  it('criar', async () => {
+    const { POST } = await import('@/app/api/conta/livros/route')
+    const pedido = new Request('https://virapagina.app.br/api/conta/livros', {
+      method: 'POST',
+      body: JSON.stringify({ titulo: 'Conceitos', slug: 'conceitos', livro_id: 'livro-1' }),
+    })
+    const corpo = await (await POST(pedido)).json()
+    conferir(corpo.livro)
+  })
+
+  it('listar', async () => {
+    const { GET } = await import('@/app/api/conta/livros/route')
+    const corpo = await (await GET()).json()
+    conferir(corpo.livros[0])
+    expect(corpo.uso).toEqual({ livros: 1, limite: 5 })
+  })
+})

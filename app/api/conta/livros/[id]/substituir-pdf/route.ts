@@ -7,6 +7,7 @@
 // capa antiga sobre um arquivo novo deixaria a vitrine mostrando conteúdo que
 // não está mais lá.
 import { NextResponse } from 'next/server'
+import { toLivroDoAutor } from '@/lib/books'
 import { atualizarLivro } from '@/lib/firebase/firestore'
 import { capaAoLadoDoPdf, enviarCapaPng } from '@/lib/firebase/storage'
 import { requireDonoDoLivro } from '@/lib/guards'
@@ -39,7 +40,11 @@ export async function POST(
       ...(temCapa ? { capa_caminho: caminhoCapa } : {}),
     })
 
-    return NextResponse.json({ livro: atualizado })
+    if (!atualizado) return NextResponse.json({ erro: 'Livro não encontrado.' }, { status: 404 })
+
+    return NextResponse.json({
+      livro: toLivroDoAutor(atualizado, guarda.usuario.handle ?? ''),
+    })
   } catch (erro) {
     console.error(`Falha ao substituir o PDF do livro ${id}:`, erro)
     return NextResponse.json(
