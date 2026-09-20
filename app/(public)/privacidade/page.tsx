@@ -24,7 +24,7 @@ export default function PrivacidadePage() {
   return (
     <div className="flex min-h-dvh flex-col bg-tela">
       <CabecalhoPublico />
-      <Documento titulo="Política de privacidade" atualizadoEm="9 de setembro de 2026">
+      <Documento titulo="Política de privacidade" atualizadoEm="20 de setembro de 2026">
         <Secao titulo="Quem trata seus dados">
           <p>
             O controlador dos dados é {RESPONSAVEL.nome}, CNPJ {RESPONSAVEL.cnpj}. Para exercer
