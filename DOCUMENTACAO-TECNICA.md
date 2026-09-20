@@ -534,6 +534,12 @@ adopter no admin e anel de foco. Todos viraram neutro. Quem procurar
 `bg-destaque` no código não acha mais nada: os tokens `--color-destaque*` foram
 removidos, e não existe apelido de compatibilidade.
 
+**O app de iPhone não acompanhou.** `ios/Virapagina/Design/Cores.swift`
+continua com o azul como cor da ação — botão primário, `tint`, item ativo. A
+divergência é deliberada: o Build 5 está em revisão na App Store, e mudar a cara
+do app no meio da revisão muda o que a Apple está olhando. Alinhar o app é
+decisão do Alexandre.
+
 **Link sem cor própria** é a única mudança que mexe em acessibilidade: como não
 há mais contraste de cor separando link de texto, o sublinhado passou a ser
 permanente nos documentos longos (`/termos`, `/privacidade`) em vez de aparecer

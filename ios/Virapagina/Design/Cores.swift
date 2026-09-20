@@ -1,7 +1,13 @@
 // A paleta do produto, traduzida para o iOS (spec-ios seção 10).
 //
-// São os mesmos valores de `app/globals.css` — um tom de destaque só, o resto
-// neutro, e cor semântica separada da cor de marca. Azul nunca é status.
+// Os neutros e as cores semânticas são os mesmos de `app/globals.css`. O
+// destaque **não é mais**: o site passou a usar o quase-preto como cor da ação
+// e deixou o azul só para a marca (spec seção 16), e o app continuou no azul.
+//
+// A divergência é deliberada, não esquecimento: o Build 5 está em revisão na
+// App Store, e trocar a cara do app no meio disso troca o que a Apple está
+// olhando. Alinhar o app é decisão do Alexandre, não da próxima pessoa que
+// abrir este arquivo.
 //
 // Sem modo escuro, exceto o leitor, que é sempre escuro: igual à web. Por isso
 // as cores são literais e não `Color(.systemBackground)` — um app que muda de
@@ -33,7 +39,8 @@ extension Color {
     static let hairline = Color(0xE4E4E6)
     static let preenchimento = Color(0xEFEFF1)
 
-    // O único tom de destaque
+    // O destaque do app. Na web este azul virou cor de marca e saiu dos botões;
+    // aqui ele continua sendo a cor da ação até a decisão de alinhar.
     static let destaque = Color(0x1C5FD8)
     static let destaqueEscuro = Color(0x12439B)
     static let destaqueFraco = Color(0xEEF3FD)
