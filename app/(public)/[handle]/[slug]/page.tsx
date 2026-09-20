@@ -12,6 +12,7 @@ import { resolverLivroPublico } from '@/lib/books'
 import { versaoDosArquivos } from '@/lib/cache'
 import { COPY } from '@/lib/copy'
 import { sessaoAtual } from '@/lib/guards'
+import { LEITOR_ANONIMO, registrarEvento } from '@/lib/visao'
 import type { Livro, Usuario } from '@/types/livro'
 
 type Resultado =
@@ -76,7 +77,7 @@ export default async function LeitorPage({
         <p className="text-[17px] font-medium text-tinta">{COPY.erroGenerico}</p>
         <Link
           href="/"
-          className="rounded-[10px] bg-destaque px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-destaque-escuro"
+          className="rounded-[10px] bg-acao px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-acao-clara"
         >
           Ir para a home
         </Link>
@@ -85,6 +86,23 @@ export default async function LeitorPage({
   }
 
   const { livro, dono } = resultado
+
+  // A leitura é o uso que importa medir: o produto entrega um link para alguém
+  // folhear. Só conta o que está publicado — a prévia do dono sobre rascunho é
+  // trabalho de autor, não leitura (regra 11.4).
+  if (livro.publicado) {
+    registrarEvento({
+      nome: 'livro_lido',
+      quem: LEITOR_ANONIMO,
+      tela: 'Leitor',
+      descricao: 'abriu um livro público no leitor',
+      propriedades: {
+        endereco: `/${dono.handle ?? handle}/${livro.slug}`,
+        autor: dono.handle,
+        total_paginas: livro.total_paginas,
+      },
+    })
+  }
 
   return (
     <div className="flex h-dvh flex-col bg-tinta">

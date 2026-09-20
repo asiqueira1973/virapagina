@@ -66,7 +66,7 @@ npm run emu        # emulador do Firebase (vem por npx; exige Java)
 npm run build      # build de produção
 npm run typecheck  # tsc --noEmit
 npm run lint       # eslint
-npm test           # 85 testes, sem dependência externa
+npm test           # 145 testes, sem dependência externa
 npm run test:emu   # 24 testes de integração — exige `npm run emu` no ar
 npm run diagnostico -- ./<chave>.json   # roda as consultas reais contra o Firestore de produção
 swift scripts/gerar-icones.swift        # refaz os ícones do site e do app
@@ -121,6 +121,7 @@ lib/
   planos.ts  limites e franquias — os números vivem só aqui
   flags.ts   a chave EARLY_ADOPTER_ABERTO, sem imports, para não criar ciclo
   cache.ts   versão das URLs de PDF e capa — sem imports, o leitor é cliente
+  visao.ts   eventos de uso para o Visão de Produto — ÚNICO que conhece o serviço
   app-auth.ts   token do app e verificação do id_token do Google
   app-conta.ts  a visão da conta que o app recebe
   appstore.ts   verificação dos JWS da Apple, com a raiz embutida
@@ -152,7 +153,7 @@ Nenhum outro arquivo sabe que existe Firestore — mantenha assim.
 
 ---
 
-## Treze coisas que quebram em silêncio
+## Quatorze coisas que quebram em silêncio
 
 Cada uma destas já mordeu. Nenhuma dá erro de compilação.
 
@@ -225,6 +226,16 @@ Cada uma destas já mordeu. Nenhuma dá erro de compilação.
     exista. Deixar cair faria um token vencido do app virar sessão de outra conta
     aberta no mesmo Safari. Há teste.
 
+14. **`registrarEvento()` vai depois da guarda, depois do sucesso, e nunca com
+    `await`.** A função é síncrona e não devolve promessa de propósito: o envio
+    sai por `after()`, depois de a resposta ter ido. Chamá-la antes da guarda
+    mediria tentativa de invasão como uso — e o teste que exige autorização
+    antes do Firestore não pega isso, porque o Firestore não é o que está sendo
+    chamado. Do mesmo jeito, `VISAO_API_KEY` não entra em `.env.development`:
+    aquele arquivo é versionado e roda na máquina de todo mundo, e a chave lá
+    faria evento de brincadeira subir junto com o de produção, sem nenhum
+    sinal.
+
 ---
 
 ## O que NÃO implementar
@@ -232,9 +243,15 @@ Cada uma destas já mordeu. Nenhuma dá erro de compilação.
 Está no roadmap (spec seção 28) ou no `EPICO-COBRANCA.md`, e ficou de fora de
 propósito. Nem "só a estrutura", nem "deixando preparado":
 
-Stripe, tela de preços no site, dados fiscais e nota · analytics de leitura ·
-domínio próprio do autor · contas de time · grade de miniaturas de página · capa
-customizável à mão · atalhos fixos de WhatsApp/LinkedIn/X · som de virar página.
+Stripe, tela de preços no site, dados fiscais e nota · **tela de analytics para
+o autor** ("quantas pessoas leram meu livro") · domínio próprio do autor ·
+contas de time · grade de miniaturas de página · capa customizável à mão ·
+atalhos fixos de WhatsApp/LinkedIn/X · som de virar página.
+
+Cuidado para não confundir as duas medições: a **tela** de analytics do autor
+está fora, mas a **instrumentação interna** existe e está implementada em
+`lib/visao.ts` (spec seção 21). Ela não tem interface nenhuma — é o dono da
+plataforma olhando o painel do Visão de Produto.
 
 E do app (`spec-ios.md` seção 13): Login com Apple, iPad, push, leitura offline,
 vitrine dentro do app, plano anual e cupom.

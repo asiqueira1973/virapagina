@@ -62,7 +62,7 @@ export function BookFormFields({
         // O slug é sugerido a partir do título e continua editável (regra 11.3).
         ajuda="Endereço público do livro. Só letras minúsculas, números e hífen."
       >
-        <div className="flex items-center gap-0 overflow-hidden rounded-[10px] border border-hairline-forte bg-superficie focus-within:border-destaque">
+        <div className="flex items-center gap-0 overflow-hidden rounded-[10px] border border-hairline-forte bg-superficie focus-within:border-acao">
           <span className="shrink-0 border-r border-hairline bg-tela px-3 py-2.5 text-[13px] text-tinta-apagada">
             /{handle}/
           </span>
@@ -84,7 +84,7 @@ export function BookFormFields({
                 <button
                   type="button"
                   onClick={() => aoAceitarSugestao(sugestaoDeSlug)}
-                  className="cursor-pointer font-medium text-destaque underline"
+                  className="cursor-pointer font-medium text-tinta underline"
                 >
                   Usar {sugestaoDeSlug}
                 </button>
@@ -124,7 +124,7 @@ export function BookFormFields({
 }
 
 const estiloDeCampo =
-  'w-full rounded-[10px] border border-hairline-forte bg-superficie px-3 py-2.5 text-[14px] outline-none focus:border-destaque disabled:bg-tela disabled:text-tinta-apagada'
+  'w-full rounded-[10px] border border-hairline-forte bg-superficie px-3 py-2.5 text-[14px] outline-none focus:border-acao disabled:bg-tela disabled:text-tinta-apagada'
 
 // Rótulo + ajuda + campo, no espaçamento generoso do sistema visual (seção 16).
 function Campo({
@@ -172,7 +172,7 @@ export function BarraDeProgresso({ fracao, rotulo }: { fracao: number; rotulo: s
         className="h-1.5 overflow-hidden rounded-full bg-preenchimento"
       >
         <div
-          className="h-full rounded-full bg-destaque transition-[width] duration-200"
+          className="h-full rounded-full bg-acao transition-[width] duration-200"
           style={{ width: `${porcentagem}%` }}
         />
       </div>

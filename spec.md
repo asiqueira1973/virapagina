@@ -49,7 +49,7 @@ O leitor. `BookReader`, `PdfPage`, a barra de ferramentas, a renderização por 
 3. **O navegador nunca fala com o banco.** Toda leitura e escrita no Firestore e no Storage acontece em código de servidor, com credencial que não sai de lá. As regras do Firestore e do Storage negam acesso direto do cliente. Sem isso, um produto multi-tenant vaza dado entre contas — o único erro deste produto que não tem conserto.
 4. **O plano gratuito publica de verdade.** Sem marca d'água, sem limite de páginas, sem expiração. O que limita é **quantidade de livros**, e só. Marca d'água no gratuito é exatamente o que torna o Heyzine gratuito inútil, e o motivo de o Alexandre pagar por ele hoje.
 5. **Limite nunca tira nada do ar.** Atingir o limite impede publicar o próximo livro; não despublica, não apaga e não bloqueia a leitura de nada que já está no ar. Link que circula é o produto inteiro.
-6. **Simplicidade antes de complexidade prematura.** Sem cobrança, sem times, sem papéis dentro da conta, sem white-label, sem analytics no v3. Entra quando doer.
+6. **Simplicidade antes de complexidade prematura.** Sem cobrança, sem times, sem papéis dentro da conta, sem white-label, sem analytics **para o autor** no v3 — a tela de "quantas pessoas leram meu livro" continua fora (seção 28). O que existe é medição interna do uso, para o dono da plataforma, descrita na seção 21. Entra quando doer.
 7. **Mobile é cidadão de primeira classe.** A maior parte de quem lê chega por link do LinkedIn ou WhatsApp e abre no celular. Decisão de UX que funciona bem no desktop e mal no celular perde.
 
 ---
@@ -627,10 +627,14 @@ Conteúdo final, não placeholder.
 
 Mantida da v2.0 e já implementada, a partir do canvas `Vira Pagina design/Virapagina.dc.html`:
 
-- **Paleta neutra** (cinza, branco, quase-preto) com **um único tom de destaque**, o azul `#1C5FD8` (`#12439B` no hover). Vermelho `#A32020` reservado para perigo e alerta, verde `#1A7F4B` para o selo "Publicado" — **cor semântica não se mistura com cor de marca**.
+- **Paleta neutra** (cinza, branco, quase-preto) em que **a cor da ação é o quase-preto** `#101113` (`#2C2E33` no hover): botão primário, foco de teclado, barra de progresso e estado ativo saem todos dele. É o padrão do ChatGPT Ads, e é o que faz a interface desaparecer atrás do conteúdo.
+- **O azul `#1C5FD8` é a marca, não a ação.** Ele aparece em dois lugares e em nenhum outro: o quadradinho do logo e o selo da conta da plataforma no painel de admin. Azul não marca botão, link nem item de menu.
+- **Estado ativo e selecionado é pílula neutra** (`#EFEFF1`) com texto escuro — item de menu, chip de plano, área de upload em foco.
+- **Link não tem cor própria:** texto escuro, distinguido por sublinhado. Em documento longo o sublinhado é permanente; em lista e cabeçalho, aparece no hover.
+- Vermelho `#A32020` reservado para perigo e alerta, verde `#1A7F4B` para o selo "Publicado" — **cor semântica não se mistura com cor de marca**.
 - **Tipografia:** Instrument Sans na interface, Instrument Serif nos títulos grandes das páginas públicas.
 - **Forma:** cantos arredondados suaves, hairlines em vez de bordas pesadas, espaçamento generoso.
-- **Painel do autor e admin da plataforma:** menu lateral estilo App Store Connect — grupos em negrito escuro sem maiúsculas decorativas, itens indentados sem marcador, hairline entre grupos, um item ativo por vez na cor de destaque com pílula clara ao fundo, rodapé com o e-mail e "Sair".
+- **Painel do autor e admin da plataforma:** menu lateral estilo App Store Connect — grupos em negrito escuro sem maiúsculas decorativas, itens indentados sem marcador, hairline entre grupos, um item ativo por vez em pílula neutra com texto escuro, rodapé com o e-mail e "Sair".
 - **Páginas públicas** (home, vitrine, leitor, termos) **não** usam menu lateral. São páginas consumer com cabeçalho simples; o leitor usa barra de ferramentas flutuante sobre fundo escuro.
 
 Livre para o agente: a ilustração da home.
@@ -733,7 +737,11 @@ A v3.0 muda a natureza do problema. Na v2.0 não havia dado pessoal de terceiro;
 | PDFs e capas | Autores | É o produto | Enquanto o livro existir |
 | Bytes servidos por mês | Autores | Válvula da regra 11.11 | Mês corrente |
 
-**De leitor não se coleta nada.** Sem conta, sem cookie de rastreamento, sem analytics de terceiro. O contador da regra 11.11 é agregado por conta do autor, nunca por leitor.
+| Ações no produto, com o e-mail | Autores | Medição de uso da seção 21 | Enquanto a medição existir |
+
+**De leitor não se coleta nada que o identifique.** Sem conta, sem cookie de rastreamento, sem perfil. O contador da regra 11.11 é agregado por conta do autor, nunca por leitor; a contagem de aberturas da seção 21 sobe sob um `distinct_id` anônimo, igual para todo mundo, com o endereço do livro e nada da pessoa.
+
+**A medição de uso sai do servidor para um terceiro** — o Visão de Produto —, e é o único terceiro além do Google e da Vercel. Por isso `/privacidade` o nomeia: prometer "sem analytics de terceiro" e medir deixaria o documento mentindo.
 
 **Não há coleta de CPF, CNPJ nem endereço no v3** — eles entram só com a cobrança, e a seção 5 do `EPICO-COBRANCA.md` já registra que a base legal ali passa a ser obrigação fiscal, com retenção de 5 anos.
 
@@ -769,6 +777,21 @@ Hospedar arquivo de outras pessoas traz risco que a v2.0 não tinha: violação 
 | Fatura do Google no primeiro ano | **Zero.** Sem receita, qualquer valor é prejuízo |
 | Pessoas que esbarram no limite de 5 e pedem mais | **Uma já basta**: é o sinal que libera a implementação do `EPICO-COBRANCA.md` |
 | Alexandre parar de pagar o Heyzine | Sim ou não. É o teste original do produto |
+
+### Como essas métricas são medidas
+
+Três das cinco linhas acima pedem saber o que acontece em produção, e nenhuma delas se responde olhando o Firestore: "quantas contas publicam ao menos um livro" é uma consulta, mas "quanto tempo entre criar a conta e publicar" e "alguém esbarrou no limite" são sequências de eventos no tempo.
+
+O servidor envia esses eventos para o **Visão de Produto**, num único módulo (`lib/visao.ts`), com quatro regras:
+
+1. **Só no servidor.** A chave de ingestão é secreta e não chega ao navegador, como o Firestore não chega (princípio 0.3).
+2. **Nunca derruba nem atrasa a resposta.** O envio acontece depois de a resposta ter saído e todo erro morre no log. Painel de métrica fora do ar não impede ninguém de publicar um livro.
+3. **Sem chave, não envia.** Desenvolvimento, teste e emulador rodam silenciosos.
+4. **Depois da autorização e depois do sucesso.** Antes da guarda, mediria tentativa de invasão como uso; antes da escrita, mediria o que não aconteceu.
+
+O `distinct_id` é o e-mail de quem publica. Na leitura pública é um identificador anônimo fixo — quem lê não tem conta, e o produto existe para essa pessoa (princípio 0.2). Os eventos estão listados na documentação técnica.
+
+**Isto não é o analytics de leitura da seção 28.** Aquele é uma tela para o autor ver o desempenho dos livros dele, e continua fora do escopo. Este é instrumento do dono da plataforma, sem interface.
 
 ---
 

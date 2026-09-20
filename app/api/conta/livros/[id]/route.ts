@@ -8,6 +8,7 @@ import { atualizarLivro, excluirLivro, slugEmUsoNaConta, sugerirSlugLivreNaConta
 import { apagarPasta, apagarPastaDoLivro, pastaDoLivroPeloPdf } from '@/lib/firebase/storage'
 import { requireDonoDoLivro } from '@/lib/guards'
 import { slugValido, slugify } from '@/lib/slug'
+import { registrarEvento } from '@/lib/visao'
 
 // Livro de outra conta devolve 404 aqui como em todo lugar (seção 6): é a guarda
 // que responde, e ela não distingue inexistente de alheio.
@@ -109,6 +110,14 @@ export async function DELETE(
     const pastaDoPdf = pastaDoLivroPeloPdf(guarda.livro.arquivo_pdf_caminho)
     await apagarPasta(`${pastaDoPdf}/`)
     await apagarPastaDoLivro(guarda.usuario.id, id)
+    registrarEvento({
+      nome: 'livro_excluido',
+      quem: guarda.usuario.email,
+      tela: 'EditarLivro',
+      descricao: 'excluiu o livro em definitivo, com o arquivo',
+      propriedades: { publicado: guarda.livro.publicado },
+    })
+
     return NextResponse.json({ excluido: true })
   } catch (erro) {
     console.error(`Falha ao excluir o livro ${id}:`, erro)

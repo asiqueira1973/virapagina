@@ -28,7 +28,7 @@ export default async function EntrarPage({
     <main className="flex min-h-dvh items-center justify-center bg-tela px-6 py-16">
       <div className="w-full max-w-[380px]">
         <Link href="/" className="mb-8 flex items-center gap-2">
-          <span className="inline-block h-4 w-4 rounded-[4px] bg-destaque" aria-hidden="true" />
+          <span className="inline-block h-4 w-4 rounded-[4px] bg-marca" aria-hidden="true" />
           <span className="text-[15px] font-semibold tracking-[-0.01em] text-tinta">Virapágina</span>
         </Link>
 
@@ -46,7 +46,7 @@ export default async function EntrarPage({
           >
             <button
               type="submit"
-              className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-[10px] bg-destaque px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-destaque-escuro"
+              className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-[10px] bg-acao px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-acao-clara"
             >
               <IconeDoGoogle />
               Entrar com Google

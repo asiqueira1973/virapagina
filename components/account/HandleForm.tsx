@@ -96,7 +96,7 @@ export function HandleForm({
         <span className="mb-1.5 block text-[13px] font-medium text-tinta-media">Endereço</span>
         <div
           className={`flex items-center overflow-hidden rounded-[10px] border bg-superficie ${
-            mostrarErro ? 'border-perigo-borda' : 'border-hairline-forte focus-within:border-destaque'
+            mostrarErro ? 'border-perigo-borda' : 'border-hairline-forte focus-within:border-acao'
           }`}
         >
           <span className="shrink-0 border-r border-hairline bg-tela px-3 py-[11px] text-[13px] text-tinta-apagada">
@@ -148,7 +148,7 @@ export function HandleForm({
                   setErro(null)
                   setSugestao(null)
                 }}
-                className="cursor-pointer font-medium text-destaque underline"
+                className="cursor-pointer font-medium text-tinta underline"
               >
                 Usar {sugestao}
               </button>
@@ -162,7 +162,7 @@ export function HandleForm({
       <button
         type="submit"
         disabled={salvando || !formatoOk}
-        className="mt-5 w-full cursor-pointer rounded-[10px] bg-destaque px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-destaque-escuro disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-5 w-full cursor-pointer rounded-[10px] bg-acao px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-acao-clara disabled:cursor-not-allowed disabled:opacity-60"
       >
         {salvando ? 'Salvando…' : 'Continuar'}
       </button>

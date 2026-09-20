@@ -59,7 +59,7 @@ export function ConfirmDialog({
             type="button"
             onClick={aoConfirmar}
             className={`cursor-pointer rounded-[10px] px-3.5 py-2 text-[13px] font-semibold text-white transition-colors ${
-              perigo ? 'bg-perigo hover:bg-[#871a1a]' : 'bg-destaque hover:bg-destaque-escuro'
+              perigo ? 'bg-perigo hover:bg-[#871a1a]' : 'bg-acao hover:bg-acao-clara'
             }`}
           >
             {rotuloConfirmar}

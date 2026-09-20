@@ -12,6 +12,7 @@ import { apagarPastaDoLivro, caminhoDaCapa, caminhoDoPdf, enviarCapaPng } from '
 import { requireAutor } from '@/lib/guards'
 import { limiteDeLivros, temVagaParaNovoLivro } from '@/lib/planos'
 import { slugValido, slugify } from '@/lib/slug'
+import { registrarEvento } from '@/lib/visao'
 
 // A lista que o painel da web monta em componente de servidor, agora também como
 // rota — o app não renderiza React no servidor, e precisa dos mesmos dados.
@@ -112,6 +113,18 @@ export async function POST(request: Request) {
       total_paginas: Number.isFinite(Number(corpo?.total_paginas))
         ? Number(corpo.total_paginas)
         : null,
+    })
+
+    registrarEvento({
+      nome: 'livro_criado',
+      quem: guarda.usuario.email,
+      tela: 'NovoLivro',
+      descricao: 'subiu um PDF e criou o livro como rascunho',
+      propriedades: {
+        total_paginas: livro.total_paginas,
+        tamanho_bytes: livro.arquivo_pdf_tamanho_bytes,
+        livros_na_conta: quantidade + 1,
+      },
     })
 
     // `toLivroDoAutor` e não o documento cru: é ele que acrescenta as URLs com

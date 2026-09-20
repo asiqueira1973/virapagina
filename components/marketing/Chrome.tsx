@@ -8,10 +8,10 @@ export function CabecalhoPublico() {
   return (
     <header className="flex items-center justify-between border-b border-hairline bg-superficie px-6 py-[22px] sm:px-12">
       <Link href="/" className="flex items-center gap-2">
-        <span className="inline-block h-4 w-4 rounded-[4px] bg-destaque" aria-hidden="true" />
+        <span className="inline-block h-4 w-4 rounded-[4px] bg-marca" aria-hidden="true" />
         <span className="text-[14px] font-semibold tracking-[-0.01em] text-tinta">Virapágina</span>
       </Link>
-      <Link href="/entrar" className="text-[13px] font-medium text-tinta-media hover:text-destaque">
+      <Link href="/entrar" className="text-[13px] font-medium text-tinta-media hover:text-tinta">
         Entrar
       </Link>
     </header>
@@ -26,13 +26,13 @@ export function RodapePublico() {
           Virapágina — {RESPONSAVEL.nome}
         </span>
         <span className="flex flex-wrap gap-5">
-          <Link href="/termos" className="text-tinta-apagada hover:text-destaque">
+          <Link href="/termos" className="text-tinta-apagada hover:text-tinta">
             Termos
           </Link>
-          <Link href="/privacidade" className="text-tinta-apagada hover:text-destaque">
+          <Link href="/privacidade" className="text-tinta-apagada hover:text-tinta">
             Privacidade
           </Link>
-          <a href={`mailto:${emailDeContato()}`} className="text-tinta-apagada hover:text-destaque">
+          <a href={`mailto:${emailDeContato()}`} className="text-tinta-apagada hover:text-tinta">
             {emailDeContato()}
           </a>
         </span>

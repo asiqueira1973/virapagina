@@ -16,6 +16,7 @@ import { isAdminEmail } from '@/lib/admins'
 import { earlyAdopterAberto } from '@/lib/flags'
 import { PLANO_ASSINANTE, PLANO_DO_DONO, PLANO_EARLY_ADOPTER, PLANO_PADRAO, planoValido } from '@/lib/planos'
 import { proximoSlugLivre } from '@/lib/slug'
+import { registrarEvento } from '@/lib/visao'
 import type { AcaoAdmin, Assinatura, Livro, OrigemDaConta, Plano, Usuario } from '@/types/livro'
 import { COLECOES, db } from './admin'
 
@@ -184,6 +185,18 @@ export async function garantirUsuario(params: {
       atualizado_em: agora,
     }
     await referencia.set(semUndefined(novo))
+
+    // Medir a conta nova aqui, e não no login, é o que mantém a contagem certa:
+    // este ramo roda uma vez na vida da conta, enquanto `garantirUsuario` roda
+    // em toda requisição (pegadinha 12 do CLAUDE.md).
+    registrarEvento({
+      nome: 'conta_criada',
+      quem: params.email,
+      tela: 'Entrar',
+      descricao: 'criou a conta no primeiro acesso',
+      propriedades: { origem: novo.origem, plano: novo.plano },
+    })
+
     return paraUsuario(params.id, novo)
   }
 

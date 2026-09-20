@@ -34,7 +34,7 @@ export default function HomePage() {
             <div className="flex flex-wrap items-center gap-4">
               <Link
                 href="/entrar"
-                className="rounded-[10px] bg-destaque px-5 py-3.5 text-[14px] font-semibold text-white transition-colors hover:bg-destaque-escuro"
+                className="rounded-[10px] bg-acao px-5 py-3.5 text-[14px] font-semibold text-white transition-colors hover:bg-acao-clara"
               >
                 Começar de graça
               </Link>
@@ -99,7 +99,7 @@ function Argumento({
         strokeLinecap="round"
         strokeLinejoin="round"
         aria-hidden="true"
-        className="mb-3.5 text-destaque"
+        className="mb-3.5 text-tinta"
       >
         <path d={caminho} />
       </svg>
@@ -137,7 +137,7 @@ function LivroDeExemplo() {
             <Linha largura="100%" />
             <Linha largura="74%" />
           </div>
-          <div className="mt-4 h-[118px] rounded bg-gradient-to-br from-destaque-fraco to-hairline" />
+          <div className="mt-4 h-[118px] rounded bg-gradient-to-br from-preenchimento to-hairline" />
           <div className="mt-4 flex flex-col gap-[7px]">
             <Linha largura="96%" />
             <Linha largura="58%" />

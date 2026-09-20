@@ -2,7 +2,7 @@
 
 // Menu lateral do painel, no padrão App Store Connect exigido pela seção 16:
 // grupo em negrito escuro, itens indentados sem marcador, hairline separando,
-// um item ativo por vez na cor de destaque, e rodapé com o e-mail e "Sair".
+// um item ativo por vez em pílula neutra, e rodapé com o e-mail e "Sair".
 //
 // Serve os dois painéis — o do autor e o da plataforma —, que têm a mesma forma.
 // Quem monta a lista de grupos é `lib/menu.ts`, no servidor: para o admin da
@@ -25,7 +25,7 @@ export function Sidebar({
   return (
     <aside className="flex w-[232px] shrink-0 flex-col border-r border-hairline bg-superficie py-5">
       <Link href="/" className="mb-6 flex items-center gap-2 px-[18px]">
-        <span className="inline-block h-4 w-4 rounded-[4px] bg-destaque" aria-hidden="true" />
+        <span className="inline-block h-4 w-4 rounded-[4px] bg-marca" aria-hidden="true" />
         <span className="text-[14px] font-semibold tracking-[-0.01em] text-tinta">Virapágina</span>
       </Link>
 
@@ -50,7 +50,7 @@ export function Sidebar({
                   aria-current={ativo ? 'page' : undefined}
                   className={`rounded-lg py-[7px] pr-2.5 pl-5 text-[13px] transition-colors ${
                     ativo
-                      ? 'bg-destaque-fraco font-medium text-destaque'
+                      ? 'bg-preenchimento font-medium text-tinta'
                       : 'text-tinta-suave hover:bg-preenchimento-fraco'
                   }`}
                 >

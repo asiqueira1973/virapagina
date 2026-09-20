@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server'
 import { toLivroDoAutor } from '@/lib/books'
 import { atualizarLivro } from '@/lib/firebase/firestore'
 import { requireDonoDoLivro } from '@/lib/guards'
+import { registrarEvento } from '@/lib/visao'
 
 export async function POST(
   _request: Request,
@@ -25,6 +26,17 @@ export async function POST(
 
     const atualizado = await atualizarLivro(id, { publicado: true })
     if (!atualizado) return NextResponse.json({ erro: 'Livro não encontrado.' }, { status: 404 })
+
+    registrarEvento({
+      nome: 'livro_publicado',
+      quem: guarda.usuario.email,
+      tela: 'EditarLivro',
+      descricao: 'publicou o livro, que passa a responder na URL pública',
+      propriedades: {
+        endereco: `/${guarda.usuario.handle ?? ''}/${atualizado.slug}`,
+        total_paginas: atualizado.total_paginas,
+      },
+    })
 
     return NextResponse.json({
       livro: toLivroDoAutor(atualizado, guarda.usuario.handle ?? ''),

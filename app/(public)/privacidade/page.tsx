@@ -1,8 +1,15 @@
 // /privacidade — política de privacidade (spec seção 20, critério 8.6).
 //
 // Diz o que se coleta, por quê e por quanto tempo, e nomeia o controlador. O
-// ponto que vale destacar: de quem lê não se coleta nada — sem conta, sem cookie
-// de rastreio e sem analytics de terceiro.
+// ponto que vale destacar: de quem lê não se coleta nada — sem conta e sem
+// cookie de rastreio.
+//
+// A medição de uso (`lib/visao.ts`) obriga este documento a ser exato: ela
+// envia a um serviço de fora o e-mail de quem **publica**, junto com a ação que
+// a pessoa fez. De quem **lê** continua não saindo nada que a identifique — a
+// abertura de um livro sobe sob um identificador anônimo. Enquanto o texto
+// dizia "não usamos analytics de terceiro", o código passou a dizer o
+// contrário: é o texto que tinha de mudar.
 import type { Metadata } from 'next'
 import { CabecalhoPublico, RodapePublico } from '@/components/marketing/Chrome'
 import { RESPONSAVEL, emailDeContato } from '@/lib/copy'
@@ -29,13 +36,16 @@ export default function PrivacidadePage() {
         <Secao titulo="De quem lê, não coletamos nada">
           <p>
             Ler um livro no Virapágina não exige conta, não cria cadastro e não instala cookie de
-            rastreio. Não usamos analytics de terceiro. Se você chegou aqui por um link e só quer
-            ler, não guardamos nada seu.
+            rastreio. Não perfilamos leitores e não usamos publicidade. Se você chegou aqui por um
+            link e só quer ler, não guardamos nada seu.
           </p>
           <p>
-            Medimos apenas quantos bytes servimos por conta de autor, agregado por mês, para saber
-            quando uma conta está consumindo muito da nossa infraestrutura. Essa medição não
-            distingue leitores nem guarda quem leu o quê.
+            Medimos duas coisas, e nenhuma delas diz quem você é: quantos bytes servimos por conta
+            de autor, agregado por mês, para saber quando uma conta consome muito da nossa
+            infraestrutura; e quantas vezes cada livro foi aberto, para saber se o produto é usado.
+            A contagem de aberturas registra o endereço do livro e um identificador anônimo, igual
+            para todas as pessoas que leem —{' '}
+            <strong>não distinguimos leitores nem guardamos quem leu o quê</strong>.
           </p>
         </Secao>
 
@@ -69,6 +79,14 @@ export default function PrivacidadePage() {
                 <td>Saber quando uma conta passa da franquia de tráfego</td>
                 <td>Mês corrente</td>
               </tr>
+              <tr>
+                <td>Suas ações no produto, identificadas pelo seu e-mail</td>
+                <td>
+                  Saber como o produto é usado e onde ele atrapalha: criar a conta, escolher o
+                  endereço, criar, publicar, substituir e excluir livro, entrar pelo app e assinar
+                </td>
+                <td>Enquanto mantivermos a medição</td>
+              </tr>
             </tbody>
           </table>
           <p>
@@ -79,9 +97,10 @@ export default function PrivacidadePage() {
 
         <Secao titulo="Com quem compartilhamos">
           <p>
-            Com os provedores de infraestrutura que fazem o serviço funcionar: Google (login,
-            banco de dados e armazenamento dos arquivos) e Vercel (hospedagem da aplicação). Não
-            vendemos, alugamos nem cedemos dados a terceiros para publicidade.
+            Com os provedores que fazem o serviço funcionar: Google (login, banco de dados e
+            armazenamento dos arquivos), Vercel (hospedagem da aplicação) e Visão de Produto, que
+            recebe as ações de quem publica para nos dizer como o produto é usado. Não vendemos,
+            alugamos nem cedemos dados a terceiros para publicidade.
           </p>
         </Secao>
 

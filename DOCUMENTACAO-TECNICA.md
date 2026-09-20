@@ -512,9 +512,99 @@ nas mesmas medidas da web.
 
 ---
 
+## 8. O sistema visual, em tokens
+
+Os tokens vivem no `@theme` do `app/globals.css`, e **só lá** — nenhum
+componente escreve hexadecimal. A adaptação ao padrão do ChatGPT Ads mudou o
+papel das cores, não a quantidade delas:
+
+| Token | Valor | Onde aparece |
+|---|---|---|
+| `--color-acao` | `#101113` | Botão primário, foco de teclado, barra de progresso, borda de campo em foco |
+| `--color-acao-clara` | `#2C2E33` | Hover do botão primário |
+| `--color-marca` | `#1C5FD8` | O quadradinho do logo e o selo da conta da plataforma. Nada mais |
+| `--color-marca-fraca` | `#EEF3FD` | Fundo desse mesmo selo |
+| `--color-preenchimento` | `#EFEFF1` | Pílula do item de menu ativo, chip de plano selecionado, área de upload recebendo arquivo |
+| `--color-perigo` | `#A32020` | Só perigo e alerta |
+| `--color-publicado` | `#1A7F4B` | Só o selo "Publicado" |
+
+**O que era azul e deixou de ser:** botão primário, item ativo do menu, link,
+ícone da home, barra de progresso, borda de campo em foco, faixa de early
+adopter no admin e anel de foco. Todos viraram neutro. Quem procurar
+`bg-destaque` no código não acha mais nada: os tokens `--color-destaque*` foram
+removidos, e não existe apelido de compatibilidade.
+
+**Link sem cor própria** é a única mudança que mexe em acessibilidade: como não
+há mais contraste de cor separando link de texto, o sublinhado passou a ser
+permanente nos documentos longos (`/termos`, `/privacidade`) em vez de aparecer
+só no hover.
+
+---
+
+## 9. Instrumentação de uso (`lib/visao.ts`)
+
+O servidor manda eventos para o **Visão de Produto** — é assim que as métricas
+da seção 21 do spec são medidas. Um módulo só, e ele é o único que conhece esse
+serviço.
+
+**Isto não é o "analytics de leitura" da seção 28 do spec**, que continua fora:
+aquele é uma tela para o autor ver o desempenho dos livros dele. Este é
+instrumento do dono da plataforma e não tem interface nenhuma.
+
+### As quatro regras do envio
+
+1. **Só no servidor.** A chave `VISAO_API_KEY` é secreta e não chega ao
+   navegador, como o Firestore não chega.
+2. **Nunca derruba nem atrasa a resposta.** O envio sai por `after()` do Next,
+   depois de a resposta ter ido, com timeout de 5s, e todo erro morre no
+   `console.error`. Fora de um ciclo de requisição o `after()` lança, e aí o
+   envio vira disparo solto — pode se perder, não atrapalha ninguém.
+3. **Sem chave, não envia.** Desenvolvimento, teste e emulador ficam
+   silenciosos. `tests/setup.ts` não define a variável de propósito.
+4. **Depois da autorização e depois do sucesso.** Antes da guarda mediria
+   tentativa de invasão como uso; antes da escrita, mediria o que não aconteceu.
+
+### Os eventos
+
+Todos com o prefixo `vira_pagina_`. O `distinct_id` é o e-mail de quem agiu.
+
+| Evento | Onde nasce | Tela | Propriedades |
+|---|---|---|---|
+| `conta_criada` | `garantirUsuario()`, só no ramo de criação | `Entrar` | `origem`, `plano` |
+| `app_entrou` | `POST /api/app/sessao` | `Entrar` | `provedor` (google/apple), `plano` |
+| `handle_escolhido` | `POST /api/conta/handle` | `EscolherEndereco` | `handle` |
+| `livro_criado` | `POST /api/conta/livros` | `NovoLivro` | `total_paginas`, `tamanho_bytes`, `livros_na_conta` |
+| `livro_publicado` | `POST /api/conta/livros/[id]/publicar` | `EditarLivro` | `endereco`, `total_paginas` |
+| `livro_despublicado` | `POST .../despublicar` | `EditarLivro` | `endereco` |
+| `pdf_substituido` | `POST .../substituir-pdf` | `EditarLivro` | `total_paginas`, `tamanho_bytes`, `publicado` |
+| `livro_excluido` | `DELETE /api/conta/livros/[id]` | `EditarLivro` | `publicado` |
+| `livro_lido` | render de `/<handle>/<slug>` | `Leitor` | `endereco`, `autor`, `total_paginas` |
+| `assinatura_confirmada` | `POST /api/app/assinatura` | `Assinatura` | `produto`, `expira_em`, `plano` |
+
+### Três decisões que valem saber
+
+**`conta_criada` mora dentro de `garantirUsuario()`**, que é o único lugar do
+código que sabe que uma conta acabou de nascer — e a função roda em toda
+requisição (pegadinha 12 do `CLAUDE.md`). O evento fica no ramo
+`!documento.exists`; qualquer coisa fora dele viraria um evento por login.
+
+**`livro_lido` sobe sob um `distinct_id` anônimo fixo** (`leitor-anonimo`), e só
+para livro publicado — a prévia do dono sobre rascunho é trabalho de autor, não
+leitura. Quem folheia não tem conta, e é para essa pessoa que o produto existe
+(princípio 0.2). A contagem por livro continua certa pela propriedade `endereco`;
+o que não existe é linha do tempo de leitor. O efeito colateral aceito é que
+robô e pré-carregamento de link contam como abertura.
+
+**A política de privacidade mudou junto.** `/privacidade` dizia "não usamos
+analytics de terceiro", e passou a nomear o Visão de Produto entre os
+provedores, com uma linha nova na tabela de dados do autor. Medir sem mudar o
+texto deixaria o documento mentindo — e é documento legal, não copy de tela.
+
+---
+
 ## Testes
 
-`npm test` roda **122 testes** que não precisam de nada externo:
+`npm test` roda **145 testes** que não precisam de nada externo:
 
 | Arquivo | O que garante |
 |---|---|
@@ -522,6 +612,7 @@ nas mesmas medidas da web.
 | `tests/isolamento-entre-contas.test.ts` | A conta A não lê, edita, publica nem exclui livro da conta B por rota nenhuma; livro inexistente e livro alheio dão a mesma resposta; o limite do plano é aplicado; a exclusão apaga o documento antes dos arquivos |
 | `tests/visibilidade-publica.test.ts` | Rascunho devolve 404 para visitante, para outro autor e para o admin da plataforma; publicado é servido a qualquer um; o que sai do servidor não contém caminho do Storage, dono nem e-mail |
 | `tests/regras-de-negocio.test.ts` | Slug, limites de plano, franquias, visibilidade e a chave do early adopter, como funções puras |
+| `tests/visao.test.ts` | A instrumentação não envia nada sem chave, manda o prefixo do produto e a chave no cabeçalho quando tem, e **não lança quando a ponta recusa o evento ou está fora do ar** |
 | `tests/app-ios.test.ts` | O token do app não pode ser forjado, adulterado, declarado sem assinatura nem sobreviver ao prazo; o bearer passa pela guarda com o mesmo rigor do cookie e **não cai na sessão da web quando é inválido**; livro alheio continua devolvendo 404 pelo bearer; e um JWS assinado por uma **cadeia de certificados forjada de verdade** — guardada em `tests/fixtures/` — é recusado |
 
 `npm run test:emu` roda **31 testes de integração contra o emulador do Firebase**

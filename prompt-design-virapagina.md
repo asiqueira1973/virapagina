@@ -8,8 +8,13 @@ Toda a copy marcada entre aspas é **texto final**, não placeholder: use litera
 
 Já definida, mantenha:
 
-- **Paleta neutra** — cinza, branco e quase-preto — com **um único tom de destaque**: azul `#1C5FD8` (hover `#12439B`), sobre fundo claro `#F5F5F6` e superfícies brancas.
-- **Cor semântica separada da cor de marca.** Vermelho `#A32020` (fundo `#FDF2F2`, borda `#F3D2D2`) só para perigo e alerta. Verde `#1A7F4B` (fundo `#EAF6EF`) só para o selo "Publicado". Nunca use azul para status.
+- **Paleta neutra** — cinza, branco e quase-preto — sobre fundo claro `#F5F5F6` e superfícies brancas, no padrão do ChatGPT Ads.
+- **A cor da ação é o quase-preto** `#101113` (hover `#2C2E33`): botão primário, foco de teclado, barra de progresso, borda de campo em foco. Botão primário é preto com texto branco, nunca colorido.
+- **O azul `#1C5FD8` é a marca, e só a marca.** Dois usos, nenhum a mais: o quadradinho do logo e o selo da conta da plataforma no admin. Azul não marca botão, link, ícone nem item de menu.
+- **Estado ativo e selecionado é pílula neutra** `#EFEFF1` com texto escuro — item de menu, chip de plano, área de upload recebendo arquivo.
+- **Link sem cor própria:** texto escuro com sublinhado. Permanente em documento longo; no hover em lista, card e cabeçalho.
+- **Ícone é monocromático,** no cinza escuro do texto.
+- **Cor semântica separada da cor de marca.** Vermelho `#A32020` (fundo `#FDF2F2`, borda `#F3D2D2`) só para perigo e alerta. Verde `#1A7F4B` (fundo `#EAF6EF`) só para o selo "Publicado". Nunca use azul nem preto para status.
 - **Tipografia:** Instrument Sans na interface; Instrument Serif nos títulos grandes das páginas públicas (home, vitrine).
 - **Forma:** cantos arredondados suaves (8–16px), **hairlines** de 1px em vez de bordas pesadas, espaçamento generoso.
 - Texto em pt-BR. Sem modo escuro, exceto o leitor, que é sempre escuro.
@@ -21,7 +26,7 @@ As telas em `/conta/*` e `/admin/*` usam navegação lateral persistente:
 - **Grupo** com título em negrito escuro, caixa normal — nunca MAIÚSCULAS decorativas.
 - **Itens** indentados sob o grupo, **sem marcador nem bolinha**.
 - **Hairline** fina separando os grupos.
-- **Um item ativo por vez**, marcado com o azul de destaque: texto na cor + pílula clara da mesma cor ao fundo.
+- **Um item ativo por vez**, marcado em neutro: texto escuro + pílula cinza clara ao fundo.
 - **Rodapé** com o e-mail de quem está logado e o botão "Sair".
 
 No painel do autor há um grupo: **"Livros"** (item: "Meus livros").
@@ -104,7 +109,7 @@ Navegação lateral: grupo "Livros" ativo.
 ### [Admin da plataforma] Contas — `/admin`
 
 Mostra: uma faixa no topo com o estado da plataforma — **aberta ou fechada a early adopters** —, e abaixo a tabela densa de contas com e-mail, handle, plano, quantidade de livros contra o limite do plano, e tráfego do mês contra a franquia. Campo de busca por e-mail ou handle.
-Enquanto a plataforma está aberta, toda conta nova nasce **early adopter**: livros ilimitados, para sempre. O selo do plano distingue três casos — plataforma (azul), early adopter (verde) e faixa comum (cinza).
+Enquanto a plataforma está aberta, toda conta nova nasce **early adopter**: livros ilimitados, para sempre. O selo do plano distingue três casos — plataforma (azul, o único lugar do produto onde o azul aparece fora do logo), early adopter (verde) e faixa comum (cinza).
 Estados: aberta e fechada.
 Estados: carregando (esqueleto de linhas); vazio; conta acima de 80% da franquia de tráfego destacada em alerta.
 **Não mostre rascunho de ninguém.**

@@ -8,7 +8,7 @@ export default function AutorNaoEncontrado() {
       <p className="text-[17px] font-medium text-tinta">{COPY.autorInexistente}</p>
       <Link
         href="/"
-        className="rounded-[10px] bg-destaque px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-destaque-escuro"
+        className="rounded-[10px] bg-acao px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-acao-clara"
       >
         Ir para a home
       </Link>

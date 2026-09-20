@@ -22,6 +22,7 @@ import {
 } from '@/lib/app-auth'
 import { contaParaOApp } from '@/lib/app-conta'
 import { buscarUsuarioPorId, garantirUsuario } from '@/lib/firebase/firestore'
+import { registrarEvento } from '@/lib/visao'
 
 export async function POST(request: Request) {
   try {
@@ -52,6 +53,17 @@ export async function POST(request: Request) {
     })
 
     const { token, expiraEm } = assinarTokenDoApp({ id: usuario.id, email: usuario.email })
+
+    // O provedor vai na propriedade porque é a pergunta aberta do app: o Login
+    // com Apple entrou por exigência da diretriz 4.8, e só o uso diz se alguém
+    // o escolhe de fato.
+    registrarEvento({
+      nome: 'app_entrou',
+      quem: usuario.email,
+      tela: 'Entrar',
+      descricao: 'abriu sessão pelo app de iPhone',
+      propriedades: { provedor: idToken ? 'google' : 'apple', plano: usuario.plano },
+    })
 
     return NextResponse.json({
       token,

@@ -15,6 +15,7 @@ import {
 } from '@/lib/appstore'
 import { buscarUsuarioPorTransacaoOriginal, definirAssinatura } from '@/lib/firebase/firestore'
 import { requireAutor } from '@/lib/guards'
+import { registrarEvento } from '@/lib/visao'
 
 export async function POST(request: Request) {
   // Primeira linha, como em toda rota de conta (seção 6). `exigeHandle: false`
@@ -59,6 +60,18 @@ export async function POST(request: Request) {
     if (!atualizado) {
       return NextResponse.json({ erro: 'Não foi possível confirmar a assinatura.' }, { status: 400 })
     }
+
+    registrarEvento({
+      nome: 'assinatura_confirmada',
+      quem: guarda.usuario.email,
+      tela: 'Assinatura',
+      descricao: 'teve a assinatura da App Store confirmada pelo servidor',
+      propriedades: {
+        produto: assinatura.produto_id,
+        expira_em: assinatura.expira_em,
+        plano: atualizado.plano,
+      },
+    })
 
     return NextResponse.json({
       conta: await contaParaOApp(atualizado),

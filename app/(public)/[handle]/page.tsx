@@ -98,7 +98,7 @@ export default async function VitrinePage({
                         versao={versaoDosArquivos(livro)}
                         className="mb-3.5 aspect-[1/1.414] w-full shadow-[0_2px_10px_rgba(23,24,26,0.10)] transition-shadow group-hover:shadow-[0_6px_22px_rgba(23,24,26,0.16)]"
                       />
-                      <h2 className="text-[14px] leading-snug font-medium text-tinta group-hover:text-destaque">
+                      <h2 className="text-[14px] leading-snug font-medium text-tinta group-hover:underline">
                         {livro.titulo}
                       </h2>
                       {livro.subtitulo ? (

@@ -206,7 +206,7 @@ export function EditBookForm({ livro, handle }: { livro: Livro; handle: string }
             <button
               type="submit"
               disabled={ocupado}
-              className="cursor-pointer rounded-[10px] bg-destaque px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-destaque-escuro disabled:cursor-not-allowed disabled:opacity-60"
+              className="cursor-pointer rounded-[10px] bg-acao px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-acao-clara disabled:cursor-not-allowed disabled:opacity-60"
             >
               {salvando ? 'Salvando…' : 'Salvar alterações'}
             </button>
@@ -277,7 +277,7 @@ export function EditBookForm({ livro, handle }: { livro: Livro; handle: string }
               className={`mb-3 w-full cursor-pointer rounded-[10px] px-4 py-2.5 text-[13px] font-semibold transition-colors disabled:opacity-60 ${
                 estaPublicado
                   ? 'border border-hairline-forte bg-superficie text-tinta-media hover:bg-tela'
-                  : 'bg-destaque text-white hover:bg-destaque-escuro'
+                  : 'bg-acao text-white hover:bg-acao-clara'
               }`}
             >
               {estaPublicado ? 'Despublicar' : 'Publicar'}

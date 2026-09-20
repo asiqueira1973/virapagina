@@ -54,7 +54,7 @@ export default async function MeusLivrosPage() {
         {temVaga ? (
           <Link
             href="/conta/livros/novo"
-            className="rounded-[10px] bg-destaque px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-destaque-escuro"
+            className="rounded-[10px] bg-acao px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-acao-clara"
           >
             Novo livro
           </Link>
@@ -106,7 +106,7 @@ export default async function MeusLivrosPage() {
           <p className="text-[15px] font-medium text-tinta-media">{COPY.listaVazia}</p>
           <Link
             href="/conta/livros/novo"
-            className="rounded-[10px] bg-destaque px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-destaque-escuro"
+            className="rounded-[10px] bg-acao px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-acao-clara"
           >
             Novo livro
           </Link>
@@ -130,7 +130,7 @@ export default async function MeusLivrosPage() {
               <div className="min-w-0 flex-1">
                 <Link
                   href={`/conta/livros/${livro.id}`}
-                  className="block truncate text-[14px] font-medium text-tinta hover:text-destaque"
+                  className="block truncate text-[14px] font-medium text-tinta hover:underline"
                 >
                   {livro.titulo}
                 </Link>
@@ -153,7 +153,7 @@ export default async function MeusLivrosPage() {
                   <Link
                     href={`/${usuario.handle}/${livro.slug}`}
                     target="_blank"
-                    className="text-[12px] font-medium text-destaque hover:underline"
+                    className="text-[12px] font-medium text-tinta hover:underline"
                   >
                     Ver página pública
                   </Link>

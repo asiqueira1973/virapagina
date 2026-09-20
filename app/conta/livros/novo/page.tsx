@@ -29,7 +29,7 @@ export default async function NovoLivroPage() {
       <div className="mb-[26px]">
         <Link
           href="/conta/livros"
-          className="mb-3 inline-block text-[13px] text-tinta-apagada hover:text-destaque"
+          className="mb-3 inline-block text-[13px] text-tinta-apagada hover:text-tinta"
         >
           ← Livros
         </Link>

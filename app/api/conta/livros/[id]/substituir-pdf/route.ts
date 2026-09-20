@@ -11,6 +11,7 @@ import { toLivroDoAutor } from '@/lib/books'
 import { atualizarLivro } from '@/lib/firebase/firestore'
 import { capaAoLadoDoPdf, enviarCapaPng } from '@/lib/firebase/storage'
 import { requireDonoDoLivro } from '@/lib/guards'
+import { registrarEvento } from '@/lib/visao'
 
 export async function POST(
   request: Request,
@@ -41,6 +42,18 @@ export async function POST(
     })
 
     if (!atualizado) return NextResponse.json({ erro: 'Livro não encontrado.' }, { status: 404 })
+
+    registrarEvento({
+      nome: 'pdf_substituido',
+      quem: guarda.usuario.email,
+      tela: 'EditarLivro',
+      descricao: 'trocou o arquivo de um livro que já existia',
+      propriedades: {
+        total_paginas: atualizado.total_paginas,
+        tamanho_bytes: atualizado.arquivo_pdf_tamanho_bytes,
+        publicado: atualizado.publicado,
+      },
+    })
 
     return NextResponse.json({
       livro: toLivroDoAutor(atualizado, guarda.usuario.handle ?? ''),

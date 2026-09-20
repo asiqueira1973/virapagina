@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server'
 import { FORMATO_DE_HANDLE, handleDisponivel, reservarHandle, sugerirHandleLivre } from '@/lib/firebase/firestore'
 import { requireAutor } from '@/lib/guards'
+import { registrarEvento } from '@/lib/visao'
 
 export async function GET(request: Request) {
   const guarda = await requireAutor({ exigeHandle: false })
@@ -69,6 +70,14 @@ export async function POST(request: Request) {
         { status: 409 },
       )
     }
+
+    registrarEvento({
+      nome: 'handle_escolhido',
+      quem: guarda.usuario.email,
+      tela: 'EscolherEndereco',
+      descricao: 'escolheu o endereço público da conta',
+      propriedades: { handle: pedido },
+    })
 
     return NextResponse.json({ handle: pedido }, { status: 201 })
   } catch (erro) {

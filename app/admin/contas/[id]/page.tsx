@@ -32,7 +32,7 @@ export default async function ContaPage({ params }: { params: Promise<{ id: stri
       <div className="mb-[26px]">
         <Link
           href="/admin/contas"
-          className="mb-3 inline-block text-[13px] text-tinta-apagada hover:text-destaque"
+          className="mb-3 inline-block text-[13px] text-tinta-apagada hover:text-tinta"
         >
           ← Contas
         </Link>
@@ -63,7 +63,7 @@ export default async function ContaPage({ params }: { params: Promise<{ id: stri
           </div>
           <div className="mb-4 h-[5px] overflow-hidden rounded-full bg-preenchimento">
             <div
-              className="h-full rounded-full bg-destaque"
+              className="h-full rounded-full bg-acao"
               style={{
                 width: limite === null ? '100%' : `${Math.min(100, (livros.length / limite) * 100)}%`,
               }}
@@ -79,7 +79,7 @@ export default async function ContaPage({ params }: { params: Promise<{ id: stri
           </div>
           <div className="h-[5px] overflow-hidden rounded-full bg-preenchimento">
             <div
-              className={`h-full rounded-full ${fracao !== null && fracao >= 0.8 ? 'bg-perigo' : 'bg-destaque'}`}
+              className={`h-full rounded-full ${fracao !== null && fracao >= 0.8 ? 'bg-perigo' : 'bg-acao'}`}
               style={{ width: `${Math.round(Math.min(1, fracao ?? 0) * 100)}%` }}
             />
           </div>

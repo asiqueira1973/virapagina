@@ -99,7 +99,7 @@ export function AccountActions({
                   onClick={() => chamar(`/api/admin/contas/${conta.id}/plano`, { plano: faixa })}
                   className={`cursor-pointer rounded-full border px-3.5 py-[7px] text-[13px] font-medium transition-colors disabled:cursor-default ${
                     atual
-                      ? 'border-destaque bg-destaque-fraco text-destaque'
+                      ? 'border-acao bg-preenchimento text-tinta'
                       : 'border-hairline-forte bg-superficie text-tinta-media hover:bg-tela'
                   }`}
                 >
@@ -118,7 +118,7 @@ export function AccountActions({
           faça só quando alguém pedir.
         </p>
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex min-w-[240px] flex-1 items-center overflow-hidden rounded-[10px] border border-hairline-forte bg-superficie focus-within:border-destaque">
+          <div className="flex min-w-[240px] flex-1 items-center overflow-hidden rounded-[10px] border border-hairline-forte bg-superficie focus-within:border-acao">
             <span className="shrink-0 border-r border-hairline bg-tela px-2.5 py-[9px] text-[12px] text-tinta-apagada">
               /
             </span>

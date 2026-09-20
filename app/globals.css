@@ -1,9 +1,14 @@
 @import "tailwindcss";
 
 /* Sistema visual do Virapágina (spec seção 16 + canvas de design "Vira Pagina design").
-   Paleta neutra com um único tom de destaque azul, hairlines em vez de bordas
-   pesadas, cantos arredondados suaves. O produto é uma casca neutra: a
-   personalidade visual pertence ao conteúdo dos livros, não à interface. */
+   Paleta neutra, hairlines em vez de bordas pesadas, cantos arredondados
+   suaves. O produto é uma casca neutra: a personalidade visual pertence ao
+   conteúdo dos livros, não à interface.
+
+   A cor de ação é o quase-preto, não o azul: botão primário, foco, barra de
+   progresso e estado ativo saem do mesmo tom neutro. O azul sobrou para a
+   marca — o quadradinho do logo e o selo da conta da plataforma — e não
+   participa de nenhuma interação. */
 @theme {
   /* Superfícies */
   --color-tela: #f5f5f6;
@@ -25,10 +30,13 @@
   --color-preenchimento: #efeff1;
   --color-preenchimento-fraco: #f0f0f2;
 
-  /* Único tom de destaque (seção 16) */
-  --color-destaque: #1c5fd8;
-  --color-destaque-escuro: #12439b;
-  --color-destaque-fraco: #eef3fd;
+  /* Ação: botão primário, foco, progresso e estado ativo */
+  --color-acao: #101113;
+  --color-acao-clara: #2c2e33;
+
+  /* Marca: só o logo e o selo da conta da plataforma (seção 16) */
+  --color-marca: #1c5fd8;
+  --color-marca-fraca: #eef3fd;
 
   /* Estados */
   --color-perigo: #a32020;
@@ -63,7 +71,7 @@ body {
 /* Foco visível em tudo que recebe teclado — requisito de acessibilidade da
    seção 17. O leitor de flipbook depende de foco para as setas funcionarem. */
 :focus-visible {
-  outline: 2px solid var(--color-destaque);
+  outline: 2px solid var(--color-acao);
   outline-offset: 2px;
   border-radius: 4px;
 }

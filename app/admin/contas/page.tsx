@@ -52,14 +52,14 @@ export default async function ContasPage() {
           importa: é olhando a lista de contas que se decide fechar a porta. */}
       <div
         className={`mb-5 flex flex-wrap items-center gap-3 rounded-xl border px-[18px] py-3.5 ${
-          aberta ? 'border-destaque/25 bg-destaque-fraco' : 'border-hairline bg-superficie'
+          aberta ? 'border-hairline-forte bg-preenchimento-fraco' : 'border-hairline bg-superficie'
         }`}
       >
         <span
           aria-hidden="true"
-          className={`h-2 w-2 shrink-0 rounded-full ${aberta ? 'bg-destaque' : 'bg-tinta-apagada'}`}
+          className={`h-2 w-2 shrink-0 rounded-full ${aberta ? 'bg-acao' : 'bg-tinta-apagada'}`}
         />
-        <p className={`text-[13px] ${aberta ? 'text-destaque' : 'text-tinta-suave'}`}>
+        <p className={`text-[13px] ${aberta ? 'text-tinta' : 'text-tinta-suave'}`}>
           {aberta ? (
             <>
               <strong className="font-semibold">Aberta a early adopters.</strong> Toda conta nova
@@ -103,7 +103,7 @@ export default async function ContasPage() {
                 <span
                   className={`inline-flex items-center rounded-full px-2.5 py-[3px] text-[12px] font-medium ${
                     conta.ehDono
-                      ? 'bg-destaque-fraco text-destaque'
+                      ? 'bg-marca-fraca text-marca'
                       : conta.plano === 'early_adopter'
                         ? 'bg-publicado-fundo text-publicado'
                         : 'bg-preenchimento text-tinta-fraca'
@@ -118,7 +118,7 @@ export default async function ContasPage() {
               <span className="flex items-center gap-2.5">
                 <span className="h-[5px] flex-1 overflow-hidden rounded-full bg-preenchimento">
                   <span
-                    className={`block h-full rounded-full ${conta.emAlerta ? 'bg-perigo' : 'bg-destaque'}`}
+                    className={`block h-full rounded-full ${conta.emAlerta ? 'bg-perigo' : 'bg-acao'}`}
                     style={{ width: `${Math.round(Math.min(1, conta.fracao ?? 0) * 100)}%` }}
                   />
                 </span>
@@ -131,7 +131,7 @@ export default async function ContasPage() {
               <span className="text-right">
                 <Link
                   href={`/admin/contas/${conta.id}`}
-                  className="text-[12px] font-medium text-destaque hover:underline"
+                  className="text-[12px] font-medium text-tinta hover:underline"
                 >
                   Abrir
                 </Link>
