@@ -177,7 +177,7 @@ export function NewBookForm({ handle }: { handle: string }) {
         <button
           type="submit"
           disabled={enviando}
-          className="cursor-pointer rounded-[10px] bg-acao px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-acao-clara disabled:cursor-not-allowed disabled:opacity-60"
+          className="cursor-pointer rounded-full bg-tinta px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-tinta-media disabled:cursor-not-allowed disabled:opacity-60"
         >
           {enviando ? 'Enviando…' : 'Salvar como rascunho'}
         </button>

@@ -40,7 +40,7 @@ export default async function ContaLayout({ children }: { children: React.ReactN
   return (
     <div className="flex min-h-screen bg-superficie">
       <Sidebar grupos={gruposDoPainel(usuario.email)} email={usuario.email} acaoSair={sair} />
-      <main className="min-w-0 flex-1 bg-tela px-10 pt-[34px] pb-15">
+      <main className="min-w-0 flex-1 bg-superficie px-10 pt-[34px] pb-15">
         <div className="max-w-[1180px]">{children}</div>
       </main>
     </div>

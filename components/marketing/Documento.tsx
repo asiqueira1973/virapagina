@@ -31,7 +31,7 @@ export function Secao({ titulo, children }: { titulo: string; children: React.Re
   return (
     <section>
       <h2 className="mb-3 text-[17px] font-semibold tracking-[-0.01em]">{titulo}</h2>
-      <div className="flex flex-col gap-3.5 text-[14px] leading-relaxed text-tinta-media [&_a]:font-medium [&_a]:text-tinta [&_a]:underline [&_strong]:font-semibold [&_strong]:text-tinta [&_table]:mt-1 [&_table]:w-full [&_table]:border-collapse [&_table]:text-[13px] [&_td]:border-t [&_td]:border-hairline [&_td]:py-2.5 [&_td]:pr-4 [&_td]:align-top [&_th]:pb-2 [&_th]:pr-4 [&_th]:text-left [&_th]:text-[12px] [&_th]:font-semibold [&_th]:text-tinta-fraca">
+      <div className="flex flex-col gap-3.5 text-[14px] leading-relaxed text-tinta-media [&_a]:font-medium [&_a]:text-tinta [&_a]:underline [&_strong]:font-semibold [&_strong]:text-tinta [&_table]:mt-1 [&_table]:w-full [&_table]:border-collapse [&_table]:text-[13px] [&_td]:border-t [&_td]:border-traco [&_td]:py-2.5 [&_td]:pr-4 [&_td]:align-top [&_th]:pb-2 [&_th]:pr-4 [&_th]:text-left [&_th]:text-[12px] [&_th]:font-semibold [&_th]:text-tinta-apagada">
         {children}
       </div>
     </section>

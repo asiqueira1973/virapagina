@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <div className="flex min-h-dvh flex-col bg-tela">
+    <div className="flex min-h-dvh flex-col bg-superficie">
       <CabecalhoPublico />
 
       <main className="flex-1">
@@ -27,14 +27,14 @@ export default function HomePage() {
             <h1 className="mb-5 font-display text-[38px] leading-[1.06] tracking-[-0.02em] text-pretty sm:text-[52px]">
               Seu PDF vira um livro que dá vontade de folhear
             </h1>
-            <p className="mb-7 max-w-[44ch] text-[16px] leading-relaxed text-tinta-suave text-pretty">
+            <p className="mb-7 max-w-[44ch] text-[16px] leading-relaxed text-tinta-fraca text-pretty">
               Suba o arquivo, escolha o endereço e pronto: quem receber o link abre no navegador
               e vira as páginas — no computador ou no celular, sem instalar nada.
             </p>
             <div className="flex flex-wrap items-center gap-4">
               <Link
                 href="/entrar"
-                className="rounded-[10px] bg-acao px-5 py-3.5 text-[14px] font-semibold text-white transition-colors hover:bg-acao-clara"
+                className="rounded-full bg-tinta px-5 py-3.5 text-[14px] font-semibold text-white transition-colors hover:bg-tinta-media"
               >
                 Começar de graça
               </Link>
@@ -88,7 +88,7 @@ function Argumento({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-2xl border border-hairline bg-superficie p-6">
+    <div className="rounded-2xl border border-traco bg-superficie p-6">
       <svg
         width="22"
         height="22"
@@ -104,7 +104,7 @@ function Argumento({
         <path d={caminho} />
       </svg>
       <h2 className="mb-1.5 text-[15px] font-semibold">{titulo}</h2>
-      <p className="text-[13px] leading-relaxed text-tinta-suave">{children}</p>
+      <p className="text-[13px] leading-relaxed text-tinta-fraca">{children}</p>
     </div>
   )
 }
@@ -115,7 +115,7 @@ function Argumento({
 function LivroDeExemplo() {
   return (
     <div className="flex min-w-0 justify-center" aria-hidden="true">
-      <div className="flex overflow-hidden rounded-[3px] shadow-[0_18px_48px_rgba(23,24,26,0.16)]">
+      <div className="flex overflow-hidden rounded-[3px] shadow-[0_18px_48px_rgba(13,13,13,0.16)]">
         <div className="h-[288px] w-[208px] bg-superficie px-5 py-[22px] min-[480px]:border-r min-[480px]:border-[#e9e9eb]">
           <div className="mb-3.5 font-display text-[19px] leading-tight">
             Conceitos de Tecnologia
@@ -126,18 +126,18 @@ function LivroDeExemplo() {
             <Linha largura="97%" />
             <Linha largura="64%" />
           </div>
-          <div className="mt-[18px] h-[92px] rounded bg-tela" />
+          <div className="mt-[18px] h-[92px] rounded bg-superficie-2" />
         </div>
         {/* Duas páginas ocupam 416px, e com o respiro lateral não cabem num
             iPhone. Abaixo de 480px a ilustração vira página única — que é o que
             o leitor de verdade faz na mesma largura (critério 8.3). */}
-        <div className="relative hidden h-[288px] w-[208px] bg-superficie-fraca px-5 py-[22px] min-[480px]:block">
+        <div className="relative hidden h-[288px] w-[208px] bg-superficie-2 px-5 py-[22px] min-[480px]:block">
           <div className="flex flex-col gap-[7px]">
             <Linha largura="88%" />
             <Linha largura="100%" />
             <Linha largura="74%" />
           </div>
-          <div className="mt-4 h-[118px] rounded bg-gradient-to-br from-preenchimento to-hairline" />
+          <div className="mt-4 h-[118px] rounded bg-gradient-to-br from-ativo to-traco" />
           <div className="mt-4 flex flex-col gap-[7px]">
             <Linha largura="96%" />
             <Linha largura="58%" />
@@ -150,5 +150,5 @@ function LivroDeExemplo() {
 }
 
 function Linha({ largura }: { largura: string }) {
-  return <div className="h-[5px] rounded-[3px] bg-preenchimento" style={{ width: largura }} />
+  return <div className="h-[5px] rounded-[3px] bg-ativo" style={{ width: largura }} />
 }

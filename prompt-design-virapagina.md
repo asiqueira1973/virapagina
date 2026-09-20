@@ -8,15 +8,17 @@ Toda a copy marcada entre aspas é **texto final**, não placeholder: use litera
 
 Já definida, mantenha:
 
-- **Paleta neutra** — cinza, branco e quase-preto — sobre fundo claro `#F5F5F6` e superfícies brancas, no padrão do ChatGPT Ads.
-- **A cor da ação é o quase-preto** `#101113` (hover `#2C2E33`): botão primário, foco de teclado, barra de progresso, borda de campo em foco. Botão primário é preto com texto branco, nunca colorido.
-- **O azul `#1C5FD8` é a marca, e só a marca.** Dois usos, nenhum a mais: o quadradinho do logo e o selo da conta da plataforma no admin. Azul não marca botão, link, ícone nem item de menu.
-- **Estado ativo e selecionado é pílula neutra** `#EFEFF1` com texto escuro — item de menu, chip de plano, área de upload recebendo arquivo.
+- **Paleta monocromática** — preto, branco e cinza. Os valores são os do Cartão de Visita, o outro produto da casa.
+- **Preto `#0D0D0D` é a marca e é a ação:** botão primário, quadradinho do logo, foco de teclado, barra de progresso. **O produto não tem cor de marca.**
+- **Menu cinza `#F9F9F9`, conteúdo branco `#FFFFFF`**, traço `#E5E5E5` separando e delimitando cartão. Nunca o contrário.
+- **Texto em quatro passos:** `#0D0D0D`, `#3D3D3D`, `#6E6E6E`, `#8F8F8F`. Desabilitado `#A3A3A3`.
+- **Ativo e selecionado:** pílula `#ECECEC` com texto escuro semibold.
+- **Botão é pílula.** Primário preto com texto branco; secundário com traço `#D9D9D9` sobre branco; desabilitado `#ECECEC` com texto `#A3A3A3`.
 - **Link sem cor própria:** texto escuro com sublinhado. Permanente em documento longo; no hover em lista, card e cabeçalho.
-- **Ícone é monocromático,** no cinza escuro do texto.
-- **Cor semântica separada da cor de marca.** Vermelho `#A32020` (fundo `#FDF2F2`, borda `#F3D2D2`) só para perigo e alerta. Verde `#1A7F4B` (fundo `#EAF6EF`) só para o selo "Publicado". Nunca use azul nem preto para status.
-- **Tipografia:** Instrument Sans na interface; Instrument Serif nos títulos grandes das páginas públicas (home, vitrine).
-- **Forma:** cantos arredondados suaves (8–16px), **hairlines** de 1px em vez de bordas pesadas, espaçamento generoso.
+- **Ícone é monocromático,** no cinza do texto.
+- **Cor semântica separada.** Vermelho `#B91C1C` (fundo `#FEF2F2`, borda `#FECACA`) só para perigo e alerta. Verde `#15803D` (fundo `#DCFCE7`) só para o selo "Publicado". Azul `#1D4ED8` existe num lugar só: o selo da conta da plataforma, no admin.
+- **Tipografia:** Plus Jakarta Sans na interface; Instrument Serif nos títulos grandes das páginas públicas (home, vitrine). Título de página 26px bold, seção 15px semibold, corpo 14px, menu 14px, apoio 13px, selo 11px semibold.
+- **Forma:** **botão em pílula**; cartão de 12 a 16px, campo de 10px; **traços** de 1px em vez de bordas pesadas; espaçamento generoso.
 - Texto em pt-BR. Sem modo escuro, exceto o leitor, que é sempre escuro.
 
 ## Padrão de navegação — menu lateral estilo App Store Connect
@@ -26,7 +28,8 @@ As telas em `/conta/*` e `/admin/*` usam navegação lateral persistente:
 - **Grupo** com título em negrito escuro, caixa normal — nunca MAIÚSCULAS decorativas.
 - **Itens** indentados sob o grupo, **sem marcador nem bolinha**.
 - **Hairline** fina separando os grupos.
-- **Um item ativo por vez**, marcado em neutro: texto escuro + pílula cinza clara ao fundo.
+- **Um item ativo por vez**, marcado em neutro: texto escuro semibold + pílula `#ECECEC` ao fundo.
+- **Rodapé** com avatar de iniciais, o e-mail truncado e "Sair" como botão de ícone.
 - **Rodapé** com o e-mail de quem está logado e o botão "Sair".
 
 No painel do autor há um grupo: **"Livros"** (item: "Meus livros").
@@ -89,7 +92,7 @@ Prévia do dono: quando o livro está em rascunho e quem vê é o dono, o subtí
 
 ### [Autor] Meus livros — `/conta/livros`
 
-Mostra: título "Livros", uma linha com o uso contra o limite ("3 de 5 livros"), e o botão "Novo livro" em destaque. Lista em cartão único com hairlines entre as linhas; cada linha traz miniatura da capa, título, o endereço `/<handle>/<slug>`, selo de status ("Publicado" em verde / "Rascunho" em cinza), data de atualização e a ação "Ver página pública" (só quando publicado).
+Mostra: título "Livros", uma linha com o uso contra o limite ("3 de 5 livros"), e o botão "Novo livro" em destaque. Lista em cartão único com traços entre as linhas; cada linha traz miniatura da capa, título, o endereço `/<handle>/<slug>`, selo de status ("Publicado" em verde / "Rascunho" em cinza), data de atualização e a ação "Ver página pública" (só quando publicado).
 Estados: vazio ("Nenhum livro ainda." com "Novo livro" centralizado em destaque); carregando (esqueleto de linhas); **limite atingido** (botão "Novo livro" desabilitado e um aviso: "Você chegou ao limite de {n} livros." com o botão "Falar com a gente", que abre um e-mail); livro removido por denúncia (linha com aviso em vermelho: "Este livro foi despublicado por violar os termos de uso. Fale com o suporte.").
 Ações: só leitura e navegação — nada é editado nesta tela.
 Navegação lateral: grupo "Livros", item "Meus livros" ativo.
@@ -102,14 +105,14 @@ Navegação lateral: grupo "Livros" ativo.
 
 ### [Autor dono] Editar livro — `/conta/livros/[id]`
 
-Mostra: o mesmo formulário, preenchido, em duas colunas. À esquerda, os metadados com o botão "Salvar alterações", e abaixo, separadas por hairline, duas seções próprias: **"Substituir PDF"** (com sua própria área de upload e botão) e **"Excluir livro"** (em vermelho, com texto explicando que remove o arquivo e não há como desfazer). À direita, um painel com o selo de status, o botão "Publicar"/"Despublicar" que alterna conforme o estado, o botão "Ver como ficaria" (que abre o leitor mesmo em rascunho) e uma lista com páginas, tamanho, criado em e atualizado em.
+Mostra: o mesmo formulário, preenchido, em duas colunas. À esquerda, os metadados com o botão "Salvar alterações", e abaixo, separadas por traço, duas seções próprias: **"Substituir PDF"** (com sua própria área de upload e botão) e **"Excluir livro"** (em vermelho, com texto explicando que remove o arquivo e não há como desfazer). À direita, um painel com o selo de status, o botão "Publicar"/"Despublicar" que alterna conforme o estado, o botão "Ver como ficaria" (que abre o leitor mesmo em rascunho) e uma lista com páginas, tamanho, criado em e atualizado em.
 Estados: confirmação nomeada ao excluir, em diálogo modal ("Excluir "{título}"? Essa ação não pode ser desfeita." com botões "Cancelar" e "Excluir" em vermelho); aviso ao trocar o endereço de um livro já publicado, também em modal ("Isso muda o link público. Quem tinha o link antigo vai receber página não encontrada. Continuar?"); sucesso discreto após salvar; livro removido por denúncia (botão "Publicar" desabilitado, com o aviso).
 Navegação lateral: grupo "Livros" ativo.
 
 ### [Admin da plataforma] Contas — `/admin`
 
 Mostra: uma faixa no topo com o estado da plataforma — **aberta ou fechada a early adopters** —, e abaixo a tabela densa de contas com e-mail, handle, plano, quantidade de livros contra o limite do plano, e tráfego do mês contra a franquia. Campo de busca por e-mail ou handle.
-Enquanto a plataforma está aberta, toda conta nova nasce **early adopter**: livros ilimitados, para sempre. O selo do plano distingue três casos — plataforma (azul, o único lugar do produto onde o azul aparece fora do logo), early adopter (verde) e faixa comum (cinza).
+Enquanto a plataforma está aberta, toda conta nova nasce **early adopter**: livros ilimitados, para sempre. O selo do plano distingue três casos — plataforma (azul, o único lugar do produto onde o azul aparece), early adopter (verde) e faixa comum (cinza).
 Estados: aberta e fechada.
 Estados: carregando (esqueleto de linhas); vazio; conta acima de 80% da franquia de tráfego destacada em alerta.
 **Não mostre rascunho de ninguém.**

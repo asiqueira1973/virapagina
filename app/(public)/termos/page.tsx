@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function TermosPage() {
   return (
-    <div className="flex min-h-dvh flex-col bg-tela">
+    <div className="flex min-h-dvh flex-col bg-superficie">
       <CabecalhoPublico />
       <Documento titulo="Termos de uso" atualizadoEm="9 de setembro de 2026">
         <Secao titulo="Quem opera o Virapágina">

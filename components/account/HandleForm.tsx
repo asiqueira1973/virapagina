@@ -96,10 +96,10 @@ export function HandleForm({
         <span className="mb-1.5 block text-[13px] font-medium text-tinta-media">Endereço</span>
         <div
           className={`flex items-center overflow-hidden rounded-[10px] border bg-superficie ${
-            mostrarErro ? 'border-perigo-borda' : 'border-hairline-forte focus-within:border-acao'
+            mostrarErro ? 'border-perigo-borda' : 'border-traco-forte focus-within:border-tinta'
           }`}
         >
-          <span className="shrink-0 border-r border-hairline bg-tela px-3 py-[11px] text-[13px] text-tinta-apagada">
+          <span className="shrink-0 border-r border-traco bg-superficie-2 px-3 py-[11px] text-[13px] text-tinta-apagada">
             {dominio}/
           </span>
           <input
@@ -162,12 +162,12 @@ export function HandleForm({
       <button
         type="submit"
         disabled={salvando || !formatoOk}
-        className="mt-5 w-full cursor-pointer rounded-[10px] bg-acao px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-acao-clara disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-5 w-full cursor-pointer rounded-full bg-tinta px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-tinta-media disabled:cursor-not-allowed disabled:opacity-60"
       >
         {salvando ? 'Salvando…' : 'Continuar'}
       </button>
 
-      <div className="mt-5 flex items-start gap-2.5 border-t border-hairline pt-4">
+      <div className="mt-5 flex items-start gap-2.5 border-t border-traco pt-4">
         <svg
           width="16"
           height="16"

@@ -6,9 +6,9 @@ import { RESPONSAVEL, emailDeContato } from '@/lib/copy'
 
 export function CabecalhoPublico() {
   return (
-    <header className="flex items-center justify-between border-b border-hairline bg-superficie px-6 py-[22px] sm:px-12">
+    <header className="flex items-center justify-between border-b border-traco bg-superficie px-6 py-[22px] sm:px-12">
       <Link href="/" className="flex items-center gap-2">
-        <span className="inline-block h-4 w-4 rounded-[4px] bg-marca" aria-hidden="true" />
+        <span className="inline-block h-4 w-4 rounded-[4px] bg-tinta" aria-hidden="true" />
         <span className="text-[14px] font-semibold tracking-[-0.01em] text-tinta">Virapágina</span>
       </Link>
       <Link href="/entrar" className="text-[13px] font-medium text-tinta-media hover:text-tinta">
@@ -20,7 +20,7 @@ export function CabecalhoPublico() {
 
 export function RodapePublico() {
   return (
-    <footer className="border-t border-hairline bg-superficie px-6 py-[26px] sm:px-12">
+    <footer className="border-t border-traco bg-superficie px-6 py-[26px] sm:px-12">
       <div className="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-4 text-[12px] text-tinta-apagada">
         <span>
           Virapágina — {RESPONSAVEL.nome}

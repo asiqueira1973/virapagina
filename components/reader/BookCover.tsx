@@ -27,7 +27,7 @@ export function BookCover({
   if (!temCapa) {
     return (
       <div
-        className={`shrink-0 rounded-[5px] border border-hairline-tracejada bg-superficie ${className}`}
+        className={`shrink-0 rounded-[5px] border border-traco-forte bg-superficie ${className}`}
         aria-hidden="true"
       />
     )
@@ -41,7 +41,7 @@ export function BookCover({
       src={comVersao(`/api/livros/${handle}/${slug}/capa`, versao)}
       alt={`Capa de ${titulo}`}
       loading="lazy"
-      className={`shrink-0 rounded-[5px] border border-hairline bg-preenchimento object-cover ${className}`}
+      className={`shrink-0 rounded-[5px] border border-traco bg-ativo object-cover ${className}`}
     />
   )
 }

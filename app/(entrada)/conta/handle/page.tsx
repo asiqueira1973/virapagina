@@ -40,18 +40,18 @@ export default async function HandlePage() {
   const sugestao = slugify(base).slice(0, 30)
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-tela px-6 py-16">
+    <main className="flex min-h-dvh items-center justify-center bg-superficie px-6 py-16">
       <div className="w-full max-w-[460px]">
         <Link href="/" className="mb-8 flex items-center gap-2">
-          <span className="inline-block h-4 w-4 rounded-[4px] bg-marca" aria-hidden="true" />
+          <span className="inline-block h-4 w-4 rounded-[4px] bg-tinta" aria-hidden="true" />
           <span className="text-[15px] font-semibold tracking-[-0.01em] text-tinta">Virapágina</span>
         </Link>
 
-        <div className="rounded-2xl border border-hairline bg-superficie p-7">
-          <h1 className="mb-1.5 text-[21px] font-semibold tracking-[-0.02em]">
+        <div className="rounded-2xl border border-traco bg-superficie p-7">
+          <h1 className="mb-1.5 text-[21px] font-bold tracking-tight">
             Escolha seu endereço
           </h1>
-          <p className="mb-6 text-[13px] leading-relaxed text-tinta-suave">
+          <p className="mb-6 text-[13px] leading-relaxed text-tinta-fraca">
             É por ele que as pessoas vão chegar nos seus livros. Escolha com calma: ele não pode
             ser trocado depois.
           </p>

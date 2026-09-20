@@ -73,11 +73,11 @@ export default async function LeitorPage({
 
   if (resultado.estado === 'falha') {
     return (
-      <main className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-tela px-6 text-center">
+      <main className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-superficie px-6 text-center">
         <p className="text-[17px] font-medium text-tinta">{COPY.erroGenerico}</p>
         <Link
           href="/"
-          className="rounded-[10px] bg-acao px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-acao-clara"
+          className="rounded-full bg-tinta px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-tinta-media"
         >
           Ir para a home
         </Link>

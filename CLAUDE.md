@@ -135,6 +135,13 @@ ios/
 **Se um dia isso virar Postgres**, é `lib/firebase/firestore.ts` que muda.
 Nenhum outro arquivo sabe que existe Firestore — mantenha assim.
 
+**O sistema visual mora em `app/globals.css`**, no `@theme`, e em nenhum outro
+lugar: componente não escreve hexadecimal. Os valores são os mesmos do **Cartão
+de Visita** (`~/carta-de-visita`), o outro produto da casa, porque o painel dos
+dois é a mesma ferramenta. Nada automatiza essa sincronia além de quem edita:
+mudou token aqui, olhe lá — e vice-versa. A tabela está na seção 8 do
+`DOCUMENTACAO-TECNICA.md`.
+
 ---
 
 ## Idioma e comentários

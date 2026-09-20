@@ -65,7 +65,7 @@ export function AccountActions({
         </p>
       ) : null}
 
-      <section className="mb-5 rounded-[14px] border border-hairline bg-superficie p-5">
+      <section className="mb-5 rounded-[14px] border border-traco bg-superficie p-5">
         <h2 className="mb-1 text-[15px] font-semibold">Plano</h2>
         <p className="mb-4 text-[12px] leading-relaxed text-tinta-apagada">
           Alterar o plano não mexe em livro nenhum: nada é excluído, despublicado ou bloqueado
@@ -76,14 +76,14 @@ export function AccountActions({
             limite é tirar algo que foi prometido para sempre. A tela não impede
             — é a plataforma dele —, mas diz o que está em jogo. */}
         {conta.plano === 'early_adopter' && !ehDonoDaPlataforma ? (
-          <p className="mb-4 rounded-lg border border-hairline bg-superficie-suave px-3.5 py-3 text-[13px] leading-relaxed text-tinta-media">
+          <p className="mb-4 rounded-lg border border-traco bg-superficie-2 px-3.5 py-3 text-[13px] leading-relaxed text-tinta-media">
             Esta conta é <strong className="font-semibold">early adopter</strong>: livros
             ilimitados, para sempre. Mudar para uma faixa com limite tira isso dela.
           </p>
         ) : null}
 
         {ehDonoDaPlataforma ? (
-          <p className="text-[13px] text-tinta-suave">
+          <p className="text-[13px] text-tinta-fraca">
             Esta é uma conta da plataforma: ela é ilimitada por definição e o plano não é
             alterável.
           </p>
@@ -99,8 +99,8 @@ export function AccountActions({
                   onClick={() => chamar(`/api/admin/contas/${conta.id}/plano`, { plano: faixa })}
                   className={`cursor-pointer rounded-full border px-3.5 py-[7px] text-[13px] font-medium transition-colors disabled:cursor-default ${
                     atual
-                      ? 'border-acao bg-preenchimento text-tinta'
-                      : 'border-hairline-forte bg-superficie text-tinta-media hover:bg-tela'
+                      ? 'border-tinta bg-ativo text-tinta'
+                      : 'border-traco-forte bg-superficie text-tinta-media hover:bg-ativo/50'
                   }`}
                 >
                   {PLANOS[faixa].rotulo}
@@ -111,15 +111,15 @@ export function AccountActions({
         )}
       </section>
 
-      <section className="mb-5 rounded-[14px] border border-hairline bg-superficie p-5">
+      <section className="mb-5 rounded-[14px] border border-traco bg-superficie p-5">
         <h2 className="mb-1 text-[15px] font-semibold">Endereço público</h2>
         <p className="mb-4 text-[12px] leading-relaxed text-tinta-apagada">
           O autor não troca o próprio endereço. Trocar aqui quebra os links que já circulam —
           faça só quando alguém pedir.
         </p>
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex min-w-[240px] flex-1 items-center overflow-hidden rounded-[10px] border border-hairline-forte bg-superficie focus-within:border-acao">
-            <span className="shrink-0 border-r border-hairline bg-tela px-2.5 py-[9px] text-[12px] text-tinta-apagada">
+          <div className="flex min-w-[240px] flex-1 items-center overflow-hidden rounded-[10px] border border-traco-forte bg-superficie focus-within:border-tinta">
+            <span className="shrink-0 border-r border-traco bg-superficie-2 px-2.5 py-[9px] text-[12px] text-tinta-apagada">
               /
             </span>
             <input
@@ -135,14 +135,14 @@ export function AccountActions({
             type="button"
             disabled={ocupado || !novoHandle || novoHandle === conta.handle}
             onClick={() => chamar(`/api/admin/contas/${conta.id}/handle`, { handle: novoHandle })}
-            className="cursor-pointer rounded-[10px] border border-hairline-forte bg-superficie px-3.5 py-2 text-[13px] font-medium text-tinta-media transition-colors hover:bg-tela disabled:cursor-not-allowed disabled:opacity-60"
+            className="cursor-pointer rounded-full border border-traco-forte bg-superficie px-3.5 py-2 text-[13px] font-medium text-tinta-media transition-colors hover:bg-ativo/50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Alterar endereço
           </button>
         </div>
       </section>
 
-      <section className="rounded-[14px] border border-hairline bg-superficie p-5">
+      <section className="rounded-[14px] border border-traco bg-superficie p-5">
         <h2 className="mb-1 text-[15px] font-semibold">Livros publicados</h2>
         <p className="mb-4 text-[12px] leading-relaxed text-tinta-apagada">
           Só os publicados aparecem aqui — rascunho de outra pessoa não é assunto do painel da
@@ -156,7 +156,7 @@ export function AccountActions({
             {publicados.map((livro) => (
               <li
                 key={livro.id}
-                className="flex items-center gap-3.5 border-b border-preenchimento-fraco py-3 last:border-b-0"
+                className="flex items-center gap-3.5 border-b border-traco py-3 last:border-b-0"
               >
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13px] font-medium">{livro.titulo}</div>
@@ -168,7 +168,7 @@ export function AccountActions({
                   type="button"
                   disabled={ocupado}
                   onClick={() => setARemover(livro)}
-                  className="shrink-0 cursor-pointer rounded-lg border border-perigo-borda bg-perigo-fundo px-3 py-[5px] text-[12px] font-semibold text-perigo transition-colors hover:bg-[#fbe6e6] disabled:opacity-60"
+                  className="shrink-0 cursor-pointer rounded-full border border-perigo-borda bg-perigo-fundo px-3 py-[5px] text-[12px] font-semibold text-perigo transition-colors hover:bg-perigo-fundo-forte disabled:opacity-60"
                 >
                   Remover
                 </button>

@@ -42,7 +42,7 @@ export default async function EditarLivroPage({
         >
           ← Livros
         </Link>
-        <h1 className="text-[25px] font-semibold tracking-[-0.02em]">{livro.titulo}</h1>
+        <h1 className="text-[26px] font-bold tracking-tight">{livro.titulo}</h1>
         <p className="mt-1 text-[13px] text-tinta-apagada">
           /{usuario.handle}/{livro.slug}
         </p>

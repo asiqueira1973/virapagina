@@ -66,7 +66,7 @@ export default async function VitrinePage({
   if (resultado.estado === 'ausente') notFound()
 
   return (
-    <div className="flex min-h-dvh flex-col bg-tela">
+    <div className="flex min-h-dvh flex-col bg-superficie">
       <CabecalhoPublico />
 
       <main className="mx-auto w-full max-w-[1180px] flex-1 px-6 py-14 sm:px-12">
@@ -96,13 +96,13 @@ export default async function VitrinePage({
                         titulo={livro.titulo}
                         temCapa={Boolean(livro.capa_caminho)}
                         versao={versaoDosArquivos(livro)}
-                        className="mb-3.5 aspect-[1/1.414] w-full shadow-[0_2px_10px_rgba(23,24,26,0.10)] transition-shadow group-hover:shadow-[0_6px_22px_rgba(23,24,26,0.16)]"
+                        className="mb-3.5 aspect-[1/1.414] w-full shadow-[0_2px_10px_rgba(13,13,13,0.10)] transition-shadow group-hover:shadow-[0_6px_22px_rgba(13,13,13,0.16)]"
                       />
                       <h2 className="text-[14px] leading-snug font-medium text-tinta group-hover:underline">
                         {livro.titulo}
                       </h2>
                       {livro.subtitulo ? (
-                        <p className="mt-0.5 text-[13px] leading-snug text-tinta-suave">
+                        <p className="mt-0.5 text-[13px] leading-snug text-tinta-fraca">
                           {livro.subtitulo}
                         </p>
                       ) : null}

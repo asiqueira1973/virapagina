@@ -49,8 +49,8 @@ export function PdfPicker({
         }}
         className={`flex cursor-pointer flex-col items-center gap-2 rounded-[14px] border border-dashed px-6 py-9 text-center transition-colors ${
           arrastando
-            ? 'border-acao bg-preenchimento'
-            : 'border-hairline-tracejada bg-superficie-fraca hover:border-hairline-forte'
+            ? 'border-tinta bg-ativo'
+            : 'border-traco-forte bg-superficie-2 hover:border-traco-forte'
         } ${desabilitado ? 'cursor-not-allowed opacity-60' : ''}`}
       >
         <input

@@ -41,7 +41,7 @@ export default async function MeusLivrosPage() {
     <>
       <div className="mb-[26px] flex flex-wrap items-end justify-between gap-5">
         <div>
-          <h1 className="mb-[5px] text-[25px] font-semibold tracking-[-0.02em]">Livros</h1>
+          <h1 className="mb-[5px] text-[26px] font-bold tracking-tight">Livros</h1>
           <p className="text-[13px] text-tinta-apagada">
             {livros.length === 0
               ? 'Nenhum livro cadastrado'
@@ -54,14 +54,14 @@ export default async function MeusLivrosPage() {
         {temVaga ? (
           <Link
             href="/conta/livros/novo"
-            className="rounded-[10px] bg-acao px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-acao-clara"
+            className="rounded-full bg-tinta px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-tinta-media"
           >
             Novo livro
           </Link>
         ) : (
           <span
             aria-disabled="true"
-            className="cursor-not-allowed rounded-[10px] bg-tinta-apagada px-4 py-2.5 text-[13px] font-semibold text-white opacity-60"
+            className="cursor-not-allowed rounded-full bg-ativo px-4 py-2.5 text-[13px] font-semibold text-tinta-desabilitada"
           >
             Novo livro
           </span>
@@ -93,7 +93,7 @@ export default async function MeusLivrosPage() {
           </div>
           <a
             href={`mailto:${emailDeContato()}?subject=${encodeURIComponent('Preciso de mais livros no Virapágina')}`}
-            className="shrink-0 rounded-[10px] border border-perigo-borda bg-superficie px-3.5 py-2 text-[13px] font-semibold text-perigo transition-colors hover:bg-[#fbe6e6]"
+            className="shrink-0 rounded-full border border-perigo-borda bg-superficie px-3.5 py-2 text-[13px] font-semibold text-perigo transition-colors hover:bg-perigo-fundo-forte"
           >
             Falar com a gente
           </a>
@@ -101,22 +101,22 @@ export default async function MeusLivrosPage() {
       ) : null}
 
       {livros.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-hairline-tracejada bg-superficie-fraca px-6 py-[74px]">
-          <div className="h-[58px] w-11 rounded-[5px] border border-hairline-tracejada bg-superficie" />
+        <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-traco-forte bg-superficie-2 px-6 py-[74px]">
+          <div className="h-[58px] w-11 rounded-[5px] border border-traco-forte bg-superficie" />
           <p className="text-[15px] font-medium text-tinta-media">{COPY.listaVazia}</p>
           <Link
             href="/conta/livros/novo"
-            className="rounded-[10px] bg-acao px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-acao-clara"
+            className="rounded-full bg-tinta px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-tinta-media"
           >
             Novo livro
           </Link>
         </div>
       ) : (
-        <ul className="overflow-hidden rounded-[14px] border border-hairline bg-superficie">
+        <ul className="overflow-hidden rounded-[14px] border border-traco bg-superficie">
           {livros.map((livro) => (
             <li
               key={livro.id}
-              className="flex items-center gap-4 border-b border-preenchimento-fraco px-[18px] py-4 last:border-b-0"
+              className="flex items-center gap-4 border-b border-traco px-[18px] py-4 last:border-b-0"
             >
               <BookCover
                 handle={usuario.handle ?? ''}

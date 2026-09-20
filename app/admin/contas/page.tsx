@@ -40,7 +40,7 @@ export default async function ContasPage() {
   return (
     <>
       <div className="mb-[26px]">
-        <h1 className="mb-[5px] text-[25px] font-semibold tracking-[-0.02em]">Contas</h1>
+        <h1 className="mb-[5px] text-[26px] font-bold tracking-tight">Contas</h1>
         <p className="text-[13px] text-tinta-apagada">
           {contas.length} {contas.length === 1 ? 'conta' : 'contas'}
           {earlyAdopters > 0 ? ` · ${earlyAdopters} early adopter${earlyAdopters === 1 ? '' : 's'}` : ''}
@@ -52,14 +52,14 @@ export default async function ContasPage() {
           importa: é olhando a lista de contas que se decide fechar a porta. */}
       <div
         className={`mb-5 flex flex-wrap items-center gap-3 rounded-xl border px-[18px] py-3.5 ${
-          aberta ? 'border-hairline-forte bg-preenchimento-fraco' : 'border-hairline bg-superficie'
+          aberta ? 'border-traco-forte bg-superficie-2' : 'border-traco bg-superficie'
         }`}
       >
         <span
           aria-hidden="true"
-          className={`h-2 w-2 shrink-0 rounded-full ${aberta ? 'bg-acao' : 'bg-tinta-apagada'}`}
+          className={`h-2 w-2 shrink-0 rounded-full ${aberta ? 'bg-tinta' : 'bg-traco-forte'}`}
         />
-        <p className={`text-[13px] ${aberta ? 'text-tinta' : 'text-tinta-suave'}`}>
+        <p className={`text-[13px] ${aberta ? 'text-tinta' : 'text-tinta-fraca'}`}>
           {aberta ? (
             <>
               <strong className="font-semibold">Aberta a early adopters.</strong> Toda conta nova
@@ -80,8 +80,8 @@ export default async function ContasPage() {
       {contas.length === 0 ? (
         <p className="text-[15px] text-tinta-apagada">Nenhuma conta ainda.</p>
       ) : (
-        <div className="overflow-hidden rounded-[14px] border border-hairline bg-superficie">
-          <div className="grid grid-cols-[2fr_1.2fr_1.1fr_0.9fr_1.4fr_0.7fr] gap-4 border-b border-hairline bg-superficie-suave px-[18px] py-3 text-[12px] font-semibold text-tinta-fraca">
+        <div className="overflow-hidden rounded-[14px] border border-traco bg-superficie">
+          <div className="grid grid-cols-[2fr_1.2fr_1.1fr_0.9fr_1.4fr_0.7fr] gap-4 border-b border-traco bg-superficie-2 px-[18px] py-3 text-[12px] font-semibold text-tinta-apagada">
             <span>Conta</span>
             <span>Endereço</span>
             <span>Plano</span>
@@ -93,20 +93,20 @@ export default async function ContasPage() {
           {contas.map((conta) => (
             <div
               key={conta.id}
-              className="grid grid-cols-[2fr_1.2fr_1.1fr_0.9fr_1.4fr_0.7fr] items-center gap-4 border-b border-preenchimento-fraco px-[18px] py-3.5 text-[13px] last:border-b-0"
+              className="grid grid-cols-[2fr_1.2fr_1.1fr_0.9fr_1.4fr_0.7fr] items-center gap-4 border-b border-traco px-[18px] py-3.5 text-[13px] last:border-b-0"
             >
               <span className="truncate font-medium">{conta.email}</span>
-              <span className="truncate text-tinta-suave">
+              <span className="truncate text-tinta-fraca">
                 {conta.handle ? `/${conta.handle}` : '—'}
               </span>
               <span>
                 <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-[3px] text-[12px] font-medium ${
+                  className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                     conta.ehDono
-                      ? 'bg-marca-fraca text-marca'
+                      ? 'bg-plataforma-fundo text-plataforma'
                       : conta.plano === 'early_adopter'
                         ? 'bg-publicado-fundo text-publicado'
-                        : 'bg-preenchimento text-tinta-fraca'
+                        : 'bg-ativo text-tinta-apagada'
                   }`}
                 >
                   {PLANOS[conta.plano].rotulo}
@@ -116,9 +116,9 @@ export default async function ContasPage() {
                 {conta.limite === null ? conta.quantidade : `${conta.quantidade} de ${conta.limite}`}
               </span>
               <span className="flex items-center gap-2.5">
-                <span className="h-[5px] flex-1 overflow-hidden rounded-full bg-preenchimento">
+                <span className="h-[5px] flex-1 overflow-hidden rounded-full bg-ativo">
                   <span
-                    className={`block h-full rounded-full ${conta.emAlerta ? 'bg-perigo' : 'bg-acao'}`}
+                    className={`block h-full rounded-full ${conta.emAlerta ? 'bg-perigo' : 'bg-tinta'}`}
                     style={{ width: `${Math.round(Math.min(1, conta.fracao ?? 0) * 100)}%` }}
                   />
                 </span>

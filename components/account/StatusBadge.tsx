@@ -3,8 +3,8 @@
 export function StatusBadge({ publicado }: { publicado: boolean }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[12px] font-medium ${
-        publicado ? 'bg-publicado-fundo text-publicado' : 'bg-preenchimento text-tinta-fraca'
+      className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+        publicado ? 'bg-publicado-fundo text-publicado' : 'bg-ativo text-tinta-apagada'
       }`}
     >
       {publicado ? 'Publicado' : 'Rascunho'}

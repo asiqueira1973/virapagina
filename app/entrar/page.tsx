@@ -25,15 +25,15 @@ export default async function EntrarPage({
   const destino = voltar?.startsWith('/conta') ? voltar : '/conta/livros'
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-tela px-6 py-16">
+    <main className="flex min-h-dvh items-center justify-center bg-superficie px-6 py-16">
       <div className="w-full max-w-[380px]">
         <Link href="/" className="mb-8 flex items-center gap-2">
-          <span className="inline-block h-4 w-4 rounded-[4px] bg-marca" aria-hidden="true" />
+          <span className="inline-block h-4 w-4 rounded-[4px] bg-tinta" aria-hidden="true" />
           <span className="text-[15px] font-semibold tracking-[-0.01em] text-tinta">Virapágina</span>
         </Link>
 
-        <div className="rounded-2xl border border-hairline bg-superficie p-7">
-          <h1 className="mb-1 text-[21px] font-semibold tracking-[-0.02em]">Entrar</h1>
+        <div className="rounded-2xl border border-traco bg-superficie p-7">
+          <h1 className="mb-1 text-[21px] font-bold tracking-tight">Entrar</h1>
           <p className="mb-6 text-[13px] leading-relaxed text-tinta-apagada">
             Sua conta é criada na primeira vez que você entrar. Não pedimos senha nem cartão.
           </p>
@@ -46,7 +46,7 @@ export default async function EntrarPage({
           >
             <button
               type="submit"
-              className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-[10px] bg-acao px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-acao-clara"
+              className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-full bg-tinta px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-tinta-media"
             >
               <IconeDoGoogle />
               Entrar com Google

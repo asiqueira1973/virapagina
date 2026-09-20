@@ -183,7 +183,7 @@ export function EditBookForm({ livro, handle }: { livro: Livro; handle: string }
         <form onSubmit={aoSubmeter} className="flex max-w-[560px] flex-1 flex-col gap-6">
           {erroGeral ? <AvisoDeErro mensagem={erroGeral} /> : null}
           {mensagemDeSucesso ? (
-            <p className="rounded-lg border border-hairline bg-superficie-suave px-3.5 py-3 text-[13px] text-tinta-media">
+            <p className="rounded-lg border border-traco bg-superficie-2 px-3.5 py-3 text-[13px] text-tinta-media">
               {mensagemDeSucesso}
             </p>
           ) : null}
@@ -206,13 +206,13 @@ export function EditBookForm({ livro, handle }: { livro: Livro; handle: string }
             <button
               type="submit"
               disabled={ocupado}
-              className="cursor-pointer rounded-[10px] bg-acao px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-acao-clara disabled:cursor-not-allowed disabled:opacity-60"
+              className="cursor-pointer rounded-full bg-tinta px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-tinta-media disabled:cursor-not-allowed disabled:opacity-60"
             >
               {salvando ? 'Salvando…' : 'Salvar alterações'}
             </button>
           </div>
 
-          <div className="border-t border-hairline pt-6">
+          <div className="border-t border-traco pt-6">
             <h2 className="mb-1 text-[15px] font-semibold">Substituir PDF</h2>
             <p className="mb-4 text-[12px] text-tinta-apagada">
               Troca o arquivo mantendo os metadados. A capa e o total de páginas são
@@ -240,14 +240,14 @@ export function EditBookForm({ livro, handle }: { livro: Livro; handle: string }
               <button
                 type="button"
                 onClick={substituirPdf}
-                className="mt-4 cursor-pointer rounded-[10px] border border-hairline-forte bg-superficie px-3.5 py-2 text-[13px] font-medium text-tinta-media transition-colors hover:bg-tela"
+                className="mt-4 cursor-pointer rounded-full border border-traco-forte bg-superficie px-3.5 py-2 text-[13px] font-medium text-tinta-media transition-colors hover:bg-ativo/50"
               >
                 Substituir PDF
               </button>
             ) : null}
           </div>
 
-          <div className="border-t border-hairline pt-6">
+          <div className="border-t border-traco pt-6">
             <h2 className="mb-1 text-[15px] font-semibold text-perigo">Excluir livro</h2>
             <p className="mb-4 text-[12px] text-tinta-apagada">
               Remove a linha da planilha e os arquivos do Drive. Não há como desfazer.
@@ -256,7 +256,7 @@ export function EditBookForm({ livro, handle }: { livro: Livro; handle: string }
               type="button"
               onClick={() => setConfirmacao('excluir')}
               disabled={ocupado}
-              className="cursor-pointer rounded-[10px] border border-perigo-borda bg-perigo-fundo px-3.5 py-2 text-[13px] font-semibold text-perigo transition-colors hover:bg-[#fbe6e6] disabled:opacity-60"
+              className="cursor-pointer rounded-full border border-perigo-borda bg-perigo-fundo px-3.5 py-2 text-[13px] font-semibold text-perigo transition-colors hover:bg-perigo-fundo-forte disabled:opacity-60"
             >
               Excluir
             </button>
@@ -264,7 +264,7 @@ export function EditBookForm({ livro, handle }: { livro: Livro; handle: string }
         </form>
 
         <aside className="w-full shrink-0 lg:w-[300px]">
-          <div className="rounded-[14px] border border-hairline bg-superficie p-5">
+          <div className="rounded-[14px] border border-traco bg-superficie p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <span className="text-[13px] font-medium text-tinta-media">Status</span>
               <StatusBadge publicado={livro.publicado} />
@@ -274,10 +274,10 @@ export function EditBookForm({ livro, handle }: { livro: Livro; handle: string }
               type="button"
               onClick={alternarPublicacao}
               disabled={ocupado || (!estaPublicado && livro.removido_por_denuncia)}
-              className={`mb-3 w-full cursor-pointer rounded-[10px] px-4 py-2.5 text-[13px] font-semibold transition-colors disabled:opacity-60 ${
+              className={`mb-3 w-full cursor-pointer rounded-full px-4 py-2.5 text-[13px] font-semibold transition-colors disabled:opacity-60 ${
                 estaPublicado
-                  ? 'border border-hairline-forte bg-superficie text-tinta-media hover:bg-tela'
-                  : 'bg-acao text-white hover:bg-acao-clara'
+                  ? 'border border-traco-forte bg-superficie text-tinta-media hover:bg-ativo/50'
+                  : 'bg-tinta text-white hover:bg-tinta-media'
               }`}
             >
               {estaPublicado ? 'Despublicar' : 'Publicar'}
@@ -289,7 +289,7 @@ export function EditBookForm({ livro, handle }: { livro: Livro; handle: string }
               href={`/${handle}/${livro.slug}`}
               target="_blank"
               rel="noreferrer"
-              className="block w-full rounded-[10px] border border-hairline-forte bg-superficie px-4 py-2.5 text-center text-[13px] font-medium text-tinta-media transition-colors hover:bg-tela"
+              className="block w-full rounded-[10px] border border-traco-forte bg-superficie px-4 py-2.5 text-center text-[13px] font-medium text-tinta-media transition-colors hover:bg-ativo/50"
             >
               {estaPublicado ? 'Ver página pública' : 'Ver como ficaria'}
             </a>
@@ -302,7 +302,7 @@ export function EditBookForm({ livro, handle }: { livro: Livro; handle: string }
               </p>
             ) : null}
 
-            <dl className="mt-5 flex flex-col gap-2.5 border-t border-hairline pt-4 text-[12px]">
+            <dl className="mt-5 flex flex-col gap-2.5 border-t border-traco pt-4 text-[12px]">
               <Linha rotulo="Páginas" valor={livro.total_paginas ? String(livro.total_paginas) : '—'} />
               <Linha rotulo="Tamanho" valor={formatarTamanho(livro.arquivo_pdf_tamanho_bytes)} />
               <Linha rotulo="Criado em" valor={formatarData(livro.criado_em)} />

@@ -43,14 +43,14 @@ export function ConfirmDialog({
         role="alertdialog"
         aria-modal="true"
         aria-label={mensagem}
-        className="w-full max-w-[420px] rounded-2xl border border-hairline bg-superficie p-6 shadow-xl"
+        className="w-full max-w-[420px] rounded-2xl border border-traco bg-superficie p-6 shadow-xl"
       >
         <p className="mb-5 text-[14px] leading-relaxed text-tinta">{mensagem}</p>
         <div className="flex justify-end gap-2.5">
           <button
             type="button"
             onClick={aoCancelar}
-            className="cursor-pointer rounded-[10px] border border-hairline-forte bg-superficie px-3.5 py-2 text-[13px] font-medium text-tinta-media transition-colors hover:bg-tela"
+            className="cursor-pointer rounded-full border border-traco-forte bg-superficie px-3.5 py-2 text-[13px] font-medium text-tinta-media transition-colors hover:bg-ativo/50"
           >
             Cancelar
           </button>
@@ -58,8 +58,8 @@ export function ConfirmDialog({
             ref={botaoRef}
             type="button"
             onClick={aoConfirmar}
-            className={`cursor-pointer rounded-[10px] px-3.5 py-2 text-[13px] font-semibold text-white transition-colors ${
-              perigo ? 'bg-perigo hover:bg-[#871a1a]' : 'bg-acao hover:bg-acao-clara'
+            className={`cursor-pointer rounded-full px-3.5 py-2 text-[13px] font-semibold text-white transition-colors ${
+              perigo ? 'bg-perigo hover:bg-perigo-escuro' : 'bg-tinta hover:bg-tinta-media'
             }`}
           >
             {rotuloConfirmar}

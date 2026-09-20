@@ -36,7 +36,7 @@ export default async function ContaPage({ params }: { params: Promise<{ id: stri
         >
           ← Contas
         </Link>
-        <h1 className="text-[25px] font-semibold tracking-[-0.02em]">{conta.email}</h1>
+        <h1 className="text-[26px] font-bold tracking-tight">{conta.email}</h1>
         <p className="mt-1 text-[13px] text-tinta-apagada">
           {conta.handle ? `${dominioDoSite()}/${conta.handle}` : 'ainda sem endereço'} · conta desde{' '}
           {formatarData(conta.criado_em)}
@@ -52,7 +52,7 @@ export default async function ContaPage({ params }: { params: Promise<{ id: stri
           />
         </div>
 
-        <aside className="w-[300px] shrink-0 rounded-[14px] border border-hairline bg-superficie p-5">
+        <aside className="w-[300px] shrink-0 rounded-[14px] border border-traco bg-superficie p-5">
           <h2 className="mb-3.5 text-[15px] font-semibold">Uso</h2>
 
           <div className="mb-1.5 flex justify-between text-[12px] text-tinta-apagada">
@@ -61,9 +61,9 @@ export default async function ContaPage({ params }: { params: Promise<{ id: stri
               {limite === null ? livros.length : `${livros.length} de ${limite}`}
             </span>
           </div>
-          <div className="mb-4 h-[5px] overflow-hidden rounded-full bg-preenchimento">
+          <div className="mb-4 h-[5px] overflow-hidden rounded-full bg-ativo">
             <div
-              className="h-full rounded-full bg-acao"
+              className="h-full rounded-full bg-tinta"
               style={{
                 width: limite === null ? '100%' : `${Math.min(100, (livros.length / limite) * 100)}%`,
               }}
@@ -77,9 +77,9 @@ export default async function ContaPage({ params }: { params: Promise<{ id: stri
               {franquia !== null ? ` de ${Math.round(franquia / 1024 ** 3)} GB` : ''}
             </span>
           </div>
-          <div className="h-[5px] overflow-hidden rounded-full bg-preenchimento">
+          <div className="h-[5px] overflow-hidden rounded-full bg-ativo">
             <div
-              className={`h-full rounded-full ${fracao !== null && fracao >= 0.8 ? 'bg-perigo' : 'bg-acao'}`}
+              className={`h-full rounded-full ${fracao !== null && fracao >= 0.8 ? 'bg-perigo' : 'bg-tinta'}`}
               style={{ width: `${Math.round(Math.min(1, fracao ?? 0) * 100)}%` }}
             />
           </div>

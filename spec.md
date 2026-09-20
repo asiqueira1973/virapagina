@@ -627,14 +627,19 @@ Conteúdo final, não placeholder.
 
 Mantida da v2.0 e já implementada, a partir do canvas `Vira Pagina design/Virapagina.dc.html`:
 
-- **Paleta neutra** (cinza, branco, quase-preto) em que **a cor da ação é o quase-preto** `#101113` (`#2C2E33` no hover): botão primário, foco de teclado, barra de progresso e estado ativo saem todos dele. É o padrão do ChatGPT Ads, e é o que faz a interface desaparecer atrás do conteúdo.
-- **O azul `#1C5FD8` é a marca, não a ação.** Ele aparece em dois lugares e em nenhum outro: o quadradinho do logo e o selo da conta da plataforma no painel de admin. Azul não marca botão, link nem item de menu.
-- **Estado ativo e selecionado é pílula neutra** (`#EFEFF1`) com texto escuro — item de menu, chip de plano, área de upload em foco.
+**Os valores são os mesmos do Cartão de Visita** (`~/carta-de-visita`), o outro produto da casa. Não é coincidência nem cópia preguiçosa: o painel dos dois é a mesma ferramenta, e um cinza "parecido" em cada repositório é como os dois divergem um hexadecimal por vez. Token novo aqui só existe onde aquele produto não tem o caso — os fundos de perigo, por exemplo.
+
+- **Preto é a marca e é a ação.** `#0D0D0D` no botão primário, no quadradinho do logo, no foco de teclado, na barra de progresso e na bolinha de estado ligado. **O produto não tem cor de marca** — nada de azul em botão, link, ícone ou item de menu.
+- **O menu é cinza e o conteúdo é branco**, nesta ordem: menu `#F9F9F9` com traço de 1px à direita, conteúdo `#FFFFFF`, cartão branco delimitado por traço `#E5E5E5`. A hierarquia vem do traço e do peso da fonte, nunca de fundo colorido.
+- **Rampa de cinza do texto, quatro passos:** `#0D0D0D` forte, `#3D3D3D` médio, `#6E6E6E` secundário, `#8F8F8F` apagado. Mais `#A3A3A3` para desabilitado.
+- **Estado ativo e selecionado é pílula `#ECECEC`** com texto escuro e **semibold** — item de menu, chip de plano, área de upload recebendo arquivo.
+- **Botão é pílula** (`rounded-full`): o primário preto com texto branco, o secundário com traço `#D9D9D9` sobre branco, o desabilitado em `#ECECEC` com texto `#A3A3A3`.
 - **Link não tem cor própria:** texto escuro, distinguido por sublinhado. Em documento longo o sublinhado é permanente; em lista e cabeçalho, aparece no hover.
-- Vermelho `#A32020` reservado para perigo e alerta, verde `#1A7F4B` para o selo "Publicado" — **cor semântica não se mistura com cor de marca**.
-- **Tipografia:** Instrument Sans na interface, Instrument Serif nos títulos grandes das páginas públicas.
-- **Forma:** cantos arredondados suaves, hairlines em vez de bordas pesadas, espaçamento generoso.
-- **Painel do autor e admin da plataforma:** menu lateral estilo App Store Connect — grupos em negrito escuro sem maiúsculas decorativas, itens indentados sem marcador, hairline entre grupos, um item ativo por vez em pílula neutra com texto escuro, rodapé com o e-mail e "Sair".
+- Vermelho `#B91C1C` reservado para perigo e alerta, verde `#15803D` para o selo "Publicado" — **cor semântica não se mistura com cor de marca**. O azul `#1D4ED8` existe num lugar só do produto: o selo da conta da plataforma, no admin.
+- **Tipografia:** **Plus Jakarta Sans** na interface, Instrument Serif nos títulos grandes das páginas públicas — as mesmas duas famílias do Cartão de Visita. Escala: título de página 26px bold, título de seção 15px semibold, corpo 14px, item de menu 14px, rótulo e apoio 13px, selo 11px semibold.
+- **Forma:** **botão em pílula**, cartão de 12 a 16px, campo de 10px, traços de 1px em vez de bordas pesadas, espaçamento generoso.
+- **Painel do autor e admin da plataforma:** menu lateral de 248px, estilo App Store Connect — grupos em negrito escuro sem maiúsculas decorativas, itens indentados sem marcador, traço entre grupos, um item ativo por vez em pílula `#ECECEC` com texto escuro e semibold, rodapé com avatar de iniciais, o e-mail de quem está logado e "Sair" como botão de ícone.
+  **O que NÃO veio do Cartão de Visita foi a estrutura:** lá o menu é lista plana com ícones. Aqui os grupos ficam, porque é por eles que o admin da plataforma tem caminho de ida e de volta entre os dois painéis.
 - **Páginas públicas** (home, vitrine, leitor, termos) **não** usam menu lateral. São páginas consumer com cabeçalho simples; o leitor usa barra de ferramentas flutuante sobre fundo escuro.
 
 Livre para o agente: a ilustração da home.

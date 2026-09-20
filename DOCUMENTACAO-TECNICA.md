@@ -515,35 +515,64 @@ nas mesmas medidas da web.
 ## 8. O sistema visual, em tokens
 
 Os tokens vivem no `@theme` do `app/globals.css`, e **só lá** — nenhum
-componente escreve hexadecimal. A adaptação ao padrão do ChatGPT Ads mudou o
-papel das cores, não a quantidade delas:
+componente escreve hexadecimal.
+
+**Os valores são os mesmos do Cartão de Visita** (`~/carta-de-visita`), o outro
+produto da casa, copiados de propósito: o painel dos dois é a mesma ferramenta,
+e um cinza "parecido" em cada repositório é exatamente como dois produtos
+divergem um hexadecimal por vez. Só existe token novo onde aquele produto não
+tem o caso.
 
 | Token | Valor | Onde aparece |
 |---|---|---|
-| `--color-acao` | `#101113` | Botão primário, foco de teclado, barra de progresso, borda de campo em foco |
-| `--color-acao-clara` | `#2C2E33` | Hover do botão primário |
-| `--color-marca` | `#1C5FD8` | O quadradinho do logo e o selo da conta da plataforma. Nada mais |
-| `--color-marca-fraca` | `#EEF3FD` | Fundo desse mesmo selo |
-| `--color-preenchimento` | `#EFEFF1` | Pílula do item de menu ativo, chip de plano selecionado, área de upload recebendo arquivo |
-| `--color-perigo` | `#A32020` | Só perigo e alerta |
-| `--color-publicado` | `#1A7F4B` | Só o selo "Publicado" |
+| `--color-tinta` | `#0D0D0D` | Botão primário, quadradinho do logo, anel de foco, barra de progresso, bolinha de estado ligado, fundo do leitor |
+| `--color-tinta-media` | `#3D3D3D` | Hover do botão primário, item inativo do menu, texto secundário forte |
+| `--color-tinta-fraca` | `#6E6E6E` | Corpo de texto de apoio |
+| `--color-tinta-apagada` | `#8F8F8F` | Terciário: data, contador, endereço do livro |
+| `--color-tinta-desabilitada` | `#A3A3A3` | Texto de botão e campo desabilitados |
+| `--color-superficie` | `#FFFFFF` | **A área de conteúdo e os cartões** |
+| `--color-superficie-2` | `#F9F9F9` | **O menu lateral**, prefixo fixo de campo, campo desabilitado |
+| `--color-ativo` | `#ECECEC` | Pílula do item de menu ativo, chip de plano selecionado, área de upload recebendo arquivo, fundo de botão desabilitado |
+| `--color-traco` | `#E5E5E5` | Hairline de cartão, de linha de lista e entre grupos do menu |
+| `--color-traco-forte` | `#D9D9D9` | Borda de campo, de botão secundário e da área de upload |
+| `--color-perigo` | `#B91C1C` | Só perigo e alerta (com `-fundo`, `-borda`, `-escuro`, `-fundo-forte`) |
+| `--color-publicado` | `#15803D` | Só o selo "Publicado" (com `-fundo`) |
+| `--color-plataforma` | `#1D4ED8` | **O único azul do produto:** o selo da conta da plataforma, no admin (com `-fundo`) |
 
-**O que era azul e deixou de ser:** botão primário, item ativo do menu, link,
-ícone da home, barra de progresso, borda de campo em foco, faixa de early
-adopter no admin e anel de foco. Todos viraram neutro. Quem procurar
-`bg-destaque` no código não acha mais nada: os tokens `--color-destaque*` foram
-removidos, e não existe apelido de compatibilidade.
+**A inversão, que é o ponto:** antes o menu era branco e o conteúdo cinza. Agora
+é o contrário — menu `#F9F9F9`, conteúdo `#FFFFFF` — e o token `--color-tela`
+(o cinza de fundo que existia) deixou de existir. Cartão branco sobre página
+branca funciona porque o traço delimita; era assim que o cinza atrás dele fazia
+o trabalho antes.
 
-**O app de iPhone não acompanhou.** `ios/Virapagina/Design/Cores.swift`
-continua com o azul como cor da ação — botão primário, `tint`, item ativo. A
-divergência é deliberada: o Build 5 está em revisão na App Store, e mudar a cara
-do app no meio da revisão muda o que a Apple está olhando. Alinhar o app é
-decisão do Alexandre.
+**Tipografia:** Plus Jakarta Sans na interface (era Instrument Sans), Instrument
+Serif nos títulos grandes das páginas públicas. As duas vêm do `next/font` no
+`app/layout.tsx`, e as mesmas duas famílias estão no Cartão de Visita. A escala
+está na seção 16 do spec.
+
+**Botão é pílula.** `rounded-full` no primário, no secundário, nos de perigo e
+no de confirmação do diálogo. O que **não** virou pílula: campo de texto,
+`input[type=file]` e os invólucros de campo com prefixo, que seguem em
+`rounded-[10px]`.
+
+**Três hexadecimais soltos saíram dos componentes** nesta passada — os hovers
+`#fbe6e6` e `#871a1a` dos botões de perigo, que agora são
+`--color-perigo-fundo-forte` e `--color-perigo-escuro`.
+
+**Rampa de cinza com um passo a menos.** Eram cinco níveis de texto, agora são
+quatro: `tinta-suave` foi absorvido por `tinta-fraca`, e o antigo `tinta-fraca`
+virou `tinta-apagada`. Quem for comparar com um commit velho precisa saber
+disso, senão lê a mudança como se o texto tivesse clareado sem motivo.
+
+**O app de iPhone não acompanhou.** `ios/Virapagina/Design/Cores.swift` continua
+com o azul como cor da ação — botão primário, `tint`, item ativo. A divergência
+é deliberada: há um build em revisão na App Store, e mudar a cara do app no meio
+da revisão muda o que a Apple está olhando. O Alexandre decidiu alinhar o app
+assim que a loja aprovar.
 
 **Link sem cor própria** é a única mudança que mexe em acessibilidade: como não
-há mais contraste de cor separando link de texto, o sublinhado passou a ser
-permanente nos documentos longos (`/termos`, `/privacidade`) em vez de aparecer
-só no hover.
+há contraste de cor separando link de texto, o sublinhado é permanente nos
+documentos longos (`/termos`, `/privacidade`) em vez de aparecer só no hover.
 
 ---
 

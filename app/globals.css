@@ -1,50 +1,51 @@
 @import "tailwindcss";
 
-/* Sistema visual do Virapágina (spec seção 16 + canvas de design "Vira Pagina design").
-   Paleta neutra, hairlines em vez de bordas pesadas, cantos arredondados
-   suaves. O produto é uma casca neutra: a personalidade visual pertence ao
-   conteúdo dos livros, não à interface.
+/* Sistema visual do Virapágina (spec seção 16).
+   Os valores são os mesmos do Cartão de Visita (`~/carta-de-visita`), de
+   propósito: são dois produtos da mesma casa e o painel dos dois é a mesma
+   ferramenta. Copiar o token em vez de reinventar um cinza parecido é o que
+   impede os dois de divergirem um hexadecimal por vez.
 
-   A cor de ação é o quase-preto, não o azul: botão primário, foco, barra de
-   progresso e estado ativo saem do mesmo tom neutro. O azul sobrou para a
-   marca — o quadradinho do logo e o selo da conta da plataforma — e não
-   participa de nenhuma interação. */
+   Três regras que os tokens sozinhos não contam:
+
+   1. **Preto é a marca e é a ação.** Botão primário, quadradinho do logo, foco
+      de teclado, barra de progresso, item ativo — tudo sai do `tinta`. O
+      produto não tem cor de marca.
+   2. **O menu é cinza e o conteúdo é branco**, e não o contrário. O painel é
+      casca: a hierarquia vem do traço e do peso da fonte, não de fundo
+      colorido.
+   3. **Cor semântica não se mistura com marca.** Vermelho só em perigo, verde
+      só no selo "Publicado", e o azul existe num lugar só do produto — o selo
+      da conta da plataforma, no admin. */
 @theme {
   /* Superfícies */
-  --color-tela: #f5f5f6;
   --color-superficie: #ffffff;
-  --color-superficie-suave: #fafafb;
-  --color-superficie-fraca: #fcfcfd;
+  --color-superficie-2: #f9f9f9;
 
   /* Texto, do mais forte ao mais apagado */
-  --color-tinta: #17181a;
-  --color-tinta-media: #42444a;
-  --color-tinta-suave: #5c5e64;
-  --color-tinta-fraca: #75777c;
-  --color-tinta-apagada: #8a8c91;
+  --color-tinta: #0d0d0d;
+  --color-tinta-media: #3d3d3d;
+  --color-tinta-fraca: #6e6e6e;
+  --color-tinta-apagada: #8f8f8f;
+  --color-tinta-desabilitada: #a3a3a3;
 
-  /* Hairlines e preenchimentos de esqueleto */
-  --color-hairline: #e4e4e6;
-  --color-hairline-forte: #dddde0;
-  --color-hairline-tracejada: #dcdcdf;
-  --color-preenchimento: #efeff1;
-  --color-preenchimento-fraco: #f0f0f2;
-
-  /* Ação: botão primário, foco, progresso e estado ativo */
-  --color-acao: #101113;
-  --color-acao-clara: #2c2e33;
-
-  /* Marca: só o logo e o selo da conta da plataforma (seção 16) */
-  --color-marca: #1c5fd8;
-  --color-marca-fraca: #eef3fd;
+  /* Traços e preenchimentos */
+  --color-traco: #e5e5e5;
+  --color-traco-forte: #d9d9d9;
+  --color-ativo: #ececec;
 
   /* Estados */
-  --color-perigo: #a32020;
-  --color-perigo-fundo: #fdf2f2;
-  --color-perigo-borda: #f3d2d2;
-  --color-publicado: #1a7f4b;
-  --color-publicado-fundo: #eaf6ef;
+  --color-perigo: #b91c1c;
+  --color-perigo-fundo: #fef2f2;
+  --color-perigo-borda: #fecaca;
+  --color-perigo-escuro: #991b1b;
+  --color-perigo-fundo-forte: #fee2e2;
+  --color-publicado: #15803d;
+  --color-publicado-fundo: #dcfce7;
 
+  /* A conta da plataforma, no painel de admin. O único azul do produto. */
+  --color-plataforma: #1d4ed8;
+  --color-plataforma-fundo: #eef3fd;
 }
 
 /* As duas famílias vêm do next/font, que declara as variáveis no <body>.
@@ -62,16 +63,16 @@ body {
 }
 
 body {
-  background: var(--color-tela);
+  background: var(--color-superficie);
   color: var(--color-tinta);
-  font-family: var(--font-instrument-sans), system-ui, sans-serif;
+  font-family: var(--font-plus-jakarta), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 /* Foco visível em tudo que recebe teclado — requisito de acessibilidade da
    seção 17. O leitor de flipbook depende de foco para as setas funcionarem. */
 :focus-visible {
-  outline: 2px solid var(--color-acao);
+  outline: 2px solid var(--color-tinta);
   outline-offset: 2px;
   border-radius: 4px;
 }

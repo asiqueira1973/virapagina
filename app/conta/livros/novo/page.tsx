@@ -33,7 +33,7 @@ export default async function NovoLivroPage() {
         >
           ← Livros
         </Link>
-        <h1 className="text-[25px] font-semibold tracking-[-0.02em]">Novo livro</h1>
+        <h1 className="text-[26px] font-bold tracking-tight">Novo livro</h1>
       </div>
       <NewBookForm handle={usuario.handle} />
     </>
