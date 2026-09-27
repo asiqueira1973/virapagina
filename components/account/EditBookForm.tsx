@@ -250,7 +250,7 @@ export function EditBookForm({ livro, handle }: { livro: Livro; handle: string }
           <div className="border-t border-traco pt-6">
             <h2 className="mb-1 text-[15px] font-semibold text-perigo">Excluir livro</h2>
             <p className="mb-4 text-[12px] text-tinta-apagada">
-              Remove a linha da planilha e os arquivos do Drive. Não há como desfazer.
+              Apaga o livro, o PDF e a capa, e o link deixa de funcionar. Não há como desfazer.
             </p>
             <button
               type="button"
