@@ -3,6 +3,12 @@
 //
 // A frase fica na imagem, não na ficha — é o que a pessoa lê enquanto desliza a
 // galeria da loja, e quase ninguém abre a descrição.
+//
+// **Nenhuma frase fala de preço, e isso não é estilo: é a diretriz 2.3.7.** Ela
+// trata "grátis" e "de graça" como referência a preço do mesmo jeito que um
+// valor em reais, e recusa a ficha inteira por causa disso. Foi o que aconteceu
+// com a quinta imagem deste conjunto, que dizia "Cinco livros de graça" — ela
+// saiu. Preço se fala na descrição do app, que é o lugar que a Apple indica.
 import AppKit
 import Foundation
 
@@ -40,9 +46,6 @@ let imagens: [Imagem] = [
     .init(arquivo: "4-leitor.png", saida: "loja-4-leitor.png",
           frase: "Quem recebe folheia\nno navegador, sem app",
           fundoTopo: escuro.topo, fundoBase: escuro.base, tinta: .white),
-    .init(arquivo: "5-paywall.png", saida: "loja-5-assinatura.png",
-          frase: "Cinco livros de graça.\nDepois, ilimitado",
-          fundoTopo: claro.topo, fundoBase: claro.base, tinta: cor(0x17181A)),
 ]
 
 func fonteSerifada(_ tamanho: CGFloat) -> NSFont {

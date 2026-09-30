@@ -678,7 +678,7 @@ O que foi feito na infraestrutura, e que a documentação anterior listava como
 pendente: projeto Firebase criado no plano Blaze, CORS aplicado ao bucket,
 OAuth Client criado, e regras e índices do Firestore e do Storage publicados.
 
-### Seis defeitos que só apareceram em produção
+### Sete defeitos que só apareceram em produção
 
 Ficam registrados porque nenhum deles aparecia em build, teste ou emulador — e
 os seis estão cobertos agora.
@@ -690,6 +690,7 @@ os seis estão cobertos agora.
 | **Índices compostos ausentes** derrubavam o painel do autor | O Firestore só reclama em tempo de execução: o build passa, o teste com mock passa, e o emulador nem impõe índice | `scripts/diagnostico.mjs` roda as consultas reais contra o Firestore; o passo de publicar índices está em destaque no README |
 | **Substituir o PDF não trocava o arquivo na tela**: o livro seguia exibindo o antigo | A URL de proxy é fixa e a resposta vinha com uma hora de cache e mais um dia de `stale-while-revalidate` — navegador e CDN não tinham por que perguntar de novo. Em teste nada disso existe, e em desenvolvimento o cache do Next mascara | `?v=<atualizado_em>` em toda URL de PDF e capa, `immutable` só quando versionada, `must-revalidate` + `ETag` quando não; seis testes em `visibilidade-publica.test.ts` |
 | **Substituir o PDF escrevia numa pasta que ninguém lê** | `criarLivro()` sorteava o id do documento em vez de usar o da sessão de upload, então documento e pasta tinham ids diferentes. A substituição derivava o caminho do id do documento e acertava uma pasta vazia; a capa, gravada em `capa_caminho`, atualizava — o que fazia parecer que a troca tinha funcionado | O id vem da sessão de upload; a substituição escreve em `arquivo_pdf_caminho`, com `requireDonoDoLivro` guardando a escolha do caminho; seis testes em `isolamento-entre-contas.test.ts` |
+| **A tela de escolher endereço abria no vermelho para nome repetido** | A sugestão vinha de `slugify(nome)` sem passar por `sugerirHandleLivre()`. Só acontece quando outra conta já tem aquele nome — não aparece em teste, nem em desenvolvimento, nem para quem tem nome incomum. A App Review encontrou: todo revisor da Apple se chama "John Apple", e o segundo a testar reportou como "erro ao entrar com a Apple" | A página já pede um endereço livre ao servidor; os dois clientes adotam em silêncio a alternativa quando o sugerido está tomado, e só mostram erro sobre o que a pessoa digitou; teste no emulador com dois autores de mesmo nome |
 | **A home vazava para fora da tela no celular** | A ilustração do hero tem duas páginas de 208px, e item de grid não encolhe abaixo do próprio conteúdo: os 416px esticavam a coluna e levavam o título junto. Só aparece abaixo de ~464px de viewport, largura que nenhum teste exercitava | A segunda página só existe a partir de 480px — página única abaixo, como o próprio leitor faz; `min-w-0` nos filhos do grid; dois testes estruturais em `regras-de-negocio.test.ts` |
 
 ---

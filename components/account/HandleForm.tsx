@@ -6,7 +6,7 @@
 // handle não existe URL pública, logo não existe produto. A escolha é definitiva
 // (regra 11.10), e a tela diz isso antes de a pessoa decidir.
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { COPY } from '@/lib/copy'
 import { slugify } from '@/lib/slug'
 
@@ -30,6 +30,15 @@ export function HandleForm({
   const [checando, setChecando] = useState(false)
   const [salvando, setSalvando] = useState(false)
 
+  // Distingue o endereço que a **pessoa** escreveu do que o produto preencheu.
+  //
+  // É a diferença entre um aviso útil e um erro gratuito: mostrar "já está em
+  // uso" em cima de um valor que a própria tela sugeriu culpa quem acabou de
+  // chegar por uma escolha que não foi dele. Quando o sugerido está tomado, a
+  // tela adota em silêncio a alternativa livre que o servidor devolve.
+  const editadoAMao = useRef(false)
+  const jaTrocouSozinho = useRef(false)
+
   const formatoOk = FORMATO.test(handle)
 
   // Checa a disponibilidade enquanto a pessoa digita, com uma pausa para não
@@ -46,9 +55,20 @@ export function HandleForm({
         const resposta = await fetch(`/api/conta/handle?handle=${encodeURIComponent(handle)}`)
         if (!resposta.ok) return
         const resultado = await resposta.json()
-        setDisponivel(Boolean(resultado.disponivel))
-        setSugestao(resultado.disponivel ? null : (resultado.sugestao ?? null))
-        setErro(resultado.disponivel ? null : COPY.handleIndisponivel)
+        const livre = Boolean(resultado.disponivel)
+
+        // Sugerido pelo produto e tomado: troca sozinha, uma vez só. O limite
+        // de uma troca evita laço se a alternativa também estiver ocupada —
+        // nesse caso a pessoa vê o aviso, que aí é honesto.
+        if (!livre && !editadoAMao.current && !jaTrocouSozinho.current && resultado.sugestao) {
+          jaTrocouSozinho.current = true
+          setHandle(resultado.sugestao)
+          return
+        }
+
+        setDisponivel(livre)
+        setSugestao(livre ? null : (resultado.sugestao ?? null))
+        setErro(livre ? null : COPY.handleIndisponivel)
       } catch {
         // Sem rede, a checagem antecipada some e o POST decide.
       } finally {
@@ -108,6 +128,7 @@ export function HandleForm({
             onChange={(evento) => {
               // O que a pessoa digita já é normalizado para o formato aceito —
               // recusar depois o que a tela deixou escrever é armadilha.
+              editadoAMao.current = true
               setHandle(slugify(evento.target.value).slice(0, 30))
               setErro(null)
             }}

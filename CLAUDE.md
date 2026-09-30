@@ -160,7 +160,7 @@ mudou token aqui, olhe lá — e vice-versa. A tabela está na seção 8 do
 
 ---
 
-## Quatorze coisas que quebram em silêncio
+## Quinze coisas que quebram em silêncio
 
 Cada uma destas já mordeu. Nenhuma dá erro de compilação.
 
@@ -242,6 +242,17 @@ Cada uma destas já mordeu. Nenhuma dá erro de compilação.
     aquele arquivo é versionado e roda na máquina de todo mundo, e a chave lá
     faria evento de brincadeira subir junto com o de produção, sem nenhum
     sinal.
+
+15. **Nenhuma tela pode abrir com erro sobre um valor que ela mesma preencheu.**
+    A escolha do endereço sugere um handle a partir do nome — e nome se repete.
+    Enquanto a sugestão não passava por `sugerirHandleLivre()`, quem tinha nome
+    comum chegava numa tela vermelha, com o botão desabilitado, sem ter digitado
+    nada. Não aparece em teste nem em desenvolvimento, porque depende de outra
+    conta já existir com aquele nome. Foi assim que a App Review registrou um
+    "erro ao entrar com a Apple" em 29/09/2026: todo revisor da Apple se chama
+    "John Apple", e o segundo a testar encontrou `john-apple` tomado pelo
+    primeiro. A regra vale para os dois clientes: sugerido e ocupado vira troca
+    silenciosa pela alternativa livre; **erro só quando a pessoa digitou**.
 
 ---
 

@@ -243,6 +243,32 @@ descreve('camada de dados no emulador', () => {
     })
   })
 
+  // O caso que a App Review encontrou em 29/09/2026 e reportou como erro de
+  // login: o segundo revisor chamado "John Apple" caía numa tela de primeiro
+  // acesso já no vermelho, porque a sugestão vinha do nome e o nome se repete.
+  describe('dois autores com o mesmo nome — o segundo recebe um endereço livre', () => {
+    const primeiro = `${marca}-john-1`
+    const segundo = `${marca}-john-2`
+    const pedido = `${marca}-john-apple`
+
+    it('a sugestão pula o que já foi tomado, em vez de devolver um endereço ocupado', async () => {
+      await firestore.garantirUsuario({ id: primeiro, email: 'john1@exemplo.com', nome: 'John Apple' })
+      await firestore.garantirUsuario({ id: segundo, email: 'john2@exemplo.com', nome: 'John Apple' })
+
+      // O primeiro chega e leva o endereço óbvio.
+      expect(await firestore.sugerirHandleLivre(pedido)).toBe(pedido)
+      expect(await firestore.reservarHandle(primeiro, pedido)).toBe(true)
+
+      // O segundo, com o mesmo nome, não pode receber uma sugestão ocupada —
+      // é isso que fazia a tela abrir com erro sobre um valor que a pessoa não
+      // digitou.
+      const sugerido = await firestore.sugerirHandleLivre(pedido)
+      expect(sugerido).not.toBe(pedido)
+      expect(await firestore.handleDisponivel(sugerido)).toBe(true)
+      expect(await firestore.reservarHandle(segundo, sugerido)).toBe(true)
+    })
+  })
+
   describe('handles — a transação da seção 7', () => {
     it('reserva o handle e o grava na conta', async () => {
       expect(await firestore.reservarHandle(idAdmin, handleAdmin)).toBe(true)

@@ -20,6 +20,20 @@ struct EscolherEnderecoView: View {
     @State private var salvando = false
     @State private var tarefaDeChecagem: Task<Void, Never>?
 
+    // Distingue o endereço que a **pessoa** escreveu do que o produto
+    // preencheu — e é o foco que responde, não o valor: as mudanças de um campo
+    // digitado rápido chegam agrupadas, e comparar valores já falhou aqui antes,
+    // no campo de endereço do livro.
+    //
+    // Mostrar "já está em uso" sobre uma sugestão que a própria tela escreveu
+    // culpa quem acabou de chegar por uma escolha que não foi dele. Foi o que a
+    // App Review encontrou no primeiro acesso: todo revisor da Apple se chama
+    // "John Apple", e o segundo a testar achou `john-apple` tomado pelo
+    // primeiro — tela vermelha e botão desabilitado antes de digitar nada.
+    @FocusState private var campoEmFoco: Bool
+    @State private var editadoAMao = false
+    @State private var jaTrocouSozinho = false
+
     private enum Estado: Equatable { case ocioso, checando, livre, invalido, ocupado }
 
     private var dominio: String { Configuracao.servidor.host ?? "virapagina.app.br" }
@@ -82,7 +96,9 @@ struct EscolherEnderecoView: View {
             TextField("seu-nome", text: $handle)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .focused($campoEmFoco)
                 .onChange(of: handle) { _, novo in
+                    if campoEmFoco { editadoAMao = true }
                     // Normaliza enquanto digita: o formato aceito é minúsculas,
                     // números e hífen (critério 8.1).
                     let limpo = novo.lowercased().filter { $0.isLetter || $0.isNumber || $0 == "-" }
@@ -131,6 +147,18 @@ struct EscolherEnderecoView: View {
             do {
                 let resposta = try await Api.shared.handleDisponivel(handle)
                 guard !Task.isCancelled else { return }
+
+                // Sugerido pelo produto e tomado: adota a alternativa livre em
+                // silêncio, uma vez só. O limite de uma troca evita laço se a
+                // alternativa também estiver ocupada — aí o aviso aparece, e aí
+                // ele é honesto.
+                if !resposta.disponivel, resposta.valido, !editadoAMao, !jaTrocouSozinho,
+                   let livre = resposta.sugestao {
+                    jaTrocouSozinho = true
+                    handle = livre
+                    return
+                }
+
                 sugestao = resposta.sugestao
                 estado = !resposta.valido ? .invalido : (resposta.disponivel ? .livre : .ocupado)
             } catch {

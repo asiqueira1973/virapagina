@@ -17,7 +17,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { HandleForm } from '@/components/account/HandleForm'
 import { auth } from '@/lib/auth'
-import { garantirUsuario } from '@/lib/firebase/firestore'
+import { garantirUsuario, sugerirHandleLivre } from '@/lib/firebase/firestore'
 import { dominioDoSite } from '@/lib/site'
 import { slugify } from '@/lib/slug'
 
@@ -35,9 +35,18 @@ export default async function HandlePage() {
   })
   if (usuario.handle) redirect('/conta/livros')
 
-  // Sugestão a partir do nome do Google, ou do trecho antes do @ no e-mail.
+  // Sugestão a partir do nome do Google, ou do trecho antes do @ no e-mail —
+  // **já conferida contra os endereços tomados**.
+  //
+  // Sem `sugerirHandleLivre`, a tela abria no vermelho para quem tem nome
+  // comum: o campo vinha preenchido pelo próprio produto, a checagem dizia
+  // "esse endereço já está em uso" e o botão nascia desabilitado, tudo antes de
+  // a pessoa digitar qualquer coisa. Foi assim que a App Review registrou um
+  // erro no primeiro acesso — todo revisor da Apple se chama "John Apple", e o
+  // segundo a testar encontrava `john-apple` tomado pelo primeiro.
   const base = usuario.nome ?? usuario.email.split('@')[0]
-  const sugestao = slugify(base).slice(0, 30)
+  const pedida = slugify(base).slice(0, 30)
+  const sugestao = pedida.length >= 3 ? await sugerirHandleLivre(pedida) : ''
 
   return (
     <main className="flex min-h-dvh items-center justify-center bg-superficie px-6 py-16">
@@ -56,7 +65,7 @@ export default async function HandlePage() {
             ser trocado depois.
           </p>
           <HandleForm
-            sugestaoInicial={sugestao.length >= 3 ? sugestao : ''}
+            sugestaoInicial={sugestao}
             dominio={dominioDoSite()}
           />
         </div>

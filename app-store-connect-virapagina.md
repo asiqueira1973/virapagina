@@ -421,11 +421,17 @@ etária, confirme os direitos de conteúdo, e envie.
 
 ## Screenshots de marketing
 
+**Nenhuma frase pode falar de preço** — nem "grátis", nem "de graça", nem
+"gratuito". A diretriz 2.3.7 trata isso como referência a preço igual a um valor
+em reais, e recusou a ficha em 29/09/2026 por causa de uma quinta imagem que
+dizia "Cinco livros de graça". Ela saiu do conjunto; preço se fala **na
+descrição**, que é onde a Apple manda falar.
+
 **Tamanho: 6,5 polegadas — 1242 × 2688**, o mesmo conjunto dos outros apps da Dab
 Lab. Capturados nativamente num iPhone 11 Pro Max, sem redimensionar. Como o app
 é só iPhone, **não há screenshot de iPad para fazer**.
 
-As cinco estão prontas, em `loja/`:
+As quatro estão prontas, em `loja/`:
 
 | Arquivo | Tela | Frase na imagem |
 |---|---|---|
@@ -433,7 +439,7 @@ As cinco estão prontas, em `loja/`:
 | `loja-2-novo.png` | Formulário de novo livro preenchido | Escolha o PDF. O resto é automático |
 | `loja-3-publicar.png` | Livro publicado, com as ações | Publicar e compartilhar é um toque |
 | `loja-4-leitor.png` | Leitor, fundo escuro, página 3 de 12 | Quem recebe folheia no navegador, sem app |
-| `loja-5-assinatura.png` | Paywall, no limite de 5 livros | Cinco livros de graça. Depois, ilimitado |
+
 
 As telas cruas, sem moldura nem frase, ficam em `loja/telas/` — servem para
 recapturar ou remontar sem repetir o caminho todo.
