@@ -72,3 +72,15 @@ loja/
 # Credenciais da conta de teste do App Review. O e-mail pode ser versionado; a
 # senha, não — senha em histórico de Git não sai mais de lá.
 *.local.md
+
+# --- Segredos e credenciais (nunca versionar) ---
+GoogleService-Info.plist
+google-services.json
+*.p8
+*.p12
+*.mobileprovision
+*.keystore
+*.jks
+key.properties
+local.properties
+secrets/
