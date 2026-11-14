@@ -1,252 +1,90 @@
 # Virapágina
 
-**No ar em [virapagina.app.br](https://virapagina.app.br)** desde 10 de setembro
-de 2026.
+Plataforma de flipbooks: qualquer pessoa entra com o Google, sobe um PDF e recebe um link onde os leitores folheiam o livro no navegador, sem instalar nada e sem criar conta.
 
-Plataforma de flipbooks: qualquer pessoa cria conta, sobe PDFs e recebe um link
-onde as pessoas folheiam o livro no navegador — sem instalar nada e sem criar
-conta para ler.
+**Site:** [virapagina.app.br](https://virapagina.app.br/)
 
-- **Home:** `virapagina.app.br`
-- **Vitrine de um autor:** `virapagina.app.br/<endereço>`
-- **Leitor:** `virapagina.app.br/<endereço>/<livro>`
-- **Painel do autor:** `/conta/livros`
-- **Painel da plataforma:** `/admin` (só para os e-mails em `ADMIN_ALLOWED_EMAILS`)
+## Principais funcionalidades
 
-**Não há cobrança nesta versão** — o desenho está pronto em `EPICO-COBRANCA.md`.
+- Leitor em flipbook com efeito de virar página, zoom, tela cheia, download, impressão e compartilhamento — responsivo, pensado para o celular.
+- O PDF original é renderizado no navegador (PDF.js): o que a pessoa lê é exatamente o arquivo que ela baixa.
+- Conta própria por autor, criada com login Google, e um endereço público escolhido no primeiro acesso (`virapagina.app.br/<endereço>/<livro>`).
+- Painel do autor: subir, editar, publicar, despublicar, substituir o PDF e excluir os próprios livros. Livro novo nasce como rascunho, com pré-visualização.
+- Vitrine pública de cada autor com os livros publicados.
+- Limite de livros por plano; enquanto a plataforma estiver aberta a early adopters, contas novas nascem com livros ilimitados.
+- Medição de tráfego por conta, com aviso quando passa da franquia.
+- App nativo de iPhone para o autor (pasta [`ios/`](ios/)): entra com Google ou Apple, sobe PDF, publica e compartilha; tem assinatura pela App Store.
 
-Enquanto a plataforma estiver **aberta a early adopters**, toda conta nova nasce
-com **livros ilimitados, para sempre**. Isso é controlado pela variável
-`EARLY_ADOPTER_ABERTO`. Desligá-la faz as contas novas nascerem com o limite de 5
-livros — e **não rebaixa ninguém que já entrou**, nem quando a cobrança existir.
+## Stack técnica
 
-**Documentos:** `spec.md` é a fonte de verdade do produto. `CLAUDE.md` traz as
-convenções e as armadilhas. `DOCUMENTACAO-TECNICA.md` descreve o que está
-implementado, com as divergências.
+- **Web:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS v4.
+- **Leitura de PDF:** `pdfjs-dist` em `<canvas>` + `react-pageflip`.
+- **Dados e arquivos:** Cloud Firestore e Cloud Storage for Firebase, acessados só pelo Admin SDK no servidor.
+- **Login:** Auth.js v5 (NextAuth) com Google.
+- **Deploy:** Vercel (com Vercel Cron para a rotina diária).
+- **iPhone:** Swift / SwiftUI (iOS 17+), projeto gerado com XcodeGen, StoreKit para a assinatura.
+- **Testes:** Vitest, com testes de integração contra o emulador do Firebase.
+- **Instrumentação de uso:** eventos enviados ao [Visão de Produto](https://visaodeproduto.com.br/).
 
----
+## Como foi construído
+
+O Virapágina foi desenvolvido com Claude (Anthropic) a partir de uma especificação no formato SDD:
+
+- [`spec.md`](spec.md) — a fonte de verdade do produto (plataforma web).
+- [`spec-ios.md`](spec-ios.md) — o delta da especificação para o app de iPhone.
+- [`CLAUDE.md`](CLAUDE.md) — convenções do repositório e as regras que não podem ser quebradas, para humanos e agentes.
+- [`DOCUMENTACAO-TECNICA.md`](DOCUMENTACAO-TECNICA.md) — o que está implementado, incluindo as divergências em relação à spec.
+- [`EPICO-COBRANCA.md`](EPICO-COBRANCA.md) — o desenho da cobrança do site, deixado para uma versão futura.
+
+Guardrails que existem no código: testes automatizados em [`tests/`](tests/) (Vitest) cobrindo as guardas de autorização das rotas, o isolamento entre contas, a visibilidade pública de rascunhos e as regras de negócio do plano, além de testes de integração contra o emulador do Firebase. Lint (ESLint) e checagem de tipos (`tsc`) completam a verificação.
+
+## Status
+
+Publicado — no ar em [virapagina.app.br](https://virapagina.app.br/). O app de iPhone está no repositório; o status de publicação dele na App Store não está documentado aqui.
 
 ## Rodar localmente
 
-Não precisa de credencial nenhuma do Google: o desenvolvimento roda contra o
-**emulador do Firebase**.
+O desenvolvimento roda contra o **emulador do Firebase**, sem credencial nenhuma do Google. O `.env.development` é versionado de propósito e já aponta tudo para o emulador; o `.env.example` lista as variáveis de **produção**.
 
 ```bash
 npm install
+npm run emu          # em um terminal: o emulador (exige Java)
+npm run dev          # em outro: o servidor, em http://localhost:3000
+node scripts/seed-emulador.mjs caminho/do/arquivo.pdf   # conta de exemplo com um livro publicado
 ```
 
-Não precisa copiar nem preencher nada: o `.env.development` é versionado e já
-aponta tudo para o emulador. O `.env.example` é a lista de **produção** — é o que
-vai na Vercel, e não deve ser importado para lá sem revisar.
+O `firebase-tools` não é dependência do projeto: vem por `npx` na primeira vez que você roda `npm run emu`.
 
-Em um terminal, o emulador:
+O login com Google não funciona contra o emulador sem um OAuth Client ID real; para exercitar o painel, crie um `.env.local` (não versionado) com `GOOGLE_OAUTH_CLIENT_ID` e `GOOGLE_OAUTH_CLIENT_SECRET` de teste.
 
 ```bash
-npm run emu
-```
-
-Em outro, o servidor e uma conta de exemplo com um livro publicado:
-
-```bash
-npm run dev
-node scripts/seed-emulador.mjs caminho/do/arquivo.pdf
-```
-
-Abre em `http://localhost:3000`; o livro semeado fica em `/alexandre`.
-O emulador exige **Java** instalado (`java -version`). O `firebase-tools` **não**
-é dependência do projeto: ele vem por `npx` na primeira vez que você roda
-`npm run emu`, e fica em cache depois. Manter fora do `package.json` tira umas
-900 dependências — várias com compilação nativa — do caminho de todo build.
-
-```bash
-npm test        # 85 testes, sem dependência externa
-npm run test:emu # 24 testes de integração — exige o emulador no ar
+npm test             # testes unitários, sem dependência externa
+npm run test:emu     # testes de integração — exige o emulador no ar
 npm run lint
 npm run typecheck
 npm run build
 ```
 
-O login com Google não funciona contra o emulador sem um OAuth Client ID real;
-para exercitar o painel, crie um `.env.local` (não versionado) com
-`GOOGLE_OAUTH_CLIENT_ID` e `GOOGLE_OAUTH_CLIENT_SECRET` de teste — ele tem
-prioridade sobre o `.env.development`.
+Para o app de iPhone, veja [`ios/README.md`](ios/README.md).
 
-> **Nunca leve as variáveis de emulador para a Vercel.** `FIRESTORE_EMULATOR_HOST`,
-> `FIREBASE_STORAGE_EMULATOR_HOST` e `STORAGE_EMULATOR_HOST` só existem em
-> `.env.development`. Se aparecerem em produção, o código as ignora e registra um
-> erro no log, mas apague-as mesmo assim.
+### Configuração em produção, em resumo
 
----
+1. Um projeto Firebase dedicado com Cloud Firestore e Storage (o Storage exige o plano Blaze).
+2. Uma conta de serviço do Admin SDK e um ID de cliente OAuth do Google (tipo Aplicativo da Web) no mesmo projeto.
+3. CORS do bucket aplicado com `node scripts/aplicar-cors.mjs <chave-da-conta-de-servico.json>` (usa o [`cors.json`](cors.json) da raiz). Sem isso o upload falha no navegador.
+4. Regras e índices publicados com `firebase deploy --only firestore:rules,firestore:indexes,storage`. Sem os índices compostos, o painel do autor quebra; `node scripts/diagnostico.mjs <chave.json>` mostra o que falta.
+5. As variáveis do [`.env.example`](.env.example) configuradas na Vercel.
 
-## Configurar o Firebase (fazer uma vez)
+As regras do Firestore e do Storage negam todo acesso direto do cliente: a aplicação fala com os dois só pelo Admin SDK, no servidor.
 
-Sem estes passos o site sobe, mas toda tela mostra "Algo deu errado. Tente
-novamente em instantes." — é o sintoma de não conseguir falar com o Google.
+## Licença
 
-### 1. Projeto, Firestore e Storage
+O código está disponível apenas para leitura e estudo. Veja [LICENSE](LICENSE).
 
-1. No [console do Firebase](https://console.firebase.google.com), crie um projeto
-   **novo e dedicado** ao Virapágina.
-2. Ative o **Cloud Firestore** (modo de produção — as regras deste repositório
-   negam todo acesso do cliente de qualquer jeito).
-3. Ative o **Storage**. Ele exige o plano **Blaze** desde fevereiro de 2026; a
-   franquia permanente (5 GB armazenados e 100 GB de saída por mês) mantém a
-   fatura em zero no volume inicial.
-4. **Configure um alerta de orçamento** em Google Cloud → Faturamento → Orçamentos
-   e alertas. O Blaze **não tem teto de gasto**, e sem receita não há nada para
-   absorver uma surpresa. Este passo não é opcional.
+## Contribuições
 
-### 2. Conta de serviço
-
-1. Configurações do projeto → **Contas de serviço** → **Gerar nova chave privada**.
-   O arquivo JSON baixa uma vez só; guarde-o em lugar seguro.
-2. Do JSON, use `project_id`, `client_email` e `private_key` nas variáveis
-   correspondentes (mantenha as quebras de linha como `\n`, entre aspas).
-
-### 3. Login com Google
-
-1. No [Google Cloud Console](https://console.cloud.google.com), no **mesmo
-   projeto**: APIs e serviços → Tela de consentimento OAuth, tipo **Externo**.
-2. Credenciais → **Criar credenciais** → **ID do cliente OAuth**, tipo
-   **Aplicativo da Web**.
-3. Em **URIs de redirecionamento autorizados**, adicione as duas:
-   - `http://localhost:3000/api/auth/callback/google`
-   - `https://virapagina.app.br/api/auth/callback/google`
-
-### 4. CORS do bucket — o passo que mais é esquecido
-
-O navegador envia os bytes do PDF direto para o Storage. Sem CORS no bucket, todo
-upload falha no navegador e o servidor não tem como saber que falhou.
-
-Com a chave de conta de serviço em mãos (a mesma do passo 2), a partir da raiz
-do repositório:
-
-```bash
-node scripts/aplicar-cors.mjs ~/Downloads/vira-pagina-adminsdk.json
-```
-
-Usa o `firebase-admin` que já é dependência do projeto — não exige instalar o
-`gcloud`. Se você tiver o SDK do Google Cloud, o equivalente é
-`gcloud storage buckets update gs://vira-pagina.firebasestorage.app --cors-file=cors.json`.
-
-O `cors.json` está na raiz do repositório, já com as origens de produção e de
-desenvolvimento.
-
-> **Enquanto o domínio não propagar**, a Vercel serve em `*.vercel.app`, que
-> **não** está no `cors.json`. Subir um PDF por essa URL falha por CORS **sem
-> deixar rastro no log do servidor** — a recusa acontece entre o navegador e o
-> Google. As outras telas funcionam normalmente. Ou espere o domínio, ou
-> acrescente a origem `.vercel.app` ao `cors.json` e reaplique o comando acima.
-
-### 5. Regras e índices
-
-```bash
-GOOGLE_APPLICATION_CREDENTIALS=./<a-chave>.json \
-  npx --yes -p firebase-tools@14 firebase deploy --only firestore:rules,firestore:indexes,storage
-```
-
-**Este passo não é opcional e não avisa quando falta.** Sem os índices compostos,
-o painel do autor levanta uma exceção de servidor assim que a conta entra —
-`FAILED_PRECONDITION: The query requires an index` —, e a tela mostra só
-"Application error". Depois de publicar, os índices ainda levam **alguns minutos
-construindo**; enquanto isso o erro continua, agora dizendo "currently building".
-
-Para saber em que pé está, sem adivinhar:
-
-```bash
-node scripts/diagnostico.mjs ./<a-chave>.json
-```
-
-Ele roda contra o Firestore de verdade as mesmas consultas que as telas fazem, e
-imprime o link de criação do índice quando algum falta. Só lê — não escreve nada.
-
-O projeto de destino está fixado no `.firebaserc` (`vira-pagina`), para não haver
-risco de publicar as regras no projeto errado. O emulador continua usando o
-projeto local, porque o `npm run emu` passa `--project` explicitamente.
-
-As regras negam todo acesso do cliente ao Firestore e ao Storage. Isso é
-intencional: a aplicação fala com os dois pelo Admin SDK, no servidor.
-
-### 6. Quem entra no painel da plataforma
-
-`ADMIN_ALLOWED_EMAILS` é a lista, separada por vírgula, dos e-mails Google com
-acesso a `/admin`. **As contas desses e-mails também nascem com plano
-ilimitado**, sem limite de livros e sem franquia de tráfego — e se corrigem
-sozinhas a cada login, mesmo que alguém as altere no console.
-
-Quem não está na lista recebe **404** em `/admin`, não uma tela de acesso negado.
+Issues são bem-vindas; pull requests não são aceitos. Veja [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-## Variáveis de ambiente
-
-| Variável | Segreda? | Para quê |
-|---|---|---|
-| `FIREBASE_PROJECT_ID` | não | Projeto do Firebase — `vira-pagina` |
-| `FIREBASE_CLIENT_EMAIL` | não | Conta de serviço do Admin SDK |
-| `FIREBASE_PRIVATE_KEY` | **sim** | Chave da conta de serviço. **A credencial mais sensível do projeto** — dá acesso total aos dados e aos arquivos |
-| `FIREBASE_STORAGE_BUCKET` | não | Bucket dos arquivos — `vira-pagina.firebasestorage.app` |
-| `GOOGLE_OAUTH_CLIENT_ID` | não | Login |
-| `GOOGLE_OAUTH_CLIENT_SECRET` | **sim** | Login |
-| `NEXTAUTH_SECRET` | **sim** | Assina o cookie de sessão. Gere com `openssl rand -base64 32` |
-| `NEXTAUTH_URL` | não | URL do deploy |
-| `ADMIN_ALLOWED_EMAILS` | **sim** | Admins da plataforma; estas contas também nascem ilimitadas |
-| `EARLY_ADOPTER_ABERTO` | não | `true` enquanto a plataforma aceitar early adopters. Ausente ou escrita errado conta como `true` |
-| `CRON_SECRET` | **sim** | Protege a rotina diária de aviso de tráfego |
-| `EMAIL_CONTATO` | não | Aparece nos termos, na privacidade, no canal de denúncia e no botão "Falar com a gente" |
-
-Em desenvolvimento, no lugar das credenciais: `FIRESTORE_EMULATOR_HOST`,
-`FIREBASE_STORAGE_EMULATOR_HOST` e `STORAGE_EMULATOR_HOST`, como no
-`.env.example`.
-
----
-
-## Fechar a porta dos early adopters
-
-Enquanto `EARLY_ADOPTER_ABERTO` for `true`, toda conta **criada** nasce
-`early_adopter`: livros ilimitados, para sempre. O estado aparece no topo de
-`/admin/contas`, junto com quantas contas já entraram assim.
-
-Para fechar:
-
-1. Na Vercel, **Settings → Environment Variables**, mude `EARLY_ADOPTER_ABERTO`
-   para `false`.
-2. **Refaça o deploy** — variável de ambiente só passa a valer no próximo build.
-
-O que muda: contas criadas dali em diante nascem `gratuito`, com 5 livros. **O
-que não muda: ninguém é rebaixado.** Quem já é early adopter continua sendo, no
-próximo login e sempre — e continuará quando a cobrança existir (decisão C8 do
-`EPICO-COBRANCA.md`). Religar a chave também não promove quem entrou no meio.
-
-Se alguém criou a conta minutos depois de você fechar e vale a pena atender, dá
-para conceder `early_adopter` à mão em `/admin/contas/<conta>`.
-
----
-
-## Deploy na Vercel
-
-1. Conecte o repositório; `main` é produção.
-2. Configure as variáveis acima em **Settings → Environment Variables**.
-   `NEXTAUTH_URL` recebe `https://virapagina.app.br`.
-3. Aponte o domínio em **Settings → Domains**.
-4. Confirme que a URI de redirecionamento de produção está cadastrada no OAuth
-   Client (passo 3 acima) — é o que falha primeiro quando o login funciona local
-   e quebra em produção.
-5. Agende a rotina diária em **Settings → Cron Jobs**:
-   `POST /api/rotinas/avisar-trafego`, com o cabeçalho
-   `Authorization: Bearer <CRON_SECRET>`.
-
----
-
-## Publicar um livro
-
-1. Entre em `/entrar` com o Google. Na primeira vez, escolha seu endereço público
-   — ele **não pode ser trocado depois**.
-2. Em `/conta/livros`, clique **Novo livro**.
-3. Preencha o título; o link é sugerido automaticamente e pode ser editado.
-4. Escolha o PDF (até 100 MB). O total de páginas e a capa saem da primeira
-   página, sozinhos.
-5. O livro é salvo como **rascunho**. Use **Ver como ficaria** para conferir a
-   leitura antes de qualquer pessoa ver.
-6. Clique **Publicar**. O livro entra na sua vitrine e o link passa a responder
-   para todo mundo.
+Feito pela [Dab Lab](https://www.dablab.com.br/) — agência de inovação no-code para startups e PMEs, com automações usando IA.
