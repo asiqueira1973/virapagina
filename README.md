@@ -1,8 +1,49 @@
 # Virapágina
 
+<p align="center">
+  <img src="docs/images/web-leitor.png" width="100%" alt="O leitor no computador: o livro 'Conceitos de Tecnologia para Pessoas Executivas e Não Técnicas' aberto em duas páginas, no capítulo sobre monolito e microsserviços, com a barra de página, zoom, tela cheia, baixar, imprimir e compartilhar embaixo">
+</p>
+
+<p align="center">
+  <a href="https://virapagina.app.br"><b>virapagina.app.br</b></a> ·
+  <a href="https://virapagina.app.br/alexandresiqueira">Uma vitrine de exemplo</a> ·
+  <a href="https://virapagina.app.br/privacidade">Privacidade</a>
+</p>
+
 Plataforma de flipbooks: qualquer pessoa entra com o Google, sobe um PDF e recebe um link onde os leitores folheiam o livro no navegador, sem instalar nada e sem criar conta.
 
-**Site:** [virapagina.app.br](https://virapagina.app.br/)
+## O endereço é seu
+
+Cada conta ganha uma vitrine com todos os livros publicados, e cada livro tem o próprio link:
+
+- **Vitrine:** `virapagina.app.br/<seunome>`
+- **Livro:** `virapagina.app.br/<seunome>/<seu-livro>`
+
+<p align="center">
+  <img src="docs/images/web-vitrine.png" width="80%" alt="A vitrine virapagina.app.br/alexandresiqueira, com as capas de I See Life Q3, Q2 e Q1 2026 e do Guia de construção de app com Claude">
+</p>
+
+O endereço é escolhido uma vez, no primeiro login, e não muda depois: é ele que circula por WhatsApp, LinkedIn e e-mail.
+
+## O leitor
+
+O livro abre em página dupla no computador e em página simples no celular. Quem lê não faz conta, não recebe cookie de rastreio e não vê marca d'água. Trocar o PDF de um livro publicado mantém o mesmo link, e quem já tinha aberto vê o arquivo novo na hora.
+
+<p align="center">
+  <img src="docs/images/web-leitor-celular.png" width="32%" alt="O mesmo livro no celular, na capa, com a barra de navegação e as ações de baixar, imprimir e compartilhar">
+</p>
+
+## No iPhone
+
+O app de iPhone é o painel do autor no bolso: lista os livros, sobe um PDF novo, publica, compartilha o link e abre o leitor, com a mesma conta do site.
+
+<p align="center">
+  <img src="docs/images/iphone-livros.png" width="30%" alt="Lista de livros no app, cada um com a capa, o link e o estado: publicado ou rascunho">
+  &nbsp;
+  <img src="docs/images/iphone-livro.png" width="30%" alt="A tela de um livro no app: despublicar, ver livro, compartilhar link e os detalhes de endereço, autor, páginas e tamanho">
+  &nbsp;
+  <img src="docs/images/iphone-leitor.png" width="30%" alt="O leitor dentro do app, na página 3 de 12, com o botão de compartilhar">
+</p>
 
 ## Principais funcionalidades
 
@@ -16,6 +57,10 @@ Plataforma de flipbooks: qualquer pessoa entra com o Google, sobe um PDF e receb
 - App nativo de iPhone para o autor (pasta [`ios/`](ios/)): entra com Google ou Apple, sobe PDF, publica e compartilha; tem assinatura pela App Store.
 
 ## Stack técnica
+
+<p align="center">
+  <img src="docs/images/web-home.png" width="80%" alt="A home do Virapágina: 'Seu PDF vira um livro que dá vontade de folhear', com o botão Começar de graça e os cards Sem marca d'água, Nada sai do ar e Quem lê não faz conta">
+</p>
 
 - **Web:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS v4.
 - **Leitura de PDF:** `pdfjs-dist` em `<canvas>` + `react-pageflip`.
